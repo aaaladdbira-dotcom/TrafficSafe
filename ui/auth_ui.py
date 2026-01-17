@@ -83,7 +83,11 @@ def login():
             flash("Invalid email or password", "danger")
             return render_template("login.html", next=next_url)
 
-        data = resp.json()
+        # Normalize API response (requests Response vs Flask test client Response)
+        if hasattr(resp, "get_json"):
+            data = resp.get_json()
+        else:
+            data = resp.json()
 
         # 🔑 STORE AUTH DATA IN SESSION
         session["access_token"] = data["access_token"]
