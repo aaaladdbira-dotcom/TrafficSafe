@@ -1,0 +1,986 @@
+{% extends "base_private.html" %}
+
+{% block title %}Accidents{% endblock %}
+
+{% block head_extra %}
+<style>
+/* Filter Form Improvements */
+form[method="get"] {
+  background: var(--ui-surface);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--ui-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+form[method="get"] .form-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-muted);
+  margin-bottom: 8px;
+}
+
+form[method="get"] .form-select,
+form[method="get"] .form-control {
+  border-radius: 10px !important;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 2px solid var(--ui-border) !important;
+  transition: all 200ms ease;
+  background: var(--ui-surface);
+}
+
+form[method="get"] .form-select:hover,
+form[method="get"] .form-control:hover {
+  border-color: var(--ui-border-strong) !important;
+}
+
+form[method="get"] .form-select:focus,
+form[method="get"] .form-control:focus {
+  border-color: var(--ui-primary) !important;
+  box-shadow: 0 0 0 4px var(--ui-focus) !important;
+}
+
+/* Highlight applied filters */
+.filter-applied {
+  border-color: var(--ui-primary) !important;
+  background: var(--ui-surface) !important;
+  font-weight: 600 !important;
+}
+
+/* Table Improvements */
+.glass-card.table-responsive {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+}
+
+.table {
+  margin: 0;
+}
+
+.table thead {
+  background: linear-gradient(180deg, var(--ui-primary) 0%, var(--brand-600) 100%);
+}
+
+.table thead th {
+  color: white !important;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 16px;
+  border: none !important;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: all 200ms ease;
+}
+
+.table tbody tr:hover {
+  background: var(--ui-overlay) !important;
+}
+
+.table tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: 14px;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody td a {
+  color: var(--ui-primary);
+  font-weight: 600;
+  transition: color 200ms ease;
+}
+
+.table tbody td a:hover {
+  color: var(--brand-600);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  background: var(--ui-surface);
+  border-radius: 16px;
+  border: 1px solid var(--ui-border);
+}
+
+.empty-state-icon {
+  margin-bottom: 24px;
+  color: var(--ui-muted);
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ui-text);
+  margin-bottom: 12px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  color: var(--ui-muted);
+  max-width: 400px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.empty-state-action {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Total Count */
+.total-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  padding: 8px 16px;
+  background: var(--ui-surface);
+  border-radius: 8px;
+  display: inline-block;
+  border: 1px solid var(--ui-border);
+}
+
+/* Pagination Improvements */
+.pagination {
+  gap: 4px;
+}
+
+.pagination .page-link {
+  border-radius: 8px !important;
+  border: 1px solid var(--ui-border);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 200ms ease;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+}
+
+.pagination .page-link:hover {
+  background: var(--ui-overlay);
+  border-color: var(--ui-border-strong);
+  transform: translateY(-1px);
+}
+
+.pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, var(--ui-primary) 0%, var(--brand-600) 100%);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(33, 44, 77, 0.2);
+}
+
+.pagination .page-item.disabled .page-link {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Button improvements */
+.btn-primary {
+  background: linear-gradient(135deg, var(--ui-primary) 0%, var(--brand-600) 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(33, 44, 77, 0.2);
+  font-weight: 600;
+  transition: all 200ms ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(33, 44, 77, 0.3);
+}
+
+.btn-outline-secondary {
+  border: 2px solid var(--ui-border);
+  font-weight: 500;
+  transition: all 200ms ease;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--ui-overlay);
+  border-color: var(--ui-border-strong);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* Stagger animation */
+.table tbody tr {
+  opacity: 0;
+  animation: fadeInRow 300ms ease forwards;
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0ms; }
+.table tbody tr:nth-child(2) { animation-delay: 30ms; }
+.table tbody tr:nth-child(3) { animation-delay: 60ms; }
+.table tbody tr:nth-child(4) { animation-delay: 90ms; }
+.table tbody tr:nth-child(5) { animation-delay: 120ms; }
+.table tbody tr:nth-child(6) { animation-delay: 150ms; }
+.table tbody tr:nth-child(7) { animation-delay: 180ms; }
+.table tbody tr:nth-child(8) { animation-delay: 210ms; }
+.table tbody tr:nth-child(9) { animation-delay: 240ms; }
+.table tbody tr:nth-child(10) { animation-delay: 270ms; }
+
+/* ============================================
+   ACCIDENTS LIST DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode form[method="get"] {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode form[method="get"] .form-label {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode form[method="get"] .form-select,
+body.dark-mode form[method="get"] .form-control {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode form[method="get"] .form-select option {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .glass-card.table-responsive {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .table {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .table thead {
+  background: linear-gradient(180deg, var(--brand-600) 0%, var(--brand-700) 100%) !important;
+}
+
+body.dark-mode .table tbody tr {
+  background: var(--ui-surface) !important;
+}
+
+body.dark-mode .table tbody tr:hover {
+  background: var(--ui-bg) !important;
+}
+
+body.dark-mode .table tbody td {
+  color: var(--ui-text) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .table tbody td a {
+  color: var(--brand-400) !important;
+}
+
+body.dark-mode .badge {
+  color: var(--brand-800) !important;
+}
+
+body.dark-mode .breadcrumb-nav {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .breadcrumb-nav a {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .breadcrumb-nav a.active {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode h2 {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .pagination .page-link {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .pagination .page-item.active .page-link {
+  background: var(--brand-500) !important;
+  border-color: var(--brand-500) !important;
+  color: var(--brand-800) !important;
+}
+
+body.dark-mode .pagination .page-item.disabled .page-link {
+  background: var(--ui-bg) !important;
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .text-muted {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .btn-outline-secondary {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+  background: var(--ui-bg) !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="breadcrumb-nav" aria-label="breadcrumb">
+  <a href="/ui/dashboard" class="breadcrumb-item">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    <span data-i18n="nav.dashboard">Dashboard</span>
+  </a>
+  <span class="breadcrumb-separator">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </span>
+  <span class="breadcrumb-item active" data-i18n="accidents.title">Accidents</span>
+</nav>
+
+<h2 class="mb-3" data-i18n="accidents.browseAccidents">Reported Accidents</h2>
+
+{% set tunisia_states = [
+  'Ariana','Béja','Ben Arous','Bizerte','Gabes','Gafsa','Jendouba','Kairouan',
+  'Kasserine','Kébili','Le Kef','Mahdia','Manouba','Medenine','Monastir','Nabeul',
+  'Sfax','Sidi Bouzid','Siliana','Sousse','Tataouine','Tozeur','Tunis','Zaghouan'
+] %}
+
+<form class="mb-3" method="get" id="filter-form"
+      data-selected-location="{{ selected_location|default('') }}"
+      data-selected-severity="{{ selected_severity|default('') }}"
+      data-selected-cause="{{ selected_cause|default('') }}"
+      data-selected-delegation="{{ selected_delegation|default('') }}"
+      data-selected-start="{{ start_date|default('') }}"
+      data-selected-end="{{ end_date|default('') }}"
+      style="display:grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1.2fr 1.2fr; gap:16px; align-items:end; width:100%;">
+  <div>
+    <label class="form-label" data-i18n="accidents.location">Location</label>
+    <select name="location" class="form-select">
+      <option value="" data-i18n="accidents.allLocations">All</option>
+      {% for loc in tunisia_states %}
+        <option value="{{ loc }}" {% if selected_location|default('') == loc %}selected{% endif %}>{{ loc }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label" data-i18n="accidents.severity">Severity</label>
+    <select name="severity" class="form-select">
+      <option value="" data-i18n="accidents.allSeverity">All</option>
+      <option value="fatal" {% if selected_severity|default('') == 'fatal' %}selected{% endif %} data-i18n="accidents.fatal">Fatal</option>
+      <option value="serious" {% if selected_severity|default('') == 'serious' %}selected{% endif %} data-i18n="accidents.serious">Serious</option>
+      <option value="minor" {% if selected_severity|default('') == 'minor' %}selected{% endif %} data-i18n="accidents.minor">Minor</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label" data-i18n="accidents.cause">Cause</label>
+    <select name="cause" class="form-select">
+      <option value="" data-i18n="accidents.allCauses">All</option>
+      <option value="phone_usage" {% if selected_cause|default('') == 'phone_usage' %}selected{% endif %} data-i18n="accidents.phoneUsage">Phone Usage</option>
+      <option value="speeding" {% if selected_cause|default('') == 'speeding' %}selected{% endif %} data-i18n="accidents.speeding">Speeding</option>
+      <option value="distraction" {% if selected_cause|default('') == 'distraction' %}selected{% endif %} data-i18n="accidents.distraction">Distraction</option>
+      <option value="pedestrian" {% if selected_cause|default('') == 'pedestrian' %}selected{% endif %} data-i18n="accidents.pedestrian">Pedestrian</option>
+      <option value="mechanical" {% if selected_cause|default('') == 'mechanical' %}selected{% endif %} data-i18n="accidents.mechanical">Mechanical</option>
+      <option value="weather" {% if selected_cause|default('') == 'weather' %}selected{% endif %} data-i18n="accidents.weather">Weather</option>
+      <option value="drunk_driving" {% if selected_cause|default('') == 'drunk_driving' %}selected{% endif %} data-i18n="accidents.drunkDriving">Drunk Driving</option>
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label" data-i18n="accidents.delegation">Delegation</label>
+    <select name="delegation" class="form-select">
+      <option value="" data-i18n="accidents.allDelegations">All</option>
+      {% for d in delegations %}
+        <option value="{{ d }}" {% if selected_delegation|default('') == d %}selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="form-label" data-i18n="accidents.start">Start</label>
+    <input type="datetime-local" name="start_date" class="form-control" value="{{ start_date|default('') }}">
+  </div>
+
+  <div>
+    <label class="form-label" data-i18n="accidents.end">End</label>
+    <input type="datetime-local" name="end_date" class="form-control" value="{{ end_date|default('') }}">
+  </div>
+  <div class="d-flex gap-3 mt-2" style="grid-column:1/-1;">
+    <button type="submit" class="btn btn-primary btn-sm flex-fill" style="min-width:240px;" data-i18n="accidents.applyFilters">Apply filters</button>
+    <a href="{{ url_for('accidents_ui.accidents') }}" class="btn btn-outline-secondary btn-sm flex-fill" style="min-width:240px;" data-i18n="accidents.clearFilters">Clear filters</a>
+    
+    <!-- Export Dropdown -->
+    <div class="dropdown flex-fill" style="min-width:240px;">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span data-i18n="accidents.export">Export</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item export-btn" href="#" data-format="csv">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span data-i18n="accidents.exportCSV">Export as CSV</span>
+        </a></li>
+        <li><a class="dropdown-item export-btn" href="#" data-format="excel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          <span data-i18n="accidents.exportExcel">Export as Excel</span>
+        </a></li>
+        <li><a class="dropdown-item export-btn" href="#" data-format="pdf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span data-i18n="accidents.exportPDF">Export as PDF</span>
+        </a></li>
+      </ul>
+    </div>
+    
+    {% if session.role == 'government' %}
+      <button id="clear-imports-btn" class="btn btn-danger btn-sm flex-fill" type="button" style="min-width:240px;" data-i18n="accidents.clearImported">Clear imported records</button>
+    {% endif %}
+    <span id="loading-spinner" class="ms-3" style="display:none">
+      <div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>
+    </span>
+  </div>
+</form>
+
+<script>
+// Export functionality
+document.querySelectorAll('.export-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const format = this.dataset.format;
+    const params = new URLSearchParams(window.location.search);
+    const exportUrl = `/api/export/accidents/${format}?${params.toString()}`;
+    
+    Toast.info('Preparing export...', 'Export');
+    
+    fetch(exportUrl, {
+      headers: {
+        'Authorization': 'Bearer ' + (document.cookie.match(/access_token=([^;]+)/) || ['', ''])[1]
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Export failed');
+      return response.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `accidents_export.${format === 'excel' ? 'xlsx' : format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      Toast.success('Export downloaded successfully!', 'Export');
+    })
+    .catch(err => {
+      Toast.error('Failed to export data: ' + err.message, 'Export Error');
+    });
+  });
+});
+</script>
+
+  {% if session.role == 'government' %}
+    <div class="mb-3">
+      <div class="form-text" data-i18n="accidents.clearingHint">Clearing will delete all records created by CSV imports (source=government_import).</div>
+    </div>
+  {% endif %}
+
+{% if accidents and accidents|length > 0 %}
+  <div class="mb-2 text-muted page-fade total-count">Total: {{ total if total is defined else accidents|length }}</div>
+  <div class="glass-card card-anim table-responsive page-fade p-0" style="overflow-x:auto;">
+    <table class="table table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">ID</th>
+          <th data-i18n="accidents.date">Date</th>
+          <th data-i18n="accidents.location">Location</th>
+          <th data-i18n="accidents.delegation">Delegation</th>
+          <th data-i18n="accidents.severity">Severity</th>
+          <th data-i18n="accidents.cause">Cause</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in accidents %}
+        <tr>
+          <td class="table-row-anim ps-4"><a href="{{ url_for('accidents_ui.accident_detail', accident_id=a.id) }}" class="text-decoration-none fw-bold">{{ a.id }}</a></td>
+          <td class="table-row-anim">{{ a.date_human if a.date_human is defined else a.date }}</td>
+          <td class="table-row-anim">{{ a.governorate if a.governorate is defined else a.location }}</td>
+          <td class="table-row-anim">{{ a.delegation if a.delegation is defined else '' }}</td>
+          <td class="table-row-anim text-capitalize">{{ a.severity }}</td>
+          <td class="table-row-anim">{{ (a.cause or '')|replace('_',' ') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if total is defined and total > per_page %}
+    {# Responsive centered pagination: numbers centered, jump form on the right on wide screens, stacked on small screens #}
+  <div id="server-pagination-wrapper" class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3 mb-3">
+      <div></div>
+      <nav aria-label="Page navigation" class="mx-auto">
+        <ul class="pagination mb-0">
+          {% set current = page|default(1) %}
+          <li class="page-item {% if current <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('accidents_ui.accidents', location=selected_location, cause=selected_cause, severity=selected_severity, start_date=start_date, end_date=end_date, page=current-1, per_page=per_page) }}" data-i18n="common.previous">Previous</a>
+          </li>
+
+          {# Server-provided condensed pages list (integers or '...') #}
+          {% for p in pages %}
+            {% if p == '...' %}
+              <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% else %}
+              <li class="page-item {% if p == current %}active{% endif %}"><a class="page-link" href="{{ url_for('accidents_ui.accidents', location=selected_location, cause=selected_cause, severity=selected_severity, start_date=start_date, end_date=end_date, page=p, per_page=per_page) }}">{{ p }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          <li class="page-item {% if current >= (last_page|default(1)) %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('accidents_ui.accidents', location=selected_location, cause=selected_cause, severity=selected_severity, start_date=start_date, end_date=end_date, page=current+1, per_page=per_page) }}" data-i18n="common.next">Next</a>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+  {% endif %}
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    <h3 class="empty-state-title">No accidents found</h3>
+    <p class="empty-state-description">There are no accident records matching your filters. Try adjusting your search criteria or import some data.</p>
+    <div class="empty-state-action">
+      <a href="{{ url_for('accidents_ui.accidents') }}" class="btn btn-outline-primary">Clear filters</a>
+      {% if session.role in ['government', 'police'] %}
+      <a href="{{ url_for('import_ui.import_csv') }}" class="btn btn-primary">Import CSV</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+<!-- AJAX filtering/pagination script -->
+<div id="init-params" data-page="{{ page|default(1) }}" data-per-page="{{ per_page|default(25) }}" data-highlight="{{ highlight_ids|join(',') if highlight_ids is defined else '' }}" data-server-rendered="{{ 1 if (total is defined and total > per_page) else 0 }}" style="display:none"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('form');
+  const tableBody = document.querySelector('table tbody');
+  const totalEl = document.querySelector('.mb-2.text-muted');
+  const paginationContainer = document.querySelector('nav[aria-label="Page navigation"]');
+  // set by init() so loadData can reference it
+  let highlightSet = new Set();
+
+  // Helper to build query string
+  function qs(params) {
+    return Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+  }
+
+  async function fetchFilters() {
+    try {
+      const r = await fetch('/ui/accidents/filters');
+      if (!r.ok) return;
+      const data = await r.json();
+      // Store filter data globally for later use
+      window.filterData = data;
+      
+      // Get server-side selected values from form data attributes
+      const serverValues = {
+        location: form.dataset.selectedLocation || '',
+        delegation: form.dataset.selectedDelegation || '',
+        severity: form.dataset.selectedSeverity || '',
+        cause: form.dataset.selectedCause || ''
+      };
+      
+      // populate selects if empty (server-side rendered may have them)
+      const locSel = document.querySelector('select[name="location"]');
+      const sevSel = document.querySelector('select[name="severity"]');
+      const causeSel = document.querySelector('select[name="cause"]');
+      const delSel = document.querySelector('select[name="delegation"]');
+      
+      if (locSel && locSel.options.length <= 1) {
+        data.locations.forEach(l => {
+          const o = document.createElement('option'); 
+          o.value = l; 
+          o.text = l;
+          if (l === serverValues.location) o.selected = true;
+          locSel.add(o);
+        });
+      }
+      if (sevSel && sevSel.options.length <= 1) {
+        data.severities.forEach(s => {
+          const o = document.createElement('option'); 
+          o.value = s; 
+          o.text = s[0].toUpperCase() + s.slice(1);
+          if (s === serverValues.severity) o.selected = true;
+          sevSel.add(o);
+        });
+      }
+      if (causeSel && causeSel.options.length <= 1) {
+        data.causes.forEach(c => {
+          const o = document.createElement('option'); 
+          o.value = c; 
+          o.text = (c || '').replace(/_/g, ' ');
+          if (c === serverValues.cause) o.selected = true;
+          causeSel.add(o);
+        });
+      }
+      if (delSel && delSel.options.length <= 1) {
+        (data.delegations || []).forEach(d => {
+          const o = document.createElement('option'); 
+          o.value = d; 
+          o.text = d;
+          if (d === serverValues.delegation) o.selected = true;
+          delSel.add(o);
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load filters', e);
+    }
+  }
+
+  async function loadData(params = {}) {
+    const page = params.page || 1;
+    const per_page = params.per_page || 25;
+    const query = qs(Object.assign({}, params, {page, per_page}));
+    
+    try {
+      const r = await fetch('/ui/accidents/data?' + query);
+      if (!r.ok) {
+        console.error('Failed to fetch data, status:', r.status);
+        const text = await r.text();
+        console.error('Response:', text);
+        return;
+      }
+      const j = await r.json();
+      console.log('Data loaded:', j);
+      const items = j.items || j.data || [];
+      const total = j.total || (j.pagination && j.pagination.total) || items.length;
+      const page = j.page || (j.pagination && j.pagination.page) || 1;
+      const per_page = j.per_page || (j.pagination && j.pagination.per_page) || per_page;
+
+      // update total
+      if (totalEl) totalEl.textContent = 'Total: ' + total;
+
+      // update table body
+      if (tableBody) {
+        tableBody.innerHTML = '';
+        items.forEach(a => {
+          const tr = document.createElement('tr');
+          if (highlightSet.has(a.id)) tr.classList.add('table-success');
+          const gov = a.governorate || a.location || '';
+          const del = a.delegation || '';
+          tr.innerHTML = `<td>${a.id}</td><td>${a.date_human || a.date || ''}</td><td>${gov}</td><td>${del}</td><td>${a.severity||''}</td><td>${(a.cause||'').replace(/_/g,' ')}</td>`;
+          tableBody.appendChild(tr);
+        });
+        // if highlighted rows present, scroll to first
+        const firstHighlight = tableBody.querySelector('.table-success');
+        if (firstHighlight) firstHighlight.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+      
+      // render pagination
+      renderPagination(total, page, per_page, params);
+      
+      // Update form dropdown values to match the active filters - AFTER pagination
+      // Create a copy of params to avoid closure issues
+      const filterParams = { ...params };
+      console.log('About to update form values with params:', filterParams);
+      if (form) {
+        const locSelect = form.querySelector('select[name="location"]');
+        const delSelect = form.querySelector('select[name="delegation"]');
+        const sevSelect = form.querySelector('select[name="severity"]');
+        const causeSelect = form.querySelector('select[name="cause"]');
+        const startInput = form.querySelector('input[name="start_date"]');
+        const endInput = form.querySelector('input[name="end_date"]');
+        
+        console.log('Form elements found:', {locSelect: !!locSelect, delSelect: !!delSelect, sevSelect: !!sevSelect, causeSelect: !!causeSelect});
+        
+        // Use requestAnimationFrame to ensure the browser has finished rendering
+        requestAnimationFrame(() => {
+          // Only update values if they exist in filterParams, otherwise keep current selection
+          if (locSelect && 'location' in filterParams) {
+            locSelect.value = filterParams.location || '';
+            if (filterParams.location) locSelect.classList.add('filter-applied');
+            else locSelect.classList.remove('filter-applied');
+            console.log('Location set to:', locSelect.value);
+          }
+          if (delSelect && 'delegation' in filterParams) {
+            delSelect.value = filterParams.delegation || '';
+            if (filterParams.delegation) delSelect.classList.add('filter-applied');
+            else delSelect.classList.remove('filter-applied');
+            console.log('Delegation set to:', delSelect.value);
+          }
+          if (sevSelect && 'severity' in filterParams) {
+            sevSelect.value = filterParams.severity || '';
+            if (filterParams.severity) sevSelect.classList.add('filter-applied');
+            else sevSelect.classList.remove('filter-applied');
+            console.log('Severity set to:', sevSelect.value);
+          }
+          if (causeSelect && 'cause' in filterParams) {
+            causeSelect.value = filterParams.cause || '';
+            if (filterParams.cause) causeSelect.classList.add('filter-applied');
+            else causeSelect.classList.remove('filter-applied');
+            console.log('Cause set to:', causeSelect.value);
+          }
+          if (startInput && 'start_date' in filterParams) startInput.value = filterParams.start_date || '';
+          if (endInput && 'end_date' in filterParams) endInput.value = filterParams.end_date || '';
+        });
+      }
+    } catch (e) {
+      console.warn('Error loading data', e);
+    }
+  }
+
+  function renderPagination(total, current, per_page, params) {
+    // remove old pagination
+    // remove any existing ajax or server pagination wrappers to avoid duplicates
+    const oldAjax = document.querySelector('#ajax-pagination-wrapper'); if (oldAjax) oldAjax.remove();
+    const oldServer = document.querySelector('#server-pagination-wrapper'); if (oldServer) oldServer.remove();
+    let nav = null;
+    const last_page = Math.max(1, Math.ceil(total / per_page));
+    if (last_page <= 1) return;
+
+  // Build wrapper similar to server-side layout: centered nav with optional jump form on the right
+  const wrapper = document.createElement('div'); wrapper.id = 'ajax-pagination-wrapper'; wrapper.className = 'd-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3 mb-3';
+  nav = document.createElement('nav'); nav.id = 'ajax-pagination'; nav.setAttribute('aria-label', 'Page navigation'); nav.className = 'mx-auto';
+  const ul = document.createElement('ul'); ul.className = 'pagination mb-0';
+
+    const makeLi = (p, label, disabled=false, active=false, isLink=true) => {
+      const li = document.createElement('li'); li.className = 'page-item' + (disabled? ' disabled':'') + (active? ' active':'');
+      const a = document.createElement(isLink ? 'a' : 'span');
+      a.className = 'page-link';
+      if (isLink) { a.href = '#'; }
+      a.textContent = label;
+      if (isLink) {
+        a.addEventListener('click', (ev) => { ev.preventDefault(); if (disabled) return; params.page = p; loadData(params); });
+      }
+      li.appendChild(a); return li;
+    };
+
+    // Previous
+    ul.appendChild(makeLi(Math.max(1, current-1), 'Previous', current<=1, false));
+
+    // Build condensed pages: first, last, and window around current
+    const pages = new Set();
+    pages.add(1);
+    pages.add(last_page);
+    const window = 2;
+    for (let p = Math.max(2, current - window); p <= Math.min(last_page - 1, current + window); p++) pages.add(p);
+    const sorted = Array.from(pages).sort((a,b)=>a-b);
+    let lastShown = null;
+    sorted.forEach(p => {
+      if (lastShown !== null && p - lastShown > 1) {
+        ul.appendChild(makeLi(null, '\u2026', true, false, false));
+      }
+      ul.appendChild(makeLi(p, String(p), false, p===current));
+      lastShown = p;
+    });
+
+    // Next
+    ul.appendChild(makeLi(Math.min(last_page, current+1), 'Next', current>=last_page, false));
+
+  nav.appendChild(ul);
+
+  // create a small jump-to-page control for AJAX pagination (right side on wide screens)
+  const jumpForm = document.createElement('form'); jumpForm.className = 'd-inline-block ms-sm-3'; jumpForm.addEventListener('submit', function(ev){ ev.preventDefault(); const val = jumpForm.querySelector('input[name="page"]').value; const p = parseInt(val,10); if (p && p > 0) { params.page = p; loadData(params); } });
+  const inputGroup = document.createElement('div'); inputGroup.className = 'input-group input-group-sm'; inputGroup.style.width = '160px';
+  const num = document.createElement('input'); num.type = 'number'; num.name = 'page'; num.className = 'form-control'; num.min = 1; num.placeholder = 'Page #';
+  const btn = document.createElement('button'); btn.className = 'btn btn-outline-secondary'; btn.type = 'submit'; btn.textContent = 'Go';
+  inputGroup.appendChild(num); inputGroup.appendChild(btn); jumpForm.appendChild(inputGroup);
+
+  // assemble wrapper: left spacer, centered nav, right jump form
+  const left = document.createElement('div');
+  wrapper.appendChild(left);
+  wrapper.appendChild(nav);
+  wrapper.appendChild(jumpForm);
+
+    // append wrapper after table
+    const table = document.querySelector('table');
+    if (table && table.parentNode) table.parentNode.insertAdjacentElement('afterend', wrapper);
+  }
+
+  // Bind form submit to AJAX
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const params = {};
+      // Include all filter keys, even empty ones, so loadData knows which values to update
+      ['location', 'delegation', 'severity', 'cause', 'start_date', 'end_date'].forEach(k => {
+        params[k] = fd.get(k) || '';
+      });
+      params.page = 1;
+      console.log('Form submitted with params:', params);
+      loadData(params);
+      return false;
+    });
+  }
+
+  // Debounce helper
+  function debounce(fn, wait) {
+    let t = null;
+    return function(...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  // Auto-apply filters when selects/inputs change (debounced)
+  const debouncedLoad = debounce(() => {
+    const fd = new FormData(form);
+    const p = {};
+    for (const [k,v] of fd.entries()) { if (v) p[k]=v; }
+    p.page = 1;
+    console.log('Debounced load with params:', p);
+    loadData(p);
+  }, 400);
+
+  // Attach change handler to selects and inputs - DISABLE auto-filtering for now
+  // if (form) {
+  //   form.querySelectorAll('select,input').forEach(el => el.addEventListener('change', debouncedLoad));
+  // }
+
+  // Export button: build URL and navigate to proxy; show spinner while starting
+  const exportLink = document.getElementById('export-link');
+  const spinner = document.getElementById('loading-spinner');
+  if (exportLink) {
+    exportLink.addEventListener('click', function(ev) {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const params = {};
+      for (const [k,v] of fd.entries()) { if (v) params[k]=v; }
+      const query = qs(params);
+      if (spinner) spinner.style.display = 'inline-block';
+      // navigate to proxy export URL
+      window.location = '/ui/accidents/export' + (query ? ('?' + query) : '');
+      // hide spinner after a short delay in case navigation doesn't start immediately
+      setTimeout(() => { if (spinner) spinner.style.display = 'none'; }, 3000);
+    });
+  }
+
+  // Initial load: fetch filters and then data (use server-provided values as defaults)
+  (async function init() {
+    // Read server-side selected values from form data attributes BEFORE fetching filters
+    const serverValues = {
+      location: form.dataset.selectedLocation || '',
+      delegation: form.dataset.selectedDelegation || '',
+      severity: form.dataset.selectedSeverity || '',
+      cause: form.dataset.selectedCause || '',
+      start_date: form.dataset.selectedStart || '',
+      end_date: form.dataset.selectedEnd || ''
+    };
+    console.log('Server-side selected values:', serverValues);
+    
+    await fetchFilters();
+    
+    // Apply server-side filter values to dropdowns AFTER filters are loaded
+    const locSelect = form.querySelector('select[name="location"]');
+    const delSelect = form.querySelector('select[name="delegation"]');
+    const sevSelect = form.querySelector('select[name="severity"]');
+    const causeSelect = form.querySelector('select[name="cause"]');
+    const startInput = form.querySelector('input[name="start_date"]');
+    const endInput = form.querySelector('input[name="end_date"]');
+    
+    // Set values and apply filter-applied class for active filters
+    if (locSelect) {
+      if (serverValues.location) {
+        locSelect.value = serverValues.location;
+        locSelect.classList.add('filter-applied');
+        console.log('Set location to:', serverValues.location, 'current value:', locSelect.value);
+      }
+    }
+    if (delSelect) {
+      if (serverValues.delegation) {
+        delSelect.value = serverValues.delegation;
+        delSelect.classList.add('filter-applied');
+        console.log('Set delegation to:', serverValues.delegation, 'current value:', delSelect.value);
+      }
+    }
+    if (sevSelect) {
+      if (serverValues.severity) {
+        sevSelect.value = serverValues.severity;
+        sevSelect.classList.add('filter-applied');
+        console.log('Set severity to:', serverValues.severity, 'current value:', sevSelect.value);
+      }
+    }
+    if (causeSelect) {
+      if (serverValues.cause) {
+        causeSelect.value = serverValues.cause;
+        causeSelect.classList.add('filter-applied');
+        console.log('Set cause to:', serverValues.cause, 'current value:', causeSelect.value);
+      }
+    }
+    if (startInput && serverValues.start_date) {
+      startInput.value = serverValues.start_date;
+    }
+    if (endInput && serverValues.end_date) {
+      endInput.value = serverValues.end_date;
+    }
+    
+    // build params from current querystring values in the form inputs
+    const fd = new FormData(form);
+    const params = {};
+    for (const [k,v] of fd.entries()) { if (v) params[k]=v; }
+    // read page/per_page from template variables if present
+  const initEl = document.getElementById('init-params');
+  const initPage = initEl ? parseInt(initEl.dataset.page || '1', 10) : 1;
+  const initPerPage = initEl ? parseInt(initEl.dataset.perPage || initEl.dataset.per_page || '25', 10) : 25;
+  const highlightData = initEl ? (initEl.dataset.highlight || '') : '';
+  const highlightSet = new Set((highlightData || '').split(',').map(s => s.trim()).filter(Boolean).map(s => parseInt(s,10)));
+  params.page = initPage;
+  params.per_page = initPerPage;
+    // Only auto-load if the server did not render the initial page to avoid duplicate pagination.
+    const serverRendered = initEl ? (initEl.dataset.serverRendered === '1') : false;
+    if (!serverRendered) {
+      loadData(params);
+    }
+    // Wire clear-imports button to submit delete action for ALL imported records
+    try {
+      const clearBtn = document.getElementById('clear-imports-btn');
+        if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+          if (!confirm('Delete ALL imported records? This cannot be undone.')) return;
+          // Submit to a local UI endpoint that proxies the delete call and redirects back to this page
+          const formEl = document.createElement('form');
+          formEl.method = 'POST';
+          formEl.action = '/ui/accidents/clear_imports';
+          document.body.appendChild(formEl);
+          formEl.submit();
+        });
+      }
+    } catch (e) { console.warn('Failed to wire clear imports', e); }
+  })();
+});
+</script>
+{% endblock %}

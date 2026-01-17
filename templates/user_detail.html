@@ -1,0 +1,35 @@
+{% extends 'base_private.html' %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card card-admin shadow p-4" style="min-width:350px; max-width: 450px; width:100%;">
+        <h2 class="text-center mb-4" data-i18n="userDetail.title">User Detail</h2>
+        {% if error %}
+            <div class="alert alert-danger text-center">{{ error }}</div>
+        {% elif user %}
+            <ul class="list-group mb-3">
+                <li class="list-group-item"><strong data-i18n="userDetail.fullName">Full Name:</strong> {{ user.full_name }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.gender">Gender:</strong> {{ user.gender }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.dob">Date of Birth:</strong> {{ user.date_of_birth }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.age">Age:</strong> {{ user.age }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.nationalId">National ID:</strong> {{ user.national_id }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.role">Role:</strong> <span class="badge bg-secondary">{{ user.role }}</span></li>
+                <li class="list-group-item"><strong data-i18n="userDetail.placeOfWork">Place of Work:</strong> {{ user.work_place or 'N/A' }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.badgeNumber">Badge Number:</strong> {{ user.badge_number or 'N/A' }}</li>
+                <li class="list-group-item"><strong data-i18n="userDetail.journalistId">Journalist ID:</strong> {{ user.journalist_id or 'N/A' }}</li>
+            </ul>
+            <form method="post" class="text-center">
+                <div class="mb-3">
+                    <label for="role" class="form-label" data-i18n="userDetail.changeRole">Change Role:</label>
+                    <select name="role" id="role" class="form-select w-auto d-inline-block ms-2">
+                        <option value="citizen" {% if user.role == 'citizen' %}selected{% endif %} data-i18n="users.citizen">Citizen</option>
+                        <option value="police" {% if user.role == 'police' %}selected{% endif %} data-i18n="users.police">Police</option>
+                        <option value="media" {% if user.role == 'media' %}selected{% endif %} data-i18n="users.media">Media</option>
+                        <option value="government" {% if user.role == 'government' %}selected{% endif %} data-i18n="users.government">Government</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" data-i18n="userDetail.updateRole">Update Role</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

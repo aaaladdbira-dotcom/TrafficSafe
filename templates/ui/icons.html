@@ -1,0 +1,71 @@
+{# Lucide (outline) icon system.
+   Usage: {% from "ui/icons.html" import ui_icon %}
+          {{ ui_icon('mail') }}
+
+   Notes:
+   - Single consistent outline family (Discord-like).
+   - The base templates load Lucide and call lucide.createIcons().
+   - `style` is kept for backward compatibility but ignored.
+#}
+
+{% macro ui_icon(name, class='', title='', style='') -%}
+{% set icon_map = {
+    'sparkles': 'sparkles',
+    'shield': 'shield-check',
+    'bolt': 'zap',
+    'wand': 'wand',
+    'mail': 'mail',
+    'lock': 'lock',
+    'id-card': 'id-card',
+    'user-add': 'user-plus',
+    'user': 'user',
+    'chart': 'bar-chart-3',
+    'bell': 'bell',
+    'display': 'monitor',
+    'settings': 'settings',
+    'upload': 'upload',
+    'cloud-upload': 'cloud-upload',
+    'users': 'users',
+    'clipboard': 'clipboard-list',
+    'plus': 'plus',
+    'minus': 'minus',
+    'file': 'file',
+    'logout': 'log-out',
+    'check': 'check',
+    'x': 'x',
+    'arrow-left': 'arrow-left',
+    'eye': 'eye',
+    'google': 'globe',
+    'facebook': 'globe',
+    'dashboard': 'layout-dashboard',
+    'stats': 'line-chart',
+    'car': 'car',
+    'location': 'map-pin',
+    'calendar': 'calendar',
+    'time': 'clock',
+    'edit': 'pencil',
+    'delete': 'trash-2',
+    'search': 'search',
+    'filter': 'filter',
+    'download': 'download',
+    'print': 'printer',
+    'info': 'info',
+    'warning': 'alert-triangle',
+    'error': 'x-circle',
+    'success': 'check-circle',
+    'menu': 'menu',
+    'close': 'x',
+    'home': 'home',
+    'refresh': 'refresh-cw',
+    'star': 'star',
+    'chevron-down': 'chevron-down',
+    'expand': 'maximize-2',
+    'layers': 'layers',
+    'danger': 'alert-circle',
+    'flash': 'zap',
+    'clock': 'clock',
+    'arrow': 'trending-up'
+} %}
+{% set icon_name = icon_map.get(name, 'help-circle') %}
+<i data-lucide="{{ icon_name }}" class="ui-icon {{ class }}" {% if title %}aria-label="{{ title }}" title="{{ title }}"{% else %}aria-hidden="true"{% endif %}></i>
+{%- endmacro %}

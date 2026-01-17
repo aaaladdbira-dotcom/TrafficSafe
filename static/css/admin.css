@@ -1,0 +1,306 @@
+/* Admin-style UI improvements for management pages */
+.table-admin thead {
+  background: var(--ui-primary, #212C4D);
+  color: #fff;
+}
+.table-admin tbody tr:hover {
+  background: #f1f3f5;
+}
+.card-admin {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(33,37,41,0.05);
+}
+.btn-admin {
+  min-width: 100px;
+}
+.badge-status {
+  font-size: 1em;
+  padding: 0.5em 1em;
+}
+.badge-status.pending {
+  background: rgba(33, 44, 77, 0.10);
+  color: var(--ui-text);
+  border: 1px solid rgba(33, 44, 77, 0.18);
+}
+.badge-status.confirmed {
+  background: rgba(33, 44, 77, 0.14);
+  color: var(--ui-text);
+  border: 1px solid rgba(33, 44, 77, 0.22);
+}
+.badge-status.rejected {
+  background: rgba(33, 44, 77, 0.16);
+  color: var(--ui-text);
+  border: 1px solid rgba(33, 44, 77, 0.24);
+}
+
+/* Statistics page styles */
+.stats-title {
+  font-weight: 700;
+  color: var(--ui-text);
+}
+
+.stat-card .card-body {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:110px;
+}
+
+.stat-value {
+  font-size:28px;
+  font-weight:700;
+  color: var(--ui-text);
+}
+
+.card.stat-card {
+  border: 0;
+}
+
+/* Glassmorphism card style for KPI and chart cards */
+.glass-card {
+  /* Use token system for consistent theming */
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+}
+
+/* Remove opaque glass card look on the statistics carousel pages to show a flat background */
+#statsCarousel .glass-card,
+#statsCarousel .card.chart-card,
+#statsCarousel .stat-card {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.card.chart-card {
+  border: 0;
+  box-shadow: 0 6px 30px rgba(2,6,23,0.06);
+}
+
+.chart-container {
+  position: relative;
+  height: 320px;
+  width: 100%;
+}
+
+/* Carousel / swipe container */
+#statsCarousel {
+  position: relative;
+  overflow: hidden;
+}
+.carousel-pages { display:flex; transition: transform 360ms ease; align-items:flex-start; }
+.carousel-page { min-width: 100%; padding: 0 12px; box-sizing: border-box; }
+.carousel-arrow { position: absolute; top: 48%; transform: translateY(-50%); width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.85); backdrop-filter: blur(6px); box-shadow:0 8px 22px rgba(2,6,23,0.10); cursor:pointer; z-index:200; border: 1px solid rgba(2,6,23,0.04); }
+.carousel-arrow.left { left: 10px; }
+.carousel-arrow.right { right: 10px; }
+.carousel-arrow svg { width:20px; height:20px; fill:#061426; }
+.carousel-arrow:focus { outline: 3px solid rgba(59,130,246,0.18); }
+.carousel-arrow[role="button"] { cursor: pointer; }
+
+.chart-container.small {
+  height: 180px;
+}
+
+.chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Skeleton loader styles */
+.skeleton {
+  background: linear-gradient(90deg, #f0f2f5 0%, #e6eef8 50%, #f0f2f5 100%);
+  background-size: 200% 100%;
+  animation: skeleton-anim 1.2s linear infinite;
+  border-radius: 6px;
+}
+
+@keyframes skeleton-anim {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  min-height: 110px;
+}
+
+.skeleton-chart {
+  height: 100%;
+}
+
+/* Modern navigation highlight */
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.96) !important;
+  border-radius: 12px;
+}
+
+/* Pager / page controls for charts */
+.page-controls {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.page-btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(33, 44, 77, 0.06);
+  border: 1px solid rgba(33, 44, 77, 0.10);
+  color: var(--ui-text);
+  font-weight:600;
+}
+.page-btn:hover { background: rgba(33, 44, 77, 0.10); }
+.page-indicator {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(33, 44, 77, 0.08);
+  color: var(--ui-text);
+  font-weight:700;
+}
+
+@media (max-width: 767px) {
+  .page-controls { gap:6px; }
+  .page-btn { padding: 6px 10px; font-size: 0.9rem; }
+  .page-indicator { padding: 5px 8px; font-size: 0.9rem; }
+}
+
+/* Filter panel */
+.filter-panel {
+  /* make the filter area visually part of the page (no white card) */
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  background: transparent;
+  backdrop-filter: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.filter-panel .form-control-sm, .filter-panel .form-select-sm { min-width: 140px; }
+
+/* grid layout for the statistics filter panel: left-to-right alignment on wide screens
+   with a full-width actions row under the controls */
+.filter-panel .filter-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, auto);
+  gap: 8px 12px;
+  align-items: end;
+  width: 100%;
+  grid-template-rows: auto auto; /* controls row, actions row */
+  padding: 6px 0; /* small internal spacing */
+}
+.filter-panel .filter-grid > div { display:flex; flex-direction:column; }
+.filter-panel .btn { min-width: 72px; }
+.filter-panel .filter-grid .filter-actions { grid-column: 1 / -1; display:flex; justify-content:flex-start; padding-top:6px; }
+
+/* fade animation for cards when showing/hiding charts */
+.card.fade-hidden { opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity 260ms ease, transform 260ms ease; }
+.card.fade-visible { opacity: 1; transform: translateY(0); pointer-events: auto; transition: opacity 260ms ease, transform 260ms ease; }
+
+/* inline no-data message used when charts have no data */
+.no-data-message {
+  padding: 18px 14px;
+  color: var(--ui-muted);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* === DARK MODE FIXES === */
+body.dark-mode .glass-card,
+body.dark-mode .card.chart-card,
+body.dark-mode .stat-card {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .carousel-arrow {
+  background: rgba(33, 44, 77, 0.85);
+  border-color: rgba(209, 219, 249, 0.12);
+}
+
+body.dark-mode .carousel-arrow svg {
+  fill: var(--brand-200);
+}
+
+body.dark-mode .page-btn {
+  background: rgba(209, 219, 249, 0.08);
+  border-color: rgba(209, 219, 249, 0.12);
+  color: var(--ui-text);
+}
+
+body.dark-mode .page-btn:hover {
+  background: rgba(209, 219, 249, 0.12);
+}
+
+body.dark-mode .page-indicator {
+  background: rgba(209, 219, 249, 0.10);
+  color: var(--ui-text);
+}
+
+body.dark-mode .skeleton {
+  background: linear-gradient(90deg, var(--brand-700) 0%, var(--brand-600) 50%, var(--brand-700) 100%);
+  background-size: 200% 100%;
+}
+
+body.dark-mode .heatmap-legend {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .leaflet-container {
+  background: var(--brand-700);
+}
+
+body.dark-mode .region-info {
+  background: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+/* heatmap grid styles */
+.heatmap-grid { display: inline-block; border-collapse: collapse; }
+.heatmap-grid .hm-row { display: flex; }
+.heatmap-grid .hm-cell { width: 36px; height: 22px; margin: 1px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; color:#062; border-radius:3px; }
+.heatmap-legend { margin-top:8px; font-size:0.85rem; color:#475569 }
+
+@media (max-width: 991px) {
+  .filter-panel { position: static; }
+  .filter-panel .form-control-sm, .filter-panel .form-select-sm { min-width: 120px; }
+}
+
+/* Debug overlay used during development to show initialization status on the stats page */
+#statsDebug {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2000;
+  background: rgba(2,6,23,0.9);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 360px;
+  max-height: 220px;
+  overflow: auto;
+  box-shadow: 0 6px 24px rgba(2,6,23,0.4);
+}
+#statsDebug h6 { margin: 0 0 6px 0; font-size: 12px; }
+#statsDebug ul { margin: 0; padding-left: 18px; }
+
+/* Map container */
+.map-container {
+  height: 520px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.leaflet-container { background: #f8fafc; }
+
+/* Region info panel */
+.region-info { width: 320px; border-radius: 10px; }
+.region-info .card-body { padding: 12px; }
+.region-info h6 { margin: 0; font-weight: 700; }
+.region-info p { margin: 6px 0; }

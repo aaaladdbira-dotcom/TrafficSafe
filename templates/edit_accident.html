@@ -1,0 +1,107 @@
+{% extends 'base_private.html' %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center page-fade" style="min-height: 80vh;">
+  <div class="glass-card card-anim" style="max-width: 500px; width: 100%;">
+    <h3 class="mb-4 text-center" data-i18n="editAccident.title">Edit Accident #{{ accident.id }}</h3>
+    <form id="edit-accident-form" autocomplete="off">
+      <div class="mb-3">
+        <label class="form-label" data-i18n="editAccident.date">Date</label>
+        <input type="text" name="date" class="form-control" value="{{ accident.date_human if accident.date_human is defined else accident.date }}" readonly>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="editAccident.location">Location</label>
+        <input type="text" name="location" class="form-control" value="{{ accident.governorate if accident.governorate is defined else accident.location }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="editAccident.delegation">Delegation</label>
+        <input type="text" name="delegation" class="form-control" value="{{ accident.delegation }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="editAccident.severity">Severity</label>
+        <select name="severity" class="form-select">
+          <option value="fatal" {% if accident.severity == 'fatal' %}selected{% endif %} data-i18n="accidents.fatal">Fatal</option>
+          <option value="serious" {% if accident.severity == 'serious' %}selected{% endif %} data-i18n="accidents.serious">Serious</option>
+          <option value="minor" {% if accident.severity == 'minor' %}selected{% endif %} data-i18n="accidents.minor">Minor</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" data-i18n="editAccident.cause">Cause</label>
+        <input type="text" name="cause" class="form-control" value="{{ accident.cause }}">
+      </div>
+      <div id="form-status" class="mb-2" style="min-height:1.5em;"></div>
+      <div class="d-flex justify-content-center gap-2">
+  <button id="save-btn" type="submit" class="btn btn-primary">
+          <span id="save-btn-text" data-i18n="editAccident.saveChanges">Save Changes</span>
+          <span id="save-btn-spinner" class="spinner-border spinner-border-sm ms-2" style="display:none" role="status" aria-hidden="true"></span>
+        </button>
+        <a href="{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}" class="btn btn-outline-secondary" data-i18n="common.cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+// AJAX form submission for accident edit
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('edit-accident-form');
+  const saveBtn = document.getElementById('save-btn');
+  const saveBtnText = document.getElementById('save-btn-text');
+  const saveBtnSpinner = document.getElementById('save-btn-spinner');
+  const statusDiv = document.getElementById('form-status');
+  let submitting = false;
+  
+  // Helper for translations
+  function t(key) {
+    var lang = localStorage.getItem('app-language') || 'en';
+    var dict = (window.AppTranslations && window.AppTranslations[lang]) || {};
+    return dict[key] || key;
+  }
+  
+  if (!form) return;
+  form.addEventListener('submit', async function(ev) {
+    ev.preventDefault();
+    if (submitting) return;
+    submitting = true;
+    statusDiv.textContent = '';
+    saveBtn.disabled = true;
+    saveBtnSpinner.style.display = '';
+    saveBtnText.textContent = t('editAccident.saving');
+    // Build payload
+    const data = {
+      location: form.location.value,
+      delegation: form.delegation.value,
+      severity: form.severity.value,
+      cause: form.cause.value
+    };
+    try {
+      const resp = await fetch(`/api/accidents/{{ accident.id }}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || sessionStorage.getItem('access_token') || ''}`
+        },
+        body: JSON.stringify(data)
+      });
+      const result = await resp.json();
+      if (resp.ok) {
+        statusDiv.textContent = t('editAccident.saved');
+        statusDiv.className = 'text-success status-success';
+        setTimeout(() => {
+          window.location.href = "{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}";
+        }, 600);
+      } else {
+        statusDiv.textContent = result.message || t('editAccident.errorSaving');
+        statusDiv.className = 'text-danger status-error';
+      }
+    } catch (e) {
+      statusDiv.textContent = t('editAccident.networkError');
+      statusDiv.className = 'text-danger status-error';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtnSpinner.style.display = 'none';
+      saveBtnText.textContent = t('editAccident.saveChanges');
+      submitting = false;
+    }
+  });
+});
+</script>
+{% endblock %}

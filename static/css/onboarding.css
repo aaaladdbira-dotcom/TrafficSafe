@@ -1,0 +1,232 @@
+/* ===================================================
+   ONBOARDING TOUR STYLES
+   =================================================== */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+
+.tour-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 15, 37, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+.tour-spotlight {
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: 
+    0 0 0 9999px rgba(8, 15, 37, 0.75),
+    0 0 20px rgba(59, 130, 246, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.tour-popover {
+  position: absolute;
+  width: 340px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(8, 15, 37, 0.25);
+  overflow: hidden;
+  animation: tourPopoverIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100000;
+}
+
+@keyframes tourPopoverIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tour-popover[data-position="center"] {
+  animation: tourPopoverCenter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tourPopoverCenter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.tour-popover-arrow {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: white;
+  transform: rotate(45deg);
+}
+
+.tour-popover[data-position="right"] .tour-popover-arrow {
+  left: -8px;
+  top: 50%;
+  margin-top: -8px;
+}
+
+.tour-popover[data-position="left"] .tour-popover-arrow {
+  right: -8px;
+  top: 50%;
+  margin-top: -8px;
+}
+
+.tour-popover[data-position="bottom"] .tour-popover-arrow {
+  top: -8px;
+  left: 50%;
+  margin-left: -8px;
+}
+
+.tour-popover[data-position="top"] .tour-popover-arrow {
+  bottom: -8px;
+  left: 50%;
+  margin-left: -8px;
+}
+
+.tour-popover[data-position="center"] .tour-popover-arrow {
+  display: none;
+}
+
+.tour-popover-content {
+  padding: 24px;
+}
+
+.tour-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #080F25;
+  margin: 0 0 8px 0;
+}
+
+.tour-description {
+  font-size: 14px;
+  color: #7E89AC;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tour-popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #F8FAFC;
+  border-top: 1px solid #E5E7EB;
+}
+
+.tour-progress {
+  font-size: 13px;
+  color: #7E89AC;
+}
+
+.tour-step-current {
+  font-weight: 600;
+  color: #3B82F6;
+}
+
+.tour-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.tour-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: transparent;
+  color: #7E89AC;
+  width: auto;
+  margin: 0;
+}
+
+.tour-btn:hover {
+  background: #E5E7EB;
+  color: #374151;
+  transform: none;
+  box-shadow: none;
+}
+
+.tour-btn-primary {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+}
+
+.tour-btn-primary:hover {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: white;
+}
+
+.tour-btn-skip {
+  color: #AEB9E1;
+}
+
+.tour-btn-skip:hover {
+  color: #7E89AC;
+  background: transparent;
+}
+
+/* Dark Mode */
+body.dark-mode .tour-popover,
+[data-theme="dark"] .tour-popover {
+  background: var(--ui-surface);
+}
+
+body.dark-mode .tour-popover-arrow,
+[data-theme="dark"] .tour-popover-arrow {
+  background: var(--ui-surface);
+}
+
+body.dark-mode .tour-title,
+[data-theme="dark"] .tour-title {
+  color: var(--ui-text);
+}
+
+body.dark-mode .tour-description,
+[data-theme="dark"] .tour-description {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .tour-popover-footer,
+[data-theme="dark"] .tour-popover-footer {
+  background: var(--brand-700);
+  border-color: var(--ui-border);
+}
+
+body.dark-mode .tour-btn:hover,
+[data-theme="dark"] .tour-btn:hover {
+  background: var(--brand-600);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .tour-popover {
+    width: calc(100% - 32px);
+    left: 16px !important;
+    right: 16px;
+    transform: none !important;
+  }
+  
+  .tour-popover[data-position="center"] {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  .tour-popover-arrow {
+    display: none;
+  }
+}

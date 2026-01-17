@@ -1,0 +1,280 @@
+{% extends 'base_private.html' %}
+
+{% block head_extra %}
+<style>
+/* Report Form Styling */
+.report-container {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.report-header-icon {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: #ef4444;
+}
+
+.report-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ui-text);
+  margin: 0 0 8px;
+}
+
+.report-header p {
+  font-size: 14px;
+  color: var(--ui-muted);
+  margin: 0;
+}
+
+.report-form {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.report-form .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-form .form-control,
+.report-form .form-select {
+  border: 2px solid var(--ui-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  transition: all 200ms ease;
+  background: var(--ui-surface);
+}
+
+.report-form .form-control:hover,
+.report-form .form-select:hover {
+  border-color: var(--ui-border-strong);
+}
+
+.report-form .form-control:focus,
+.report-form .form-select:focus {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 4px var(--ui-focus);
+}
+
+.report-form .form-text {
+  font-size: 12px;
+  color: var(--ui-muted);
+  margin-top: 6px;
+}
+
+.report-form .mb-3 {
+  margin-bottom: 20px !important;
+}
+
+.report-submit {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.report-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.35);
+}
+
+.report-submit:active {
+  transform: translateY(0);
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  color: #dc2626;
+  padding: 16px 20px;
+}
+
+.alert-danger ul {
+  padding-left: 20px;
+}
+
+/* Field icons */
+.field-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ui-muted);
+}
+
+/* ============================================
+   REPORT ACCIDENT DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode .report-container {
+  color: var(--ui-text);
+}
+
+body.dark-mode .report-header h1 {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .report-header p {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .report-header-icon {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .report-form {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .form-label {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .form-control::placeholder {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .form-select option {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .form-text {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .alert-danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+body.dark-mode #voiceCommandBtn {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode #voiceCommandBtn.listening {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+  <div class="report-header">
+    <div class="report-header-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    <h2 data-i18n="report.title">Report an Accident</h2>
+    <p data-i18n="report.subtitle">Help improve road safety by reporting accidents</p>
+  </div>
+
+  {% if errors %}
+    <div class="alert alert-danger mb-4">
+      <ul class="mb-0">
+        {% for error in errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" class="report-form">
+    <div class="mb-3">
+      <label for="date" class="form-label">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span data-i18n="report.dateTime">Date and Time</span>
+      </label>
+      <input type="datetime-local" class="form-control" id="date" name="date" required value="{{ form.date if form and form.date else '' }}">
+    </div>
+    <div class="mb-3">
+      <label for="location" class="form-label">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span data-i18n="report.location">Location (Governorate)</span>
+      </label>
+      <input type="text" class="form-control" id="location" name="location" data-i18n-placeholder="report.locationPlaceholder" placeholder="e.g., Tunis, Sfax, Sousse" required value="{{ form.location if form and form.location else '' }}">
+    </div>
+    <div class="mb-3">
+      <label for="delegation" class="form-label">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"></path></svg>
+        <span data-i18n="report.delegation">Delegation</span>
+      </label>
+      <input type="text" class="form-control" id="delegation" name="delegation" data-i18n-placeholder="report.delegationPlaceholder" placeholder="Specific area or district" required value="{{ form.delegation if form and form.delegation else '' }}">
+    </div>
+    <div class="mb-3">
+      <label for="severity" class="form-label">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span data-i18n="report.severity">Severity</span>
+      </label>
+      <select class="form-select" id="severity" name="severity" required>
+        <option value="" data-i18n="report.selectSeverity">Select severity level</option>
+        <option value="minor" {% if form and form.severity == 'minor' %}selected{% endif %} data-i18n="report.severityMinor">Minor - Property damage only</option>
+        <option value="moderate" {% if form and form.severity == 'moderate' %}selected{% endif %} data-i18n="report.severityModerate">Moderate - Minor injuries</option>
+        <option value="severe" {% if form and form.severity == 'severe' %}selected{% endif %} data-i18n="report.severitySevere">Severe - Serious injuries</option>
+        <option value="fatal" {% if form and form.severity == 'fatal' %}selected{% endif %} data-i18n="report.severityFatal">Fatal - Loss of life</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="phone" class="form-label">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <span data-i18n="report.phone">Contact Phone</span>
+      </label>
+      <input type="text" class="form-control" id="phone" name="phone" required placeholder="+216 XX XXX XXX" value="{{ form.phone if form and form.phone else '' }}">
+      <div class="form-text" data-i18n="report.phoneHint">Tunisia format: +216 followed by 8 digits</div>
+    </div>
+    <button type="submit" class="report-submit">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+      <span data-i18n="report.submitBtn">Submit Report</span>
+    </button>
+  </form>
+</div>
+{% endblock %}

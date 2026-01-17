@@ -1,0 +1,1333 @@
+{% extends "base.html" %}
+
+{% block title %}Traffic News - TrafficSafe{% endblock %}
+
+{% block content %}
+<style>
+    .traffic-news-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Page Header */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .page-header-left h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .page-header-left p {
+        color: var(--ui-text-muted);
+        font-size: 0.9rem;
+        margin: 0.25rem 0 0 0;
+    }
+    
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.75rem;
+        background: #ef4444;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .live-indicator::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    
+    .refresh-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .refresh-btn:hover {
+        background: var(--ui-primary);
+        color: white;
+        border-color: var(--ui-primary);
+    }
+    
+    .refresh-btn.loading .icon {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Main Grid Layout - Prevent overflow */
+    .news-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    
+    @media (max-width: 1024px) {
+        .news-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Sidebar - Fixed width, prevent overflow */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 280px;
+        max-width: 280px;
+        overflow: hidden;
+    }
+    
+    /* Weather Card */
+    .weather-card {
+        background: linear-gradient(135deg, var(--brand-700, #212C4D), var(--brand-600, #37446B));
+        border-radius: 16px;
+        padding: 1.25rem;
+        color: white;
+    }
+    
+    .weather-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .weather-location {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .weather-temp {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    
+    .weather-condition {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+    
+    .weather-icon {
+        font-size: 2.5rem;
+    }
+    
+    .weather-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        margin-top: 1rem;
+    }
+    
+    .weather-detail {
+        text-align: center;
+    }
+    
+    .weather-detail-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        opacity: 0.8;
+        letter-spacing: 0.5px;
+    }
+    
+    .weather-detail-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+    
+    .driving-conditions {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .driving-conditions.good { background: rgba(16, 185, 129, 0.3); }
+    .driving-conditions.moderate { background: rgba(245, 158, 11, 0.3); }
+    .driving-conditions.poor { background: rgba(239, 68, 68, 0.3); }
+    
+    /* Quick Stats Card */
+    .stats-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        padding: 1.25rem;
+    }
+    
+    .stats-card h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    
+    .stat-item {
+        padding: 0.75rem;
+        background: var(--ui-bg);
+        border-radius: 10px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--ui-primary);
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+        margin-top: 0.15rem;
+    }
+    
+    /* Emergency Card */
+    .emergency-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        padding: 1.25rem;
+    }
+    
+    .emergency-card h3 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 0.75rem 0;
+        color: #ef4444;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .emergency-numbers {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .emergency-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+    }
+    
+    .emergency-item:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+    
+    .emergency-item .icon {
+        font-size: 1.1rem;
+    }
+    
+    .emergency-item .name {
+        flex: 1;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .emergency-item .number {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #ef4444;
+    }
+    
+    /* Main Content - Prevent overflow */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    
+    /* Alerts Section - Clean styling */
+    .alerts-section {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* News Section - Clean styling */
+    .news-section {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--ui-border);
+        background: var(--ui-bg);
+    }
+    
+    .section-header h2 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--ui-text);
+    }
+    
+    .section-header .count {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        background: var(--ui-primary);
+        color: white;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+    
+    .alerts-filters {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--ui-bg);
+        border-bottom: 1px solid var(--ui-border);
+        overflow-x: auto;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 0.4rem 0.85rem;
+        background: transparent;
+        border: 1px solid var(--ui-border);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+    
+    .filter-btn:hover {
+        border-color: var(--ui-primary);
+        background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .filter-btn.active {
+        background: var(--ui-primary);
+        border-color: var(--ui-primary);
+        color: white;
+    }
+    
+    .alerts-list {
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
+        overflow-y: auto;
+        max-height: 450px;
+    }
+
+    .news-list {
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .news-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--ui-bg);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    
+    .news-item:hover {
+        border-color: var(--ui-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .news-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .news-icon.accident { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .news-icon.traffic { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .news-icon.roadwork { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .news-icon.weather { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+    .news-icon.police { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .news-icon.transport { background: linear-gradient(135deg, #10b981, #059669); }
+    
+    .news-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .news-source {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .news-source .name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ui-primary);
+    }
+    
+    .news-source .type {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+        background: var(--ui-border);
+        border-radius: 8px;
+        color: var(--ui-text-muted);
+        text-transform: uppercase;
+    }
+    
+    .news-content h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0 0 0.35rem 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .news-content .summary {
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+        line-height: 1.4;
+        margin: 0 0 0.35rem 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .news-meta {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+    }
+    
+    /* Load More */
+    .load-more {
+        text-align: center;
+        padding: 1rem;
+        border-top: 1px solid var(--ui-border);
+    }
+    
+    .load-more-btn {
+        padding: 0.6rem 1.5rem;
+        background: var(--ui-primary);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .load-more-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Loading */
+    .loading-spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 2rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .loading-spinner::before {
+        content: '';
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--ui-border);
+        border-top-color: var(--ui-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
+    /* Alert Items - Light Mode with colored cards */
+    .alert-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--ui-bg);
+        border-radius: 12px;
+        border-left: 4px solid transparent;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .alert-item:hover {
+        transform: translateX(4px);
+    }
+    
+    .alert-item.critical {
+        border-left-color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.2);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.04));
+    }
+    .alert-item.high {
+        border-left-color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.2);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.04));
+    }
+    .alert-item.medium {
+        border-left-color: #3b82f6;
+        border-color: rgba(59, 130, 246, 0.2);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(37, 99, 235, 0.04));
+    }
+    .alert-item.low {
+        border-left-color: #10b981;
+        border-color: rgba(16, 185, 129, 0.2);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04));
+    }
+    
+    .alert-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .alert-item.critical .alert-icon { background: rgba(239, 68, 68, 0.15); }
+    .alert-item.high .alert-icon { background: rgba(245, 158, 11, 0.15); }
+    .alert-item.medium .alert-icon { background: rgba(59, 130, 246, 0.15); }
+    .alert-item.low .alert-icon { background: rgba(16, 185, 129, 0.15); }
+    
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .alert-content h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        line-height: 1.3;
+    }
+    
+    .alert-content p {
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+        margin: 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .alert-meta {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.35rem;
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+    }
+    
+    /* ============================================
+       TRAFFIC NEWS COMPREHENSIVE DARK MODE
+       ============================================ */
+    
+    body.dark-mode .traffic-news-page {
+        color: var(--ui-text);
+    }
+    
+    body.dark-mode .page-header-left h1,
+    body.dark-mode .section-header h2 {
+        color: var(--brand-100) !important;
+    }
+    
+    body.dark-mode .page-header-left p {
+        color: var(--brand-300) !important;
+    }
+    
+    body.dark-mode .refresh-btn {
+        background: var(--brand-700) !important;
+        border: 2px solid var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 10px !important;
+    }
+    
+    body.dark-mode .refresh-btn:hover {
+        background: var(--brand-500) !important;
+        border-color: var(--brand-400) !important;
+        color: var(--brand-800) !important;
+    }
+    
+    /* Sidebar Cards - Enhanced Dark Mode */
+    body.dark-mode .stats-card,
+    body.dark-mode .emergency-card {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    body.dark-mode .stats-card h3,
+    body.dark-mode .emergency-card h3 {
+        color: var(--brand-100) !important;
+        font-weight: 700 !important;
+    }
+    
+    body.dark-mode .stat-item {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 8px !important;
+    }
+    
+    body.dark-mode .stat-value {
+        color: var(--brand-200) !important;
+        font-weight: 700 !important;
+    }
+    
+    body.dark-mode .stat-label {
+        color: var(--brand-400) !important;
+    }
+    
+    body.dark-mode .emergency-item {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 8px !important;
+    }
+    
+    body.dark-mode .emergency-item:hover {
+        background: rgba(239, 68, 68, 0.15) !important;
+        border-color: rgba(239, 68, 68, 0.4) !important;
+    }
+    
+    body.dark-mode .emergency-item .icon {
+        background: rgba(239, 68, 68, 0.2) !important;
+    }
+    
+    body.dark-mode .emergency-item .name {
+        color: var(--brand-200) !important;
+        font-weight: 600 !important;
+    }
+    
+    body.dark-mode .emergency-item .number {
+        color: #f87171 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Weather Widget in Sidebar - Dark Mode */
+    body.dark-mode .weather-widget,
+    body.dark-mode .weather-card {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+    }
+    
+    body.dark-mode .weather-card h3 {
+        color: var(--brand-100) !important;
+    }
+    
+    body.dark-mode .weather-info {
+        color: var(--brand-200) !important;
+    }
+    
+    body.dark-mode .weather-temp {
+        color: var(--brand-100) !important;
+    }
+    
+    body.dark-mode .weather-desc {
+        color: var(--brand-300) !important;
+    }
+    
+    /* Alerts & News Sections - Enhanced Dark Mode */
+    body.dark-mode .alerts-section,
+    body.dark-mode .news-section {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    body.dark-mode .section-header {
+        border-color: var(--brand-600) !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    body.dark-mode .alerts-filters {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem !important;
+    }
+    
+    body.dark-mode .filter-btn {
+        background: var(--brand-700) !important;
+        border: 2px solid var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+    }
+    
+    body.dark-mode .filter-btn:hover {
+        border-color: var(--brand-400) !important;
+        background: var(--brand-600) !important;
+    }
+    
+    body.dark-mode .filter-btn.active {
+        background: linear-gradient(135deg, var(--brand-500), var(--brand-600)) !important;
+        border-color: var(--brand-400) !important;
+        color: var(--brand-100) !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Alert Items - Enhanced Dark Mode */
+    body.dark-mode .alert-item {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    body.dark-mode .alert-item:hover {
+        border-color: var(--brand-500) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    body.dark-mode .alert-item.critical { 
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08)) !important;
+        border-color: rgba(239, 68, 68, 0.3) !important;
+    }
+    body.dark-mode .alert-item.high { 
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08)) !important;
+        border-color: rgba(245, 158, 11, 0.3) !important;
+    }
+    body.dark-mode .alert-item.medium { 
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08)) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+    }
+    body.dark-mode .alert-item.low { 
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08)) !important;
+        border-color: rgba(16, 185, 129, 0.3) !important;
+    }
+    
+    body.dark-mode .alert-icon {
+        border-radius: 10px !important;
+        font-size: 1.5rem !important;
+    }
+    
+    body.dark-mode .alert-content h4 {
+        color: var(--brand-100) !important;
+        font-weight: 600 !important;
+    }
+    
+    body.dark-mode .alert-content p {
+        color: var(--brand-300) !important;
+    }
+    
+    body.dark-mode .alert-meta {
+        color: var(--brand-400) !important;
+    }
+    
+    body.dark-mode .alert-badge {
+        background: var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+    }
+    
+    /* News Items - Enhanced Dark Mode */
+    body.dark-mode .news-item {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    
+    body.dark-mode .news-item:hover {
+        border-color: var(--brand-400) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    body.dark-mode .news-source .type {
+        background: var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+    }
+    
+    body.dark-mode .news-source .name {
+        color: var(--brand-300) !important;
+        font-weight: 500 !important;
+    }
+    
+    body.dark-mode .news-content h4 {
+        color: var(--brand-100) !important;
+        font-weight: 600 !important;
+    }
+    
+    body.dark-mode .news-content .summary {
+        color: var(--brand-300) !important;
+        line-height: 1.6 !important;
+    }
+    
+    body.dark-mode .news-meta {
+        color: var(--brand-400) !important;
+    }
+    
+    body.dark-mode .news-link {
+        color: var(--brand-400) !important;
+    }
+    
+    body.dark-mode .news-link:hover {
+        color: var(--brand-200) !important;
+    }
+    
+    /* Load More - Enhanced Dark Mode */
+    body.dark-mode .load-more {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 10px !important;
+        margin-top: 1rem !important;
+    }
+    
+    body.dark-mode .load-more-btn {
+        background: var(--brand-600) !important;
+        border: 2px solid var(--brand-500) !important;
+        color: var(--brand-200) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+    
+    body.dark-mode .load-more-btn:hover {
+        background: var(--brand-500) !important;
+        border-color: var(--brand-400) !important;
+        color: var(--brand-100) !important;
+    }
+    
+    /* Empty State - Enhanced Dark Mode */
+    body.dark-mode .empty-state {
+        color: var(--brand-400) !important;
+        background: var(--brand-800) !important;
+        border: 2px dashed var(--brand-600) !important;
+        border-radius: 12px !important;
+        padding: 2rem !important;
+    }
+    
+    body.dark-mode .empty-state h3 {
+        color: var(--brand-300) !important;
+    }
+    
+    body.dark-mode .empty-state p {
+        color: var(--brand-400) !important;
+    }
+    
+    /* Live Indicator - Dark Mode */
+    body.dark-mode .live-indicator {
+        background: #22c55e !important;
+        animation: pulse 2s infinite !important;
+    }
+    
+    /* Tabs/Navigation within news page */
+    body.dark-mode .news-tabs {
+        background: var(--brand-800) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 10px !important;
+    }
+    
+    body.dark-mode .news-tab {
+        color: var(--brand-300) !important;
+    }
+    
+    body.dark-mode .news-tab.active {
+        background: var(--brand-600) !important;
+        color: var(--brand-100) !important;
+    }
+    
+    body.dark-mode .news-tab:hover:not(.active) {
+        background: var(--brand-700) !important;
+    }
+</style>
+
+<div class="traffic-news-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1>
+                📰 <span data-i18n="news.title">Traffic News</span>
+                <span class="live-indicator" data-i18n="news.live">Live</span>
+            </h1>
+            <p data-i18n="news.subtitle">Real-time traffic updates, alerts, and road safety news from Tunisia</p>
+        </div>
+        <button class="refresh-btn" onclick="refreshAll()">
+            <span class="icon">🔄</span>
+            <span data-i18n="news.refreshAll">Refresh All</span>
+        </button>
+    </div>
+    
+    <!-- Main Grid -->
+    <div class="news-grid">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Weather Card -->
+            <div class="weather-card" id="weatherCard">
+                <div class="weather-header">
+                    <div>
+                        <div class="weather-location">📍 <span data-i18n="news.weather.location">Tunis, Tunisia</span></div>
+                        <div class="weather-temp" id="weatherTemp">--°C</div>
+                        <div class="weather-condition" id="weatherCondition"><span data-i18n="services.loading">Loading...</span></div>
+                    </div>
+                    <div class="weather-icon" id="weatherIcon">🌤️</div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <div class="weather-detail-label" data-i18n="news.weather.wind">Wind</div>
+                        <div class="weather-detail-value" id="weatherWind">--</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="weather-detail-label" data-i18n="news.weather.humidity">Humidity</div>
+                        <div class="weather-detail-value" id="weatherHumidity">--</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="weather-detail-label" data-i18n="news.weather.rain">Rain</div>
+                        <div class="weather-detail-value" id="weatherRain">--</div>
+                    </div>
+                </div>
+                <div class="driving-conditions good" id="drivingConditions">
+                    🚗 <span data-i18n="services.loading">Loading conditions...</span>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="stats-card">
+                <h3>📊 <span data-i18n="news.stats.title">Today's Stats</span></h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="alertsCount">0</div>
+                        <div class="stat-label" data-i18n="news.stats.activeAlerts">Active Alerts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="newsCount">0</div>
+                        <div class="stat-label" data-i18n="news.stats.newsToday">News Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="accidentsCount">0</div>
+                        <div class="stat-label" data-i18n="news.stats.accidents">Accidents</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sourcesCount">0</div>
+                        <div class="stat-label" data-i18n="news.stats.sources">Sources</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Emergency Numbers -->
+            <div class="emergency-card">
+                <h3>🚨 <span data-i18n="news.emergency.title">Emergency Numbers</span></h3>
+                <div class="emergency-numbers">
+                    <a href="tel:197" class="emergency-item">
+                        <span class="icon">🚔</span>
+                        <span class="name" data-i18n="news.emergency.police">Police</span>
+                        <span class="number">197</span>
+                    </a>
+                    <a href="tel:190" class="emergency-item">
+                        <span class="icon">🚑</span>
+                        <span class="name" data-i18n="news.emergency.ambulance">SAMU</span>
+                        <span class="number">190</span>
+                    </a>
+                    <a href="tel:198" class="emergency-item">
+                        <span class="icon">🚒</span>
+                        <span class="name" data-i18n="news.emergency.fire">Fire</span>
+                        <span class="number">198</span>
+                    </a>
+                    <a href="tel:71341250" class="emergency-item">
+                        <span class="icon">🛣️</span>
+                        <span class="name" data-i18n="services.emergency.roadAssistance">Highway Help</span>
+                        <span class="number">71 341 250</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Traffic Alerts -->
+            <div class="alerts-section">
+                <div class="section-header">
+                    <h2>🚨 <span data-i18n="news.alerts">Traffic Alerts</span> <span class="count" id="alertsBadge">0</span></h2>
+                </div>
+                <div class="alerts-filters">
+                    <button class="filter-btn active" data-filter="all" data-i18n="news.alerts.all">All</button>
+                    <button class="filter-btn" data-filter="critical">🔴 <span data-i18n="news.alerts.critical">Critical</span></button>
+                    <button class="filter-btn" data-filter="high">🟠 <span data-i18n="news.alerts.high">High</span></button>
+                    <button class="filter-btn" data-filter="medium">🔵 <span data-i18n="news.alerts.medium">Medium</span></button>
+                    <button class="filter-btn" data-filter="low">🟢 <span data-i18n="news.alerts.low">Low</span></button>
+                </div>
+                <div class="alerts-list" id="alertsList">
+                    <div class="loading-spinner"><span data-i18n="services.loading">Loading alerts...</span></div>
+                </div>
+            </div>
+            
+            <!-- Traffic News -->
+            <div class="news-section">
+                <div class="section-header">
+                    <h2>📰 <span data-i18n="news.articles">Traffic & Road News</span> <span class="count" id="newsBadge">0</span></h2>
+                </div>
+                <div class="news-list" id="newsList">
+                    <div class="loading-spinner"><span data-i18n="services.loading">Loading traffic news...</span></div>
+                </div>
+                <div class="load-more" id="loadMore" style="display: none;">
+                    <button class="load-more-btn" onclick="loadMoreNews()" data-i18n="news.articles.loadMore">Load More</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allAlerts = [];
+let allNews = [];
+let displayedNews = 10;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadWeather();
+    loadAlerts();
+    loadNews();
+    
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            filterAlerts(this.dataset.filter);
+        });
+    });
+    
+    // Auto refresh every 5 minutes
+    setInterval(() => {
+        loadAlerts();
+        loadNews();
+    }, 300000);
+});
+
+// Weather
+async function loadWeather() {
+    try {
+        const response = await fetch('/api/services/weather?city=Tunis');
+        const data = await response.json();
+        
+        if (data.success && data.current) {
+            const w = data.current;
+            
+            document.getElementById('weatherTemp').textContent = `${Math.round(w.temperature)}°C`;
+            document.getElementById('weatherCondition').textContent = w.condition || 'Clear';
+            document.getElementById('weatherWind').textContent = `${w.wind_speed || 0} km/h`;
+            document.getElementById('weatherHumidity').textContent = `${w.humidity || 0}%`;
+            document.getElementById('weatherRain').textContent = `${w.precipitation_probability || 0}%`;
+            
+            // Weather icon based on condition
+            const code = w.weather_code || 0;
+            let icon = '☀️';
+            if (code >= 1 && code <= 3) icon = '⛅';
+            else if (code >= 45 && code <= 48) icon = '🌫️';
+            else if (code >= 51 && code <= 67) icon = '🌧️';
+            else if (code >= 71 && code <= 77) icon = '🌨️';
+            else if (code >= 80 && code <= 82) icon = '🌦️';
+            else if (code >= 95) icon = '⛈️';
+            document.getElementById('weatherIcon').textContent = icon;
+            
+            // Driving conditions
+            const condEl = document.getElementById('drivingConditions');
+            const risk = data.driving_risk || 'low';
+            condEl.className = `driving-conditions ${risk === 'low' ? 'good' : risk === 'moderate' ? 'moderate' : 'poor'}`;
+            
+            const riskText = {
+                'low': '✅ Good driving conditions',
+                'moderate': '⚠️ Drive with caution',
+                'high': '🚨 Poor conditions - Be careful'
+            };
+            condEl.textContent = riskText[risk] || riskText.low;
+        }
+    } catch (error) {
+        console.error('Weather error:', error);
+        document.getElementById('drivingConditions').textContent = '⚠️ Weather unavailable';
+    }
+}
+
+// Alerts
+async function loadAlerts() {
+    try {
+        const response = await fetch('/api/services/news/alerts');
+        const data = await response.json();
+        
+        allAlerts = data.alerts || [];
+        document.getElementById('alertsBadge').textContent = allAlerts.length;
+        document.getElementById('alertsCount').textContent = allAlerts.length;
+        
+        renderAlerts(allAlerts);
+    } catch (error) {
+        console.error('Alerts error:', error);
+        document.getElementById('alertsList').innerHTML = '<div class="empty-state"><div class="icon">📡</div><p>Unable to load alerts</p></div>';
+    }
+}
+
+function renderAlerts(alerts) {
+    const container = document.getElementById('alertsList');
+    
+    if (!alerts.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No traffic alerts at this time</p></div>';
+        return;
+    }
+    
+    const icons = {
+        'accident': '🚗', 'traffic': '🚦', 'roadwork': '🚧',
+        'weather': '⛈️', 'police': '🚔', 'closure': '🚫', 'transport': '🚌'
+    };
+    
+    container.innerHTML = alerts.map(alert => `
+        <div class="alert-item ${alert.severity}">
+            <div class="alert-icon">${icons[alert.type] || '⚠️'}</div>
+            <div class="alert-content">
+                <h4>${alert.title}</h4>
+                <p>${alert.description || ''}</p>
+                <div class="alert-meta">
+                    <span>📍 ${alert.location || alert.governorate}</span>
+                    <span>🕐 ${formatTime(alert.timestamp)}</span>
+                    ${alert.source ? `<span>📰 ${alert.source}</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterAlerts(filter) {
+    if (filter === 'all') {
+        renderAlerts(allAlerts);
+    } else {
+        renderAlerts(allAlerts.filter(a => a.severity === filter));
+    }
+}
+
+// News - ONLY traffic related
+async function loadNews() {
+    try {
+        // Fetch only traffic-related news
+        const response = await fetch('/api/services/news/traffic?limit=30');
+        const data = await response.json();
+        
+        allNews = data.data || [];
+        
+        // Update stats
+        document.getElementById('newsBadge').textContent = allNews.length;
+        document.getElementById('newsCount').textContent = allNews.length;
+        document.getElementById('accidentsCount').textContent = allNews.filter(n => n.category === 'accident').length;
+        
+        // Count unique sources
+        const sources = new Set(allNews.map(n => n.source));
+        document.getElementById('sourcesCount').textContent = sources.size;
+        
+        renderNews();
+    } catch (error) {
+        console.error('News error:', error);
+        document.getElementById('newsList').innerHTML = '<div class="empty-state"><div class="icon">📰</div><p>Unable to load news</p></div>';
+    }
+}
+
+function renderNews() {
+    const container = document.getElementById('newsList');
+    const toShow = allNews.slice(0, displayedNews);
+    
+    if (!toShow.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📰</div><p>No traffic news available</p></div>';
+        document.getElementById('loadMore').style.display = 'none';
+        return;
+    }
+    
+    container.innerHTML = toShow.map(news => `
+        <a href="${news.link}" target="_blank" rel="noopener" class="news-item">
+            <div class="news-icon ${news.category || 'traffic'}">
+                ${getCategoryIcon(news.category)}
+            </div>
+            <div class="news-content">
+                <div class="news-source">
+                    <span class="name">${news.source}</span>
+                    <span class="type">${news.source_type || 'news'}</span>
+                </div>
+                <h4>${news.title}</h4>
+                ${news.summary ? `<p class="summary">${news.summary}</p>` : ''}
+                <div class="news-meta">
+                    <span>📅 ${formatDate(news.published)}</span>
+                    ${news.location ? `<span>📍 ${news.location}</span>` : ''}
+                </div>
+            </div>
+        </a>
+    `).join('');
+    
+    // Show/hide load more
+    document.getElementById('loadMore').style.display = displayedNews < allNews.length ? 'block' : 'none';
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'accident': '🚨', 'traffic': '🚦', 'roadwork': '🚧',
+        'weather': '⛈️', 'police': '🚔', 'closure': '🚫', 'transport': '🚌'
+    };
+    return icons[category] || '📰';
+}
+
+function loadMoreNews() {
+    displayedNews += 10;
+    renderNews();
+}
+
+function refreshAll() {
+    const btn = document.querySelector('.refresh-btn');
+    btn.classList.add('loading');
+    
+    document.getElementById('alertsList').innerHTML = '<div class="loading-spinner">Refreshing...</div>';
+    document.getElementById('newsList').innerHTML = '<div class="loading-spinner">Refreshing...</div>';
+    
+    Promise.all([loadWeather(), loadAlerts(), loadNews()]).then(() => {
+        btn.classList.remove('loading');
+    });
+}
+
+function formatTime(timestamp) {
+    if (!timestamp) return 'Just now';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = (now - date) / 1000 / 60;
+    
+    if (diff < 1) return 'Just now';
+    if (diff < 60) return `${Math.floor(diff)}m ago`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+    return date.toLocaleDateString();
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = (now - date) / 1000 / 60 / 60;
+    
+    if (diff < 24) return `${Math.floor(diff)}h ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+</script>
+{% endblock %}

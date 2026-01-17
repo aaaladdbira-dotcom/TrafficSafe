@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - TrafficSafe{% endblock %}
+
+{% block content %}
+<style>
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 100% 80% at 50% -30%, rgba(55, 68, 107, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 20%, rgba(126, 137, 172, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 15% 30%, rgba(174, 185, 225, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(55, 68, 107, 0.07) 0%, transparent 50%);
+      animation: gradientShift 15s ease-in-out infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+
+    .about-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .about-hero {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .about-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--ui-text);
+    }
+
+    .about-hero p {
+        font-size: 1.1rem;
+        color: var(--ui-text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .about-section {
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(174, 185, 225, 0.2);
+        border-radius: 24px;
+        box-shadow: 0 12px 40px rgba(55, 68, 107, 0.1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .about-section:hover {
+        transform: translateY(-6px);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+        box-shadow: 0 24px 60px rgba(55, 68, 107, 0.15);
+        border-color: rgba(174, 185, 225, 0.35);
+    }
+
+    .about-section h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .about-section p {
+        line-height: 1.8;
+        color: var(--ui-text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.5) 100%);
+        border: 1.5px solid rgba(174, 185, 225, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 10px 25px rgba(55, 68, 107, 0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(174, 185, 225, 0.1) 0%, transparent 50%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+        box-shadow: 0 30px 60px rgba(55, 68, 107, 0.15);
+        border-color: rgba(174, 185, 225, 0.3);
+    }
+
+    .feature-card:hover::before {
+        opacity: 0.15;
+    }
+
+    .feature-card h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--ui-text);
+    }
+
+    .feature-card p {
+        font-size: 0.95rem;
+        color: var(--ui-text-muted);
+        margin: 0;
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .team-member {
+        text-align: center;
+    }
+
+    .team-member-avatar {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+    }
+
+    .team-member h3 {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: var(--ui-text);
+    }
+
+    .team-member p {
+        color: var(--ui-text-muted);
+        font-size: 0rgba(174, 185, 225, 0.05);
+        border: 1px solid rgba(174, 185, 225, 0.1);
+        border-radius: 28px;
+        box-shadow: 0 8px 20px rgba(55, 68, 107, 0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-item:hover {
+        transform: translateY(-6px) scale(1.01);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(174, 185, 225, 0.2);
+        box-shadow: 0 25px 50px rgba(55, 68, 107, 0.12);
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(174, 185, 225, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+        border-color: rgba(174, 185, 225, 0.5);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--ui-text-muted);
+    }
+
+    .values-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .value-item {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(174, 185, 225, 0.25);
+        border-left: 4px solid var(--brand-500);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(55, 68, 107, 0.06);
+    }
+
+    .value-item:hover {
+        background: rgba(255, 255, 255, 0.75);
+        box-shadow: 0 8px 24px rgba(55, 68, 107, 0.1);
+        border-color: rgba(174, 185, 225, 0.4);
+    }
+
+    .value-item h3 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--ui-text);
+    }
+
+    .value-item p {
+        font-size: 0.9rem;
+        color: var(--ui-text-muted);
+        margin: 0;
+    }
+
+    /* Dark mode */
+    body.dark-mode .about-hero h1 {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .about-section h2 {
+        color: var(--brand-100);
+    }
+
+    @media (max-width: 768px) {
+        .about-hero h1 {
+            font-size: 2rem;
+        }
+
+        .team-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="about-container">
+    <div class="about-hero">
+        <h1>About TrafficSafe</h1>
+        <p>Making Tunisia's roads safer through intelligent accident reporting and real-time traffic insights</p>
+    </div>
+
+    <div class="about-section">
+        <h2>🎯 Our Mission</h2>
+        <p>
+            TrafficSafe is dedicated to reducing traffic accidents and improving road safety across Tunisia. We provide a comprehensive platform for reporting accidents, analyzing traffic patterns, and sharing real-time information to help drivers make safer decisions and authorities respond more effectively.
+        </p>
+    </div>
+
+    <div class="about-section">
+        <h2>📊 Our Impact</h2>
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">10K+</div>
+                <div class="stat-label">Accidents Reported</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">50K+</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Monitoring</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>✨ Key Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>📍 Real-Time Reporting</h3>
+                <p>Report accidents instantly with location, photos, and detailed information</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Analytics Dashboard</h3>
+                <p>View comprehensive statistics and trends to understand road safety patterns</p>
+            </div>
+            <div class="feature-card">
+                <h3>🗺️ Interactive Maps</h3>
+                <p>Visualize accident hotspots and traffic conditions on interactive maps</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 Mobile Friendly</h3>
+                <p>Access the platform from any device with responsive design</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔒 Secure & Private</h3>
+                <p>Your data is protected with enterprise-grade security standards</p>
+            </div>
+            <div class="feature-card">
+                <h3>🚨 Real-Time Alerts</h3>
+                <p>Receive notifications about accidents and road hazards in your area</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>💡 Our Core Values</h2>
+        <div class="values-container">
+            <div class="value-item">
+                <h3>Safety First</h3>
+                <p>Every decision prioritizes the safety and well-being of road users</p>
+            </div>
+            <div class="value-item">
+                <h3>Transparency</h3>
+                <p>Open communication with our users and stakeholders</p>
+            </div>
+            <div class="value-item">
+                <h3>Innovation</h3>
+                <p>Continuously improving our platform with cutting-edge technology</p>
+            </div>
+            <div class="value-item">
+                <h3>Collaboration</h3>
+                <p>Working with authorities and communities for better road safety</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>👥 Our Team</h2>
+        <p>TrafficSafe is built by a dedicated team of developers, designers, and safety experts committed to making a difference on Tunisia's roads.</p>
+        <div class="team-grid">
+            <div class="team-member">
+                <div class="team-member-avatar">💼</div>
+                <h3>Leadership</h3>
+                <p>Steering vision & strategy</p>
+            </div>
+            <div class="team-member">
+                <div class="team-member-avatar">👨‍💻</div>
+                <h3>Developers</h3>
+                <p>Building the platform</p>
+            </div>
+            <div class="team-member">
+                <div class="team-member-avatar">🎨</div>
+                <h3>Designers</h3>
+                <p>Creating user experiences</p>
+            </div>
+            <div class="team-member">
+                <div class="team-member-avatar">📊</div>
+                <h3>Data Analysts</h3>
+                <p>Extracting insights</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>🤝 Get Involved</h2>
+        <p>
+            Have suggestions to improve TrafficSafe? Want to partner with us? We'd love to hear from you! 
+            <a href="/contact" style="color: var(--brand-500); text-decoration: none; font-weight: 600;">Contact us</a> 
+            to learn more about collaboration opportunities.
+        </p>
+    </div>
+</div>
+{% endblock %}

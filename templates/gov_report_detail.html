@@ -1,0 +1,266 @@
+{% extends 'base_private.html' %}
+{% from "ui/icons.html" import ui_icon %}
+
+{% block head_extra %}
+<style>
+.report-detail-container { max-width: 520px; margin: 40px auto; padding: 0 20px; }
+.report-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 32px rgba(33,37,41,0.08);
+}
+.report-header { text-align: center; margin-bottom: 28px; }
+.report-header-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; color: #ef4444;
+}
+.report-header h2 { font-size: 22px; font-weight: 700; color: var(--ui-text); margin: 0 0 10px; }
+.report-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.report-status.pending { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.report-status.confirmed { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+.report-status.rejected { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+
+.report-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.report-info-item { font-size: 13px; padding: 10px 12px; background: var(--ui-bg); border-radius: 10px; }
+.report-info-item span:first-child { display: block; font-weight: 600; color: var(--ui-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.report-info-item span:last-child { color: var(--ui-text); }
+
+.report-description { font-size: 13px; padding: 12px 14px; background: var(--ui-bg); border-radius: 10px; margin-bottom: 20px; }
+.report-description strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ui-muted); margin-bottom: 6px; }
+.report-description p { margin: 0; color: var(--ui-text); line-height: 1.5; }
+
+.report-link { font-size: 13px; padding: 10px 14px; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px; margin-bottom: 20px; }
+.report-link a { color: #3b82f6; font-weight: 600; text-decoration: none; }
+.report-link a:hover { text-decoration: underline; }
+
+.report-rejection { font-size: 13px; padding: 12px 14px; background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 10px; margin-bottom: 20px; color: #dc2626; }
+
+.report-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.btn-confirm {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; font-size: 15px; font-weight: 600;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none; border-radius: 12px; color: white; cursor: pointer;
+  transition: all 200ms ease; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+}
+.btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4); }
+.btn-reject {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 20px; font-size: 15px; font-weight: 600;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none; border-radius: 12px; color: white; cursor: pointer;
+  transition: all 200ms ease; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+}
+.btn-reject:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4); }
+.btn-back {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; font-size: 14px; font-weight: 600;
+  background: var(--ui-bg); border: 1px solid var(--ui-border);
+  border-radius: 12px; color: var(--ui-text); cursor: pointer;
+  text-decoration: none; transition: all 200ms ease; margin-top: 8px;
+}
+.btn-back:hover { background: var(--ui-surface); border-color: var(--ui-border-strong); }
+
+/* Modal improvements */
+.modal-content { border-radius: 16px !important; border: none !important; }
+.modal-header.bg-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; border-radius: 16px 16px 0 0; }
+.modal-footer { border-top: 1px solid var(--ui-border); }
+
+/* ============================================
+   GOV REPORT DETAIL DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode .report-detail-container {
+  color: var(--ui-text);
+}
+
+body.dark-mode .report-card {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .report-header h1 {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .report-header-icon {
+  background: var(--ui-bg) !important;
+}
+
+body.dark-mode .report-info-item label {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .report-info-item span {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .report-description {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .report-description h3 {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .report-description p {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .report-link a {
+  color: var(--brand-400) !important;
+}
+
+body.dark-mode .report-rejection {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+body.dark-mode .btn-back {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .btn-back:hover {
+  background: var(--ui-surface) !important;
+}
+
+body.dark-mode .modal-content {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .modal-body {
+  background: var(--ui-surface) !important;
+}
+
+body.dark-mode .modal-footer {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .form-label {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .form-control {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-detail-container">
+  <div class="report-card">
+    {% if report %}
+      <div class="report-header">
+        <div class="report-header-icon">
+          {{ ui_icon('clipboard', 'ui-icon') }}
+        </div>
+        <h2 data-i18n="reportDetail.title">Report #{{ report.id }}</h2>
+        <span class="report-status {{ report.status|lower }}">{{ report.status|capitalize }}</span>
+      </div>
+      
+      <div class="report-info">
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.user">User</span>
+          <span>{{ report.user.full_name if report.user else report.user_name or report.user_id }}</span>
+        </div>
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.phone">Phone</span>
+          <span>{{ report.phone }}</span>
+        </div>
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.submission">Submission</span>
+          <span>{{ report.created_at|replace('T', ' ')|truncate(16, True, '') }}</span>
+        </div>
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.accidentDate">Accident Date</span>
+          <span>{{ report.date|replace('T', ' ')|truncate(16, True, '') }}</span>
+        </div>
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.location">Location</span>
+          <span>{{ report.location }}</span>
+        </div>
+        <div class="report-info-item">
+          <span data-i18n="reportDetail.delegation">Delegation</span>
+          <span>{{ report.delegation }}</span>
+        </div>
+        <div class="report-info-item" style="grid-column: 1 / -1;">
+          <span data-i18n="reportDetail.severity">Severity</span>
+          <span><span class="badge bg-{{ 'danger' if report.severity == 'fatal' else 'warning' if report.severity == 'severe' else 'info' }}">{{ report.severity|capitalize }}</span></span>
+        </div>
+      </div>
+      
+      {% if report.description %}
+      <div class="report-description">
+        <strong data-i18n="reportDetail.description">Description</strong>
+        <p>{{ report.description }}</p>
+      </div>
+      {% endif %}
+      
+      {% if report.status == 'confirmed' and report.accident_id %}
+      <div class="report-link">
+        <strong data-i18n="reportDetail.linkedAccident">Linked Accident:</strong> <a href="{{ url_for('accidents_ui.accident_detail', accident_id=report.accident_id) }}">View Accident #{{ report.accident_id }}</a>
+      </div>
+      {% endif %}
+      
+      {% if report.status == 'rejected' and report.rejection_reason %}
+      <div class="report-rejection">
+        <strong data-i18n="reportDetail.rejectionReason">Rejection Reason:</strong> {{ report.rejection_reason }}
+      </div>
+      {% endif %}
+      
+      {% if report.status == 'PENDING' %}
+      <form method="post" class="report-actions">
+        <button name="action" value="confirm" class="btn-confirm">
+          {{ ui_icon('check', 'ui-icon me-1') }} <span data-i18n="reportDetail.confirmBtn">Confirm & Create Accident</span>
+        </button>
+        <button type="button" class="btn-reject" data-bs-toggle="modal" data-bs-target="#rejectModal">
+          {{ ui_icon('x', 'ui-icon me-1') }} <span data-i18n="reportDetail.rejectBtn">Reject Report</span>
+        </button>
+      </form>
+      {% endif %}
+      
+      <a href="{{ url_for('gov_reports_ui.reports_list') }}" class="btn-back">
+        {{ ui_icon('arrow-left', 'ui-icon me-1') }} <span data-i18n="reportDetail.backToReports">Back to Reports</span>
+      </a>
+      
+      <!-- Reject Modal -->
+      <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectModalLabel">{{ ui_icon('x', 'ui-icon me-2') }} <span data-i18n="reportDetail.rejectModalTitle">Reject Report</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="reason" class="form-label" data-i18n="reportDetail.rejectionReasonLabel">Rejection Reason</label>
+                  <input type="text" class="form-control" name="reason" id="reason" required data-i18n-placeholder="reportDetail.rejectionReasonPlaceholder" placeholder="Enter reason for rejection">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.cancel">Cancel</button>
+                <button name="action" value="reject" class="btn btn-danger" data-i18n="reportDetail.submitRejection">Submit Rejection</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert alert-danger" data-i18n="reportDetail.notFound">Report not found.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

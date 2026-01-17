@@ -1,0 +1,294 @@
+/**
+ * Map Timeline Styles
+ * Animated time slider for accident visualization on map
+ */
+
+.map-timeline {
+  background: var(--ui-surface);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--ui-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timeline-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ui-text);
+}
+
+.timeline-title svg {
+  color: var(--ui-primary);
+}
+
+.timeline-period {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-primary);
+  background: var(--ui-primary-light, rgba(99, 102, 241, 0.1));
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.timeline-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ui-primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms ease;
+  flex-shrink: 0;
+}
+
+.timeline-btn:hover {
+  background: var(--brand-600, #4f46e5);
+  transform: scale(1.05);
+}
+
+.timeline-btn:active {
+  transform: scale(0.95);
+}
+
+.timeline-slider-container {
+  flex: 1;
+  position: relative;
+  height: 8px;
+  background: var(--ui-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.timeline-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+}
+
+.timeline-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ui-primary), var(--brand-500, #8b5cf6));
+  border-radius: 4px;
+  transition: width 150ms ease;
+  pointer-events: none;
+}
+
+.timeline-speed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.speed-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.speed-btn:hover {
+  border-color: var(--ui-primary);
+  color: var(--ui-primary);
+  background: var(--ui-overlay);
+}
+
+.speed-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  min-width: 32px;
+  text-align: center;
+}
+
+.timeline-stats {
+  display: flex;
+  gap: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.timeline-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.timeline-stat .stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ui-text);
+}
+
+.timeline-stat .stat-label {
+  font-size: 11px;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Marker Cluster Styles */
+.marker-cluster {
+  background: rgba(99, 102, 241, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  background: var(--ui-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-cluster span {
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.marker-cluster-small {
+  background: rgba(34, 197, 94, 0.4);
+}
+
+.marker-cluster-small div {
+  background: #22c55e;
+}
+
+.marker-cluster-medium {
+  background: rgba(245, 158, 11, 0.4);
+}
+
+.marker-cluster-medium div {
+  background: #f59e0b;
+}
+
+.marker-cluster-large {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.marker-cluster-large div {
+  background: #ef4444;
+}
+
+/* ============================================
+   MAP TIMELINE DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode .map-timeline,
+[data-theme="dark"] .map-timeline {
+  background: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+body.dark-mode .timeline-title,
+[data-theme="dark"] .timeline-title {
+  color: var(--ui-text);
+}
+
+body.dark-mode .timeline-period,
+[data-theme="dark"] .timeline-period {
+  background: rgba(126, 137, 172, 0.2);
+  color: var(--brand-400);
+}
+
+body.dark-mode .timeline-slider-container,
+[data-theme="dark"] .timeline-slider-container {
+  background: var(--ui-bg);
+}
+
+body.dark-mode .speed-btn,
+[data-theme="dark"] .speed-btn {
+  background: var(--ui-bg);
+  border-color: var(--ui-border);
+  color: var(--ui-muted);
+}
+
+body.dark-mode .speed-btn:hover,
+[data-theme="dark"] .speed-btn:hover {
+  background: var(--ui-surface);
+  border-color: var(--brand-500);
+  color: var(--brand-400);
+}
+
+body.dark-mode .speed-label,
+[data-theme="dark"] .speed-label {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .timeline-stats,
+[data-theme="dark"] .timeline-stats {
+  border-color: var(--ui-border);
+}
+
+body.dark-mode .timeline-stat .stat-value,
+[data-theme="dark"] .timeline-stat .stat-value {
+  color: var(--ui-text);
+}
+
+body.dark-mode .timeline-stat .stat-label,
+[data-theme="dark"] .timeline-stat .stat-label {
+  color: var(--ui-muted);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .timeline-controls {
+    flex-wrap: wrap;
+  }
+  
+  .timeline-slider-container {
+    order: 3;
+    width: 100%;
+    flex: none;
+    margin-top: 8px;
+  }
+  
+  .timeline-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - TrafficSafe{% endblock %}
+
+{% block content %}
+<style>
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 100% 80% at 50% -30%, rgba(55, 68, 107, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 20%, rgba(126, 137, 172, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 15% 30%, rgba(174, 185, 225, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(55, 68, 107, 0.07) 0%, transparent 50%);
+      animation: gradientShift 15s ease-in-out infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+
+    .contact-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .contact-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .contact-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--ui-text);
+    }
+
+    .contact-header p {
+        font-size: 1.1rem;
+        color: var(--ui-text-muted);
+    }
+
+    .contact-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+    }
+
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .contact-method {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        border: 1.5px solid rgba(174, 185, 225, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 24px rgba(55, 68, 107, 0.08);
+    }
+
+    .contact-method:hover {
+        transform: translateY(-8px);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+        box-shadow: 0 25px 60px rgba(55, 68, 107, 0.15);
+        border-color: rgba(174, 185, 225, 0.35);
+    }
+
+    .contact-method h3 {
+        font-weight: 700;
+        color: var(--ui-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-method p {
+        color: var(--ui-text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-method a {
+        color: var(--brand-500);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .contact-method a:hover {
+        color: var(--brand-600);
+        text-decoration: underline;
+    }
+
+    .contact-form {
+        padding: 2.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.75) 100%);
+        backdrop-filter: blur(15px);
+        border-radius: 28px;
+        border: 1.5px solid rgba(174, 185, 225, 0.25);
+        box-shadow: 0 12px 48px rgba(55, 68, 107, 0.12);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .contact-form:hover {
+        transform: translateY(-6px);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 100%);
+        box-shadow: 0 24px 64px rgba(55, 68, 107, 0.18);
+        border-color: rgba(174, 185, 225, 0.4);
+    }
+
+    .contact-form h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--ui-text);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--ui-text);
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(174, 185, 225, 0.2);
+        color: var(--ui-text);
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: rgba(126, 137, 172, 0.3);
+        background: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 0 0 4px rgba(126, 137, 172, 0.08), 0 8px 20px rgba(55, 68, 107, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .form-message {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        display: none;
+    }
+
+    .form-message.success {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        display: block;
+    }
+
+    .form-message.error {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        display: block;
+    }
+
+    /* Dark mode */
+    body.dark-mode .contact-header h1 {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .contact-method {
+        background: var(--ui-surface);
+    }
+
+    body.dark-mode .contact-method h3 {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .contact-method p {
+        color: var(--brand-200);
+    }
+
+    body.dark-mode .contact-form {
+        background: var(--ui-surface);
+    }
+
+    body.dark-mode .contact-form h2 {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .form-group label {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .form-group input,
+    body.dark-mode .form-group textarea {
+        background: var(--ui-background);
+        color: var(--brand-100);
+    }
+
+    @media (max-width: 768px) {
+        .contact-content {
+            grid-template-columns: 1fr;
+        }
+
+        .contact-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="contact-container">
+    <div class="contact-header">
+        <h1>Get in Touch</h1>
+        <p>Have questions or feedback? We'd love to hear from you!</p>
+    </div>
+
+    <div class="contact-content">
+        <div class="contact-info">
+            <div class="contact-method">
+                <h3>📧 Email</h3>
+                <p>Send us an email anytime</p>
+                <a href="mailto:trafficaccidentstn@gmail.com">trafficaccidentstn@gmail.com</a>
+            </div>
+
+            <div class="contact-method">
+                <h3>📍 Location</h3>
+                <p>Based in</p>
+                <p>Tunis, Tunisia</p>
+            </div>
+
+            <div class="contact-method">
+                <h3>⏰ Response Time</h3>
+                <p>We typically respond within 24-48 hours during business days</p>
+            </div>
+
+            <div class="contact-method">
+                <h3>🆘 Emergency?</h3>
+                <p>For emergency traffic incidents, please contact local authorities immediately</p>
+            </div>
+        </div>
+
+        <div class="contact-form">
+            <h2>Send us a Message</h2>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" required placeholder="What is this about?">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required placeholder="Tell us more..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                <div class="form-message" id="formMessage"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        subject: document.getElementById('subject').value,
+        message: document.getElementById('message').value
+    };
+
+    const submitBtn = document.getElementById('submitBtn');
+    const formMessage = document.getElementById('formMessage');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+        // Send to backend or email service
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            formMessage.textContent = '✓ Message sent successfully! We\'ll get back to you soon.';
+            formMessage.className = 'form-message success';
+            document.getElementById('contactForm').reset();
+        } else {
+            throw new Error('Failed to send message');
+        }
+    } catch (error) {
+        formMessage.textContent = '✗ Failed to send message. Please try emailing us directly.';
+        formMessage.className = 'form-message error';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+    }
+});
+</script>
+{% endblock %}

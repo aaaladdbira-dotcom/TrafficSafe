@@ -1,0 +1,1297 @@
+/* iOS-inspired global typography + icon system + calm UI primitives
+   Applied site-wide via base templates. */
+
+:root {
+  --ios-font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Bridge to brand-neutral tokens defined in modern.css */
+  --ios-bg: var(--ui-bg);
+  --ios-surface: var(--ui-surface);
+  --ios-text: var(--ui-text);
+  --ios-muted: var(--ui-muted);
+  --ios-hairline: rgba(55, 68, 107, 0.16); /* brand-600 */
+  --ios-hairline-strong: rgba(55, 68, 107, 0.22);
+
+  --ios-radius-card: 18px;
+  --ios-radius-control: 12px;
+
+  --ios-shadow-card: var(--shadow);
+  --ios-shadow-card-hover: var(--shadow-hover);
+
+  --ios-focus: var(--ui-focus);
+  --ios-focus-strong: rgba(174, 185, 225, 0.62);
+
+  --ios-tracking: -0.015em;
+  --ios-tracking-tight: -0.02em;
+
+  /* Switch colors (brand-only) */
+  --ios-switch-off: rgba(55, 68, 107, 0.10);
+  --ios-switch-off-border: rgba(55, 68, 107, 0.18);
+  --ios-switch-on: var(--ui-primary);
+  --ios-switch-on-border: rgba(33, 44, 77, 0.38);
+  
+  /* Light mode UI overlay for hover states */
+  --ui-overlay: rgba(33, 44, 77, 0.06);
+}
+
+body.dark-mode {
+  --ios-hairline: rgba(209, 219, 249, 0.12);
+  --ios-hairline-strong: rgba(209, 219, 249, 0.16);
+
+  --ios-switch-off: rgba(209, 219, 249, 0.10);
+  --ios-switch-off-border: rgba(209, 219, 249, 0.14);
+  
+  /* Dark mode UI overlay for hover states */
+  --ui-overlay: rgba(209, 219, 249, 0.08);
+}
+
+html, body {
+  font-family: var(--ios-font-sans) !important;
+  letter-spacing: var(--ios-tracking);
+}
+
+body {
+  background: var(--ios-bg);
+  color: var(--ios-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: var(--ios-tracking-tight);
+  font-weight: 600;
+}
+
+strong, b {
+  font-weight: 600;
+}
+
+.form-label,
+.small,
+.form-text {
+  color: var(--ios-muted) !important;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: inherit;
+}
+
+/* Calm, iOS-like focus ring */
+:focus-visible {
+  outline: none;
+}
+
+.form-control,
+.form-select,
+.input-group-text,
+textarea,
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="number"] {
+  border-radius: var(--ios-radius-control) !important;
+  border-color: var(--ios-hairline-strong) !important;
+  box-shadow: none !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+input:focus {
+  border-color: rgba(10, 132, 255, 0.42) !important;
+  box-shadow: 0 0 0 4px var(--ios-focus) !important;
+}
+
+/* Brand toggle (drops the iOS pill look, matches UI tokens) */
+.form-switch .form-check-input {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none !important;
+  width: 44px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid rgba(33, 44, 77, 0.22) !important;
+  background-color: rgba(33, 44, 77, 0.10) !important;
+  position: relative;
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  overflow: hidden;
+  padding: 0 !important;
+  margin: 0;
+}
+
+.form-switch .form-check-input::before {
+  display: none !important;
+}
+
+.form-switch .form-check-input::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(33, 44, 77, 0.20) !important;
+  transform: translateY(-50%);
+  transition: left 160ms ease;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+  box-shadow: none !important;
+}
+
+.form-switch .form-check-input:checked::after {
+  left: calc(100% - 20px);
+}
+
+.form-switch .form-check-input:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--ui-focus) !important;
+}
+
+.form-switch .form-check-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+body.dark-mode .form-switch .form-check-input {
+  background-color: rgba(229, 231, 235, 0.08) !important;
+  border-color: rgba(229, 231, 235, 0.28) !important;
+}
+
+body.dark-mode .form-switch .form-check-input::after {
+  background: #f8fafc !important;
+}
+
+body.dark-mode .form-switch .form-check-input:checked {
+  background-color: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+}
+
+.input-group-text {
+  background: rgba(33, 44, 77, 0.04) !important;
+  color: rgba(8, 15, 37, 0.78) !important;
+  border-color: var(--ios-hairline-strong) !important;
+}
+
+body.dark-mode .input-group-text {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.70) !important;
+}
+
+.card {
+  border-radius: var(--ios-radius-card) !important;
+  border: 1px solid var(--ios-hairline) !important;
+  box-shadow: var(--ios-shadow-card) !important;
+}
+
+.card:hover {
+  box-shadow: var(--ios-shadow-card-hover) !important;
+}
+
+/* ================================
+   Unified Button System
+   Dark buttons = filled with brand color
+   Light buttons = subtle background with border
+================================ */
+
+/* Base button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.008em;
+  padding: 0.75rem 1.25rem !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 1px 3px rgba(33, 44, 77, 0.08);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ui-focus) !important;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === DARK BUTTONS (Primary action) === */
+.btn-primary,
+.btn-success,
+.btn-danger {
+  background: var(--ui-primary) !important;
+  color: var(--brand-100) !important;
+  box-shadow: 0 2px 8px rgba(33, 44, 77, 0.15) !important;
+}
+
+/* Icons inside dark buttons should be light - override any muted styling */
+.btn-primary .ui-icon,
+.btn-primary .ui-icon--muted,
+.btn-success .ui-icon,
+.btn-success .ui-icon--muted,
+.btn-danger .ui-icon,
+.btn-danger .ui-icon--muted,
+.btn-primary svg,
+.btn-success svg,
+.btn-danger svg,
+.btn-primary i,
+.btn-success i,
+.btn-danger i {
+  color: var(--brand-100) !important;
+  background: transparent !important;
+}
+
+.btn-primary .ui-icon svg,
+.btn-success .ui-icon svg,
+.btn-danger .ui-icon svg {
+  stroke: var(--brand-100) !important;
+}
+
+.btn-primary:hover,
+.btn-success:hover,
+.btn-danger:hover {
+  background: var(--ui-primary-hover) !important;
+  box-shadow: 0 4px 16px rgba(33, 44, 77, 0.18) !important;
+  transform: translateY(-2px);
+}
+
+.btn-primary:active,
+.btn-success:active,
+.btn-danger:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(33, 44, 77, 0.12) !important;
+}
+
+/* === LIGHT BUTTONS (Secondary action) === */
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-light {
+  background: rgba(33, 44, 77, 0.06) !important;
+  border: 1px solid rgba(33, 44, 77, 0.15) !important;
+  color: var(--ui-text) !important;
+  box-shadow: none !important;
+}
+
+/* Icons inside light buttons match text - override any muted styling */
+.btn-secondary .ui-icon,
+.btn-secondary .ui-icon--muted,
+.btn-outline-primary .ui-icon,
+.btn-outline-primary .ui-icon--muted,
+.btn-outline-secondary .ui-icon,
+.btn-outline-secondary .ui-icon--muted,
+.btn-outline-success .ui-icon,
+.btn-outline-success .ui-icon--muted,
+.btn-outline-warning .ui-icon,
+.btn-outline-warning .ui-icon--muted,
+.btn-outline-danger .ui-icon,
+.btn-outline-danger .ui-icon--muted,
+.btn-light .ui-icon,
+.btn-light .ui-icon--muted {
+  color: var(--ui-text) !important;
+  background: transparent !important;
+}
+
+.btn-secondary .ui-icon svg,
+.btn-outline-primary .ui-icon svg,
+.btn-outline-secondary .ui-icon svg,
+.btn-outline-success .ui-icon svg,
+.btn-outline-warning .ui-icon svg,
+.btn-outline-danger .ui-icon svg,
+.btn-light .ui-icon svg {
+  stroke: var(--ui-text) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-outline-success:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover,
+.btn-light:hover {
+  background: rgba(33, 44, 77, 0.12) !important;
+  border-color: rgba(33, 44, 77, 0.22) !important;
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active,
+.btn-outline-primary:active,
+.btn-outline-secondary:active,
+.btn-outline-success:active,
+.btn-outline-warning:active,
+.btn-outline-danger:active,
+.btn-light:active {
+  transform: translateY(0);
+  background: rgba(33, 44, 77, 0.16) !important;
+}
+
+/* === DARK MODE === */
+body.dark-mode .btn-primary,
+body.dark-mode .btn-success,
+body.dark-mode .btn-danger {
+  background: var(--brand-400) !important;
+  color: var(--brand-800) !important;
+  box-shadow: 0 2px 8px rgba(8, 15, 37, 0.35) !important;
+}
+
+/* Icons inside dark buttons in dark mode */
+body.dark-mode .btn-primary .ui-icon,
+body.dark-mode .btn-primary .ui-icon--muted,
+body.dark-mode .btn-success .ui-icon,
+body.dark-mode .btn-success .ui-icon--muted,
+body.dark-mode .btn-danger .ui-icon,
+body.dark-mode .btn-danger .ui-icon--muted {
+  color: var(--brand-800) !important;
+  background: transparent !important;
+}
+
+body.dark-mode .btn-primary .ui-icon svg,
+body.dark-mode .btn-success .ui-icon svg,
+body.dark-mode .btn-danger .ui-icon svg {
+  stroke: var(--brand-800) !important;
+}
+
+body.dark-mode .btn-primary:hover,
+body.dark-mode .btn-success:hover,
+body.dark-mode .btn-danger:hover {
+  background: var(--brand-300) !important;
+  box-shadow: 0 4px 16px rgba(8, 15, 37, 0.45) !important;
+}
+
+body.dark-mode .btn-secondary,
+body.dark-mode .btn-outline-primary,
+body.dark-mode .btn-outline-secondary,
+body.dark-mode .btn-outline-success,
+body.dark-mode .btn-outline-warning,
+body.dark-mode .btn-outline-danger,
+body.dark-mode .btn-light {
+  background: rgba(209, 219, 249, 0.08) !important;
+  border: 1px solid rgba(209, 219, 249, 0.15) !important;
+  color: var(--brand-200) !important;
+}
+
+/* Icons inside light buttons in dark mode */
+body.dark-mode .btn-secondary .ui-icon,
+body.dark-mode .btn-secondary .ui-icon--muted,
+body.dark-mode .btn-outline-primary .ui-icon,
+body.dark-mode .btn-outline-primary .ui-icon--muted,
+body.dark-mode .btn-outline-secondary .ui-icon,
+body.dark-mode .btn-outline-secondary .ui-icon--muted,
+body.dark-mode .btn-outline-success .ui-icon,
+body.dark-mode .btn-outline-success .ui-icon--muted,
+body.dark-mode .btn-outline-warning .ui-icon,
+body.dark-mode .btn-outline-warning .ui-icon--muted,
+body.dark-mode .btn-outline-danger .ui-icon,
+body.dark-mode .btn-outline-danger .ui-icon--muted,
+body.dark-mode .btn-light .ui-icon,
+body.dark-mode .btn-light .ui-icon--muted {
+  color: var(--brand-200) !important;
+  background: transparent !important;
+}
+
+body.dark-mode .btn-secondary .ui-icon svg,
+body.dark-mode .btn-outline-primary .ui-icon svg,
+body.dark-mode .btn-outline-secondary .ui-icon svg,
+body.dark-mode .btn-outline-success .ui-icon svg,
+body.dark-mode .btn-outline-warning .ui-icon svg,
+body.dark-mode .btn-outline-danger .ui-icon svg,
+body.dark-mode .btn-light .ui-icon svg {
+  stroke: var(--brand-200) !important;
+}
+
+body.dark-mode .btn-secondary:hover,
+body.dark-mode .btn-outline-primary:hover,
+body.dark-mode .btn-outline-secondary:hover,
+body.dark-mode .btn-outline-success:hover,
+body.dark-mode .btn-outline-warning:hover,
+body.dark-mode .btn-outline-danger:hover,
+body.dark-mode .btn-light:hover {
+  background: rgba(209, 219, 249, 0.14) !important;
+  border-color: rgba(209, 219, 249, 0.22) !important;
+}
+
+/* iOS-style badges (calm, soft color, no gradients) */
+.badge {
+  font-weight: 600;
+  letter-spacing: var(--ios-tracking);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.badge-status,
+.status-badge {
+  border-radius: 999px;
+  font-size: 0.88rem;
+  padding: 4px 12px;
+}
+
+.badge.bg-success,
+.badge-status.confirmed,
+.status-badge.status-positive {
+  background: rgba(52, 199, 89, 0.14) !important;
+  color: rgba(30, 132, 55, 0.96) !important;
+}
+
+.badge.bg-warning,
+.badge-status.pending,
+.status-badge.status-warning {
+  background: rgba(255, 159, 10, 0.14) !important;
+  color: rgba(150, 88, 0, 0.96) !important;
+}
+
+.badge.bg-danger,
+.badge-status.rejected,
+.status-badge.status-critical {
+  background: rgba(255, 69, 58, 0.14) !important;
+  color: rgba(192, 38, 28, 0.96) !important;
+}
+
+.badge.bg-primary,
+.badge.bg-secondary {
+  background: rgba(15, 23, 42, 0.10) !important;
+  color: rgba(15, 23, 42, 0.86) !important;
+}
+
+body.dark-mode .badge.bg-success,
+body.dark-mode .badge-status.confirmed,
+body.dark-mode .status-badge.status-positive {
+  background: rgba(52, 199, 89, 0.18) !important;
+  color: rgba(140, 230, 160, 0.96) !important;
+}
+
+body.dark-mode .badge.bg-warning,
+body.dark-mode .badge-status.pending,
+body.dark-mode .status-badge.status-warning {
+  background: rgba(255, 159, 10, 0.18) !important;
+  color: rgba(255, 190, 110, 0.96) !important;
+}
+
+body.dark-mode .badge.bg-danger,
+body.dark-mode .badge-status.rejected,
+body.dark-mode .status-badge.status-critical {
+  background: rgba(255, 69, 58, 0.18) !important;
+  color: rgba(255, 140, 135, 0.96) !important;
+}
+
+body.dark-mode .badge.bg-primary,
+body.dark-mode .badge.bg-secondary {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* Modern pill-style nav links with smooth transitions */
+.navbar-nav .nav-link {
+  position: relative;
+  transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 12px;
+  padding: 8px 16px !important;
+  margin: 0 4px;
+  overflow: hidden;
+}
+
+.navbar-nav .nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.08));
+  opacity: 0;
+  transition: opacity 220ms ease;
+  border-radius: 12px;
+  z-index: -1;
+}
+
+.navbar-nav .nav-link.nav-active,
+.navbar-nav .nav-link.active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  font-weight: 600;
+  box-shadow: none;
+  transform: none;
+}
+
+.navbar-nav .nav-link.nav-active .ui-icon,
+.navbar-nav .nav-link.active .ui-icon {
+  color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  transform: none;
+}
+
+.navbar-nav .nav-link:hover::before {
+  opacity: 1;
+}
+
+/* =========================================================
+   Discord-like Top Navigation (Desktop)
+   ========================================================= */
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  background: var(--ui-bg);
+  isolation: isolate;
+  overflow: visible;
+}
+
+.topnav__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.topnav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ui-text);
+  font-weight: 720;
+  letter-spacing: 0.01em;
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+.topnav__brand:hover {
+  background: var(--ui-overlay);
+  color: var(--ui-text);
+}
+
+.topnav__brandIcon {
+  color: var(--ui-text);
+  flex-shrink: 0;
+}
+
+.topnav__brandText {
+  font-size: 14px;
+}
+
+.topnav__primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+.topnav__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: inherit;
+}
+
+.topnav__link,
+.topnav__trigger {
+  appearance: none;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ui-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 560;
+  width: auto !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  line-height: 1;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+/* Dashboard: no icon, keep label visually centered */
+.topnav__link--dashboard {
+  justify-content: center;
+  min-width: 140px;
+  gap: 0;
+}
+
+.topnav__link:hover,
+.topnav__trigger:hover {
+  background: var(--ui-overlay) !important;
+  color: var(--ui-text);
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.topnav__link:focus-visible,
+.topnav__trigger:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.topnav__link.is-active,
+.topnav__trigger.is-active {
+  background: rgba(33, 44, 77, 0.12);
+  color: var(--ui-text);
+  font-weight: 650;
+}
+
+/* Dark Mode - Enhanced active state visibility */
+body.dark-mode .topnav__link.is-active,
+body.dark-mode .topnav__trigger.is-active {
+  background: rgba(126, 137, 172, 0.25) !important;
+  color: var(--brand-100) !important;
+  font-weight: 650;
+  box-shadow: inset 0 0 0 1px rgba(209, 219, 249, 0.15);
+}
+
+body.dark-mode .topnav__link:hover,
+body.dark-mode .topnav__trigger:hover {
+  background: rgba(126, 137, 172, 0.15) !important;
+  color: var(--brand-200) !important;
+}
+
+body.dark-mode .topnav__item.is-open > .topnav__trigger {
+  background: rgba(126, 137, 172, 0.20) !important;
+  color: var(--brand-100) !important;
+}
+
+.topnav__item {
+  position: relative;
+}
+
+.topnav__chevron {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  align-items: center;
+  justify-content: center;
+  transition: transform 160ms ease;
+}
+
+.topnav__chevron::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.85;
+}
+
+.topnav__item.is-open .topnav__chevron {
+  transform: rotate(180deg);
+}
+
+/* Keep the trigger highlighted while its panel is open */
+.topnav__item.is-open > .topnav__trigger {
+  background: var(--ui-overlay);
+  color: var(--ui-text);
+}
+
+.topnav__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--ui-surface);
+  box-shadow: 0 24px 64px rgba(8, 15, 37, 0.16);
+  border: 1px solid var(--ui-border);
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1), transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 99999;
+  isolation: isolate;
+}
+
+.topnav__item--right .topnav__panel {
+  left: auto;
+  right: 0;
+}
+
+.topnav__item.is-open .topnav__panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.topnav__panelSection {
+  padding: 6px;
+}
+
+.topnav__panelHeading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-muted);
+  padding: 6px 8px 8px;
+}
+
+.topnav__panelDivider {
+  height: 1px;
+  background: var(--ui-border);
+  margin: 6px 6px;
+  opacity: 0.9;
+}
+
+.topnav__panelLink {
+  display: block;
+  text-decoration: none;
+  color: var(--ui-text);
+  border-radius: 12px;
+  padding: 12px 12px;
+  transition: all 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.topnav__panelLink:hover {
+  background: rgba(33, 44, 77, 0.08);
+  transform: translateX(2px);
+}
+
+.topnav__panelLink:hover .topnav__panelTitle {
+  color: var(--ui-primary);
+  font-weight: 700;
+}
+
+body.dark-mode .topnav__panelLink:hover {
+  background: rgba(174, 185, 225, 0.12);
+}
+
+body.dark-mode .topnav__panelLink:hover .topnav__panelTitle {
+  color: var(--brand-300);
+}
+
+/* Panel Link Active State */
+.topnav__panelLink.is-active {
+  background: rgba(33, 44, 77, 0.12);
+}
+
+.topnav__panelLink.is-active .topnav__panelTitle {
+  color: var(--ui-primary);
+  font-weight: 700;
+}
+
+body.dark-mode .topnav__panelLink.is-active {
+  background: rgba(126, 137, 172, 0.20) !important;
+  box-shadow: inset 0 0 0 1px rgba(209, 219, 249, 0.1);
+}
+
+body.dark-mode .topnav__panelLink.is-active .topnav__panelTitle {
+  color: var(--brand-200) !important;
+  font-weight: 700;
+}
+
+body.dark-mode .topnav__panelLink.is-active .topnav__panelDesc {
+  color: var(--brand-400) !important;
+}
+
+.topnav__panelLink:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.topnav__panelTitle {
+  font-weight: 650;
+  font-size: 13px;
+  color: var(--ui-text);
+}
+
+.topnav__panelDesc {
+  font-size: 12px;
+  color: var(--ui-muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+/* Stats-only navbar sidebar toggle (enabled by stats page CSS) */
+.stats-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
+  background: rgba(33, 44, 77, 0.08);
+  color: var(--ui-text);
+  cursor: pointer;
+  padding: 0;
+  position: static;
+  transform: none;
+  box-shadow: none;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+body.dark-mode .stats-nav-toggle {
+  background: rgba(209, 219, 249, 0.08);
+}
+
+.stats-nav-toggle:hover {
+  background: rgba(33, 44, 77, 0.12);
+}
+
+body.dark-mode .stats-nav-toggle:hover {
+  background: rgba(209, 219, 249, 0.12);
+}
+
+.stats-nav-toggle:active {
+  transform: scale(0.98);
+}
+
+.stats-nav-toggle:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.stats-nav-toggle .ui-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Lucide icons (SVG injected into .ui-icon) */
+.ui-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: -2px;
+  color: currentColor;
+}
+
+.ui-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.75;
+}
+
+/* Muted icon tone (matches UI label tone) */
+.ui-icon--muted { color: var(--ui-muted); }
+
+body.dark-mode .ui-icon--muted { color: var(--ui-muted); }
+
+/* Size variations for Uicons */
+.ui-icon--sm svg { width: 14px; height: 14px; }
+.ui-icon--md svg { width: 18px; height: 18px; }
+.ui-icon--lg svg { width: 22px; height: 22px; }
+.ui-icon--xl svg { width: 28px; height: 28px; }
+
+/* Icon in buttons */
+.btn .ui-icon svg { width: 16px; height: 16px; }
+
+/* Icon colors */
+.ui-icon--primary { color: var(--ui-text); }
+.ui-icon--success { color: var(--ui-text); }
+.ui-icon--danger { color: var(--ui-text); }
+.ui-icon--warning { color: var(--ui-text); }
+.ui-icon--info { color: var(--ui-text); }
+
+/* Auth (Login) layout */
+.auth-surface {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 72px);
+  display: grid;
+  grid-template-columns: 1fr minmax(360px, 440px);
+  gap: clamp(28px, 6vw, 96px);
+  align-items: center;
+}
+
+.auth-brand {
+  max-width: 560px;
+}
+
+.auth-mark {
+  display: none;
+}
+
+.auth-mark-logo {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  object-position: center;
+  margin-bottom: 20px;
+  display: block;
+  background: transparent;
+  border-radius: 0;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+  padding: 20px;
+  background-clip: content-box;
+}
+
+body.dark-mode .auth-mark {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.dark-mode .auth-mark-logo {
+  filter: invert(1);
+}
+
+body.dark-mode .auth-mark {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.dark-mode .auth-mark-logo {
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.12)) invert(1);
+}
+
+.auth-headline {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 3.2vw, 38px);
+}
+
+.auth-subhead {
+  margin: 0 0 22px;
+  color: var(--ios-muted);
+  max-width: 48ch;
+}
+
+.auth-values {
+  display: grid;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.auth-value {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.auth-value-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--ios-hairline);
+  display: grid;
+  place-items: center;
+  color: rgba(15, 23, 42, 0.60);
+}
+
+body.dark-mode .auth-value-icon {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.auth-value-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.auth-value-desc {
+  margin: 2px 0 0;
+  color: var(--ios-muted);
+  font-size: 0.92rem;
+}
+
+.auth-card {
+  background: var(--ios-surface) !important;
+}
+
+.auth-card .card-body {
+  padding: 26px;
+}
+
+.auth-card-title {
+  margin: 0 0 14px;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.auth-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-link {
+  color: rgba(15, 23, 42, 0.72);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+body.dark-mode .auth-link {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ios-muted);
+  font-size: 0.9rem;
+  margin: 14px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  background: var(--ios-hairline);
+  flex: 1;
+}
+
+.auth-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.auth-social:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.auth-social i {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+  .auth-brand {
+    max-width: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Language Switcher (Standalone)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.lang-switcher {
+  position: relative;
+  margin-right: 8px;
+  z-index: 100000;
+}
+
+.lang-switcher__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  pointer-events: auto;
+}
+
+.lang-switcher__trigger:hover {
+  background: var(--ui-overlay);
+  border-color: var(--ui-border-strong);
+}
+
+.lang-switcher__flag {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.lang-switcher__flag svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lang-switcher__code {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.lang-switcher__arrow {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+  transition: transform 200ms ease;
+}
+
+.lang-switcher.is-open .lang-switcher__arrow {
+  transform: rotate(180deg);
+}
+
+.lang-switcher__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 180ms ease;
+  z-index: 99999;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.lang-switcher.is-open .lang-switcher__dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.lang-switcher__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ui-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease;
+  text-align: left;
+}
+
+.lang-switcher__option:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.lang-switcher__option--active {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.lang-switcher__option-flag {
+  width: 26px;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+
+.lang-switcher__option-flag svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lang-switcher__option-name {
+  flex: 1;
+}
+
+.lang-switcher__check {
+  width: 18px;
+  height: 18px;
+  color: var(--ui-primary);
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.lang-switcher__option--active .lang-switcher__check {
+  opacity: 1;
+}
+
+/* RTL Support */
+body.rtl {
+  direction: rtl;
+}
+
+body.rtl .topnav__primary {
+  flex-direction: row-reverse;
+}
+
+body.rtl .topnav__right {
+  flex-direction: row-reverse;
+}
+
+body.rtl .topnav__panelLink:hover {
+  transform: translateX(-2px);
+}
+
+body.rtl .topnav__chevron::before {
+  transform: rotate(45deg);
+}
+
+body.rtl .topnav__lang {
+  margin-left: 0;
+  margin-right: 4px;
+}
+
+body.rtl .topnav__langPanel {
+  right: auto;
+  left: 0;
+}
+
+body.rtl .container {
+  direction: rtl;
+  text-align: right;
+}
+
+body.rtl .topnav__item--right .topnav__panel {
+  left: 0;
+  right: auto;
+}

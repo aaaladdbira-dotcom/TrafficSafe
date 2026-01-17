@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Report Accident{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="mb-4" data-i18n="accidentForm.title">Report Traffic Accident</h2>
+            
+            <form method="post" id="accidentForm" class="needs-validation">
+                <div class="mb-3">
+                    <label for="location" class="form-label" data-i18n="accidentForm.location">Location</label>
+                    <input type="text" class="form-control" id="location" name="location" required>
+                    <small class="form-text text-muted">Enter street name or landmark</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="zone" class="form-label" data-i18n="accidentForm.zone">Zone/Governorate</label>
+                    <input type="text" class="form-control" id="zone" name="zone" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cause" class="form-label" data-i18n="accidentForm.cause">Cause</label>
+                    <select class="form-select" id="cause" name="cause" required>
+                        <option value="">Select cause...</option>
+                        <option value="speeding" data-i18n="accidentForm.speeding">Speeding</option>
+                        <option value="phone_usage" data-i18n="accidentForm.phoneUsage">Phone Usage</option>
+                        <option value="drunk_driving" data-i18n="accidentForm.drunkDriving">Drunk Driving</option>
+                        <option value="weather_conditions">Weather Conditions</option>
+                        <option value="mechanical_failure">Mechanical Failure</option>
+                        <option value="road_hazard">Road Hazard</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="severity" class="form-label" data-i18n="accidentForm.severity">Severity</label>
+                    <select class="form-select" id="severity" name="severity" required>
+                        <option value="">Select severity...</option>
+                        <option value="fatal" data-i18n="accidents.fatal">Fatal</option>
+                        <option value="serious" data-i18n="accidents.serious">Serious</option>
+                        <option value="minor" data-i18n="accidents.minor">Minor</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <div class="input-group">
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Describe the accident details... or use the voice button"></textarea>
+                        <button type="button" class="btn btn-outline-secondary" id="voiceCommandBtn" 
+                                title="Click to speak description">
+                            <i class="bi bi-mic-fill"></i> Speak
+                        </button>
+                    </div>
+                    <small class="form-text text-muted">
+                        Chrome, Edge, Safari supported. Your speech will be transcribed to text.
+                    </small>
+                </div>
+
+                <div class="mb-3" id="voiceStatus" style="display: none;">
+                    <div class="alert alert-info" role="alert">
+                        <span id="voiceStatusText">Listening...</span>
+                        <span id="voiceConfidence" class="float-end badge bg-primary"></span>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-sm-flex">
+                    <button type="submit" class="btn btn-primary" data-i18n="common.submit">Submit Report</button>
+                    <a href="/accidents" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    #voiceCommandBtn {
+        white-space: nowrap;
+        min-width: 100px;
+    }
+    
+    #voiceCommandBtn.listening {
+        background-color: #dc3545;
+        color: white;
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+</style>
+
+<script src="/static/js/voice-commands.js"></script>
+<script>
+    // Initialize voice commands when ready
+    document.addEventListener('DOMContentLoaded', () => {
+        const voiceBtn = document.getElementById('voiceCommandBtn');
+        const textarea = document.getElementById('description');
+        const statusDiv = document.getElementById('voiceStatus');
+        const statusText = document.getElementById('voiceStatusText');
+        const confidenceSpan = document.getElementById('voiceConfidence');
+        
+        if (!voiceBtn) return;
+        
+        let voiceHandler = null;
+        
+        voiceBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (!voiceHandler) {
+                // Create handler on first use
+                voiceHandler = new VoiceCommandsHandler();
+                
+                // Handle results
+                voiceHandler.on('voiceResult', (event) => {
+                    const transcript = event.transcript;
+                    const isFinal = event.isFinal;
+                    
+                    if (isFinal) {
+                        // Append to textarea
+                        textarea.value += (textarea.value ? ' ' : '') + transcript;
+                        statusDiv.style.display = 'none';
+                        voiceBtn.classList.remove('listening');
+                        Toast.success('Voice input captured');
+                    } else {
+                        // Show interim results
+                        statusText.textContent = `Interim: ${transcript}`;
+                        confidenceSpan.textContent = Math.round((event.confidence || 0) * 100) + '%';
+                    }
+                });
+                
+                voiceHandler.on('voiceError', (error) => {
+                    console.error('Voice error:', error);
+                    Toast.error(`Voice error: ${error.error}`);
+                    statusDiv.style.display = 'none';
+                    voiceBtn.classList.remove('listening');
+                });
+                
+                voiceHandler.on('voiceEnd', () => {
+                    statusDiv.style.display = 'none';
+                    voiceBtn.classList.remove('listening');
+                });
+            }
+            
+            if (voiceBtn.classList.contains('listening')) {
+                voiceHandler.stop();
+                voiceBtn.classList.remove('listening');
+                statusDiv.style.display = 'none';
+            } else {
+                statusDiv.style.display = 'block';
+                statusText.textContent = 'Listening...';
+                voiceBtn.classList.add('listening');
+                voiceHandler.start();
+            }
+        });
+    });
+</script>
+{% endblock %}

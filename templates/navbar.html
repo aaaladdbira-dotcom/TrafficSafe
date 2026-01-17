@@ -1,0 +1,270 @@
+{% from "ui/icons.html" import ui_icon %}
+
+<header class="topnav" role="banner">
+	<div class="topnav__inner nav-inner container-fluid px-3">
+		<a class="topnav__brand" href="/ui/dashboard" aria-label="TrafficSafe">
+			<svg class="topnav__brandIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+				<line x1="12" y1="9" x2="12" y2="13"></line>
+				<line x1="12" y1="17" x2="12.01" y2="17"></line>
+			</svg>
+			<span class="topnav__brandText">TrafficSafe</span>
+		</a>
+
+		<nav class="topnav__primary" aria-label="Primary">
+			<a class="topnav__link topnav__link--dashboard" href="/ui/dashboard">
+				<span data-i18n="nav.dashboard">Dashboard</span>
+			</a>
+
+			<div class="topnav__item" data-topnav-dropdown>
+				<button class="topnav__trigger" type="button" data-topnav-trigger aria-haspopup="menu" aria-expanded="false">
+					<span data-i18n="nav.accidents">Accidents</span>
+					<span class="topnav__chevron" aria-hidden="true"></span>
+				</button>
+				<div class="topnav__panel" role="menu" aria-label="Accidents">
+					<div class="topnav__panelSection" role="none">
+						<div class="topnav__panelHeading" role="none" data-i18n="nav.accidents">Accidents</div>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/accidents">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.browseAccidents">Browse accidents</div>
+								<div class="topnav__panelDesc" data-i18n="nav.browseAccidentsDesc">Search, filter, and view details</div>
+							</div>
+						</a>
+						{% if session.role != "government" %}
+						<a class="topnav__panelLink" role="menuitem" href="/ui/report-accident">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.reportAccident">Report an accident</div>
+								<div class="topnav__panelDesc" data-i18n="nav.reportAccidentDesc">Submit a new report</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/my-reports">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.myReports">My reports</div>
+								<div class="topnav__panelDesc" data-i18n="nav.myReportsDesc">Track your submitted reports</div>
+							</div>
+						</a>
+						{% endif %}
+					</div>
+
+					{% if session.role == "government" %}
+					<div class="topnav__panelDivider" role="none"></div>
+					<div class="topnav__panelSection" role="none">
+						<div class="topnav__panelHeading" role="none" data-i18n="nav.administration">Administration</div>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/import">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.importCSV">Import CSV</div>
+								<div class="topnav__panelDesc" data-i18n="nav.importCSVDesc">Upload accident batches</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/users">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.usersManagement">Users management</div>
+								<div class="topnav__panelDesc" data-i18n="nav.usersManagementDesc">Manage accounts and access</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/reports">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.reports">Reports</div>
+								<div class="topnav__panelDesc" data-i18n="nav.reportsDesc">Review and audit reports</div>
+							</div>
+						</a>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+
+			<div class="topnav__item" data-topnav-dropdown>
+				<button class="topnav__trigger" type="button" data-topnav-trigger aria-haspopup="menu" aria-expanded="false">
+					<span data-i18n="nav.statistics">Statistics</span>
+					<span class="topnav__chevron" aria-hidden="true"></span>
+				</button>
+				<div class="topnav__panel" role="menu" aria-label="Statistics">
+					<div class="topnav__panelSection" role="none">
+						<div class="topnav__panelHeading" role="none" data-i18n="nav.statistics">Statistics</div>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/stats#summary">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.summary">Summary</div>
+								<div class="topnav__panelDesc" data-i18n="nav.summaryDesc">KPIs and key metrics</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/stats#visuals">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.visuals">Visuals</div>
+								<div class="topnav__panelDesc" data-i18n="nav.visualsDesc">Charts and trends</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/stats#map">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.map">Map</div>
+								<div class="topnav__panelDesc" data-i18n="nav.mapDesc">Explore regions interactively</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/stats#predictions">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.predictions">Predictions</div>
+								<div class="topnav__panelDesc" data-i18n="nav.predictionsDesc">AI-powered risk forecasting</div>
+							</div>
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<a class="topnav__link" href="/ui/services">
+				<span data-i18n="nav.services">Services</span>
+			</a>
+
+			<a class="topnav__link topnav__link--news" href="/ui/traffic-news">
+				<span data-i18n="nav.trafficNews">Traffic News</span>
+			</a>
+
+			<a class="topnav__link" href="/contact">
+				<span>Contact Us</span>
+			</a>
+		</nav>
+
+		<div class="topnav__right" aria-label="Account">
+			<!-- Language Switcher - Standalone -->
+			<div class="lang-switcher" id="langSwitcher">
+				<button class="lang-switcher__trigger" type="button" id="langSwitcherBtn" onclick="document.getElementById('langSwitcher').classList.toggle('is-open'); event.stopPropagation();">
+					<span class="lang-switcher__flag" id="currentLangFlag">
+						<svg viewBox="0 0 640 480"><path fill="#012169" d="M0 0h640v480H0z"/><path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/><path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184 20 6 35L54 480H0l240-179zM640 0v3L391 191l2-44L590 0h50zM0 0l239 176h-60L0 42V0z"/><path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/><path fill="#C8102E" d="M0 193v96h640v-96H0zM273 0v480h96V0h-96z"/></svg>
+					</span>
+					<span class="lang-switcher__code" id="currentLangCode">EN</span>
+					<svg class="lang-switcher__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+				</button>
+				<div class="lang-switcher__dropdown" id="langDropdown">
+					<button type="button" class="lang-switcher__option lang-switcher__option--active" data-lang="en" onclick="window.changeLang('en'); event.stopPropagation();">
+						<span class="lang-switcher__option-flag">
+							<svg viewBox="0 0 640 480"><path fill="#012169" d="M0 0h640v480H0z"/><path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/><path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184 20 6 35L54 480H0l240-179zM640 0v3L391 191l2-44L590 0h50zM0 0l239 176h-60L0 42V0z"/><path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/><path fill="#C8102E" d="M0 193v96h640v-96H0zM273 0v480h96V0h-96z"/></svg>
+						</span>
+						<span class="lang-switcher__option-name">English</span>
+						<svg class="lang-switcher__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+					</button>
+					<button type="button" class="lang-switcher__option" data-lang="fr" onclick="window.changeLang('fr'); event.stopPropagation();">
+						<span class="lang-switcher__option-flag">
+							<svg viewBox="0 0 640 480"><path fill="#002654" d="M0 0h213.3v480H0z"/><path fill="#FFF" d="M213.3 0h213.4v480H213.3z"/><path fill="#CE1126" d="M426.7 0H640v480H426.7z"/></svg>
+						</span>
+						<span class="lang-switcher__option-name">Français</span>
+						<svg class="lang-switcher__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+					</button>
+					<button type="button" class="lang-switcher__option" data-lang="ar" onclick="window.changeLang('ar'); event.stopPropagation();">
+						<span class="lang-switcher__option-flag">
+							<svg viewBox="0 0 640 480"><path fill="#E70013" d="M0 0h640v480H0z"/><circle cx="320" cy="240" r="96" fill="#FFF"/><circle cx="340" cy="240" r="80" fill="#E70013"/><path fill="#FFF" d="m260 240 60-20 12 37-48-35h48l-48 35 12-37z"/></svg>
+						</span>
+						<span class="lang-switcher__option-name">العربية</span>
+						<svg class="lang-switcher__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+					</button>
+				</div>
+			</div>
+			<script>
+				// Use global translations from translations.js, fallback to embedded if not loaded
+				var flags = {
+					en: '<svg viewBox="0 0 640 480"><path fill="#012169" d="M0 0h640v480H0z"/><path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/><path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184 20 6 35L54 480H0l240-179zM640 0v3L391 191l2-44L590 0h50zM0 0l239 176h-60L0 42V0z"/><path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/><path fill="#C8102E" d="M0 193v96h640v-96H0zM273 0v480h96V0h-96z"/></svg>',
+					fr: '<svg viewBox="0 0 640 480"><path fill="#002654" d="M0 0h213.3v480H0z"/><path fill="#FFF" d="M213.3 0h213.4v480H213.3z"/><path fill="#CE1126" d="M426.7 0H640v480H426.7z"/></svg>',
+					ar: '<svg viewBox="0 0 640 480"><path fill="#E70013" d="M0 0h640v480H0z"/><circle cx="320" cy="240" r="96" fill="#FFF"/><circle cx="340" cy="240" r="80" fill="#E70013"/><path fill="#FFF" d="m260 240 60-20 12 37-48-35h48l-48 35 12-37z"/></svg>'
+				};
+				
+				// Language change function - uses global AppTranslations if available
+				window.changeLang = function(lang) {
+					console.log('[changeLang] Switching to:', lang);
+					
+					// Close dropdown
+					document.getElementById('langSwitcher').classList.remove('is-open');
+					
+					// Update flag and code in trigger
+					var flagEl = document.getElementById('currentLangFlag');
+					var codeEl = document.getElementById('currentLangCode');
+					if (flagEl && flags[lang]) flagEl.innerHTML = flags[lang];
+					if (codeEl) codeEl.textContent = lang.toUpperCase();
+					
+					// Update active state in dropdown
+					document.querySelectorAll('.lang-switcher__option').forEach(function(opt) {
+						opt.classList.toggle('lang-switcher__option--active', opt.getAttribute('data-lang') === lang);
+					});
+					
+					// Get translations from global AppTranslations (from translations.js)
+					var dict = (window.AppTranslations && window.AppTranslations[lang]) || {};
+					
+					// Apply translations to all data-i18n elements
+					document.querySelectorAll('[data-i18n]').forEach(function(el) {
+						var key = el.getAttribute('data-i18n');
+						if (dict[key]) {
+							el.textContent = dict[key];
+						}
+					});
+					
+					// Apply translations to placeholders
+					document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+						var key = el.getAttribute('data-i18n-placeholder');
+						if (dict[key]) {
+							el.placeholder = dict[key];
+						}
+					});
+					
+					// Save to localStorage
+					localStorage.setItem('app-language', lang);
+					
+					// Apply RTL for Arabic
+					if (lang === 'ar') {
+						document.documentElement.dir = 'rtl';
+						document.documentElement.lang = 'ar';
+						document.body.classList.add('rtl');
+					} else {
+						document.documentElement.dir = 'ltr';
+						document.documentElement.lang = lang;
+						document.body.classList.remove('rtl');
+					}
+					
+					// Dispatch event for other components
+					document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+					
+					console.log('[changeLang] Applied translations for', lang);
+				};
+				
+				// Close dropdown when clicking outside
+				document.addEventListener('click', function(e) {
+					var switcher = document.getElementById('langSwitcher');
+					if (switcher && !switcher.contains(e.target)) {
+						switcher.classList.remove('is-open');
+					}
+				});
+				
+				// Apply saved language on page load
+				document.addEventListener('DOMContentLoaded', function() {
+					var saved = localStorage.getItem('app-language');
+					if (saved && saved !== 'en') {
+						// Small delay to ensure AppTranslations is loaded
+						setTimeout(function() {
+							window.changeLang(saved);
+						}, 50);
+					}
+				});
+			</script>
+
+			<div class="topnav__item topnav__item--right" data-topnav-dropdown>
+				<button class="topnav__trigger" type="button" data-topnav-trigger aria-haspopup="menu" aria-expanded="false">
+					{{ ui_icon('user', 'ui-icon ui-icon--muted') }}
+					<span data-i18n="nav.account">Account</span>
+					<span class="topnav__chevron" aria-hidden="true"></span>
+				</button>
+				<div class="topnav__panel" role="menu" aria-label="Account">
+					<div class="topnav__panelSection" role="none">
+						<div class="topnav__panelHeading" role="none" data-i18n="nav.account">Account</div>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/account-settings">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.accountSettings">Account settings</div>
+								<div class="topnav__panelDesc" data-i18n="nav.accountSettingsDesc">Preferences and appearance</div>
+							</div>
+						</a>
+						<a class="topnav__panelLink" role="menuitem" href="/ui/logout" data-no-smooth-nav="1">
+							<div class="topnav__panelMain">
+								<div class="topnav__panelTitle" data-i18n="nav.logout">Logout</div>
+								<div class="topnav__panelDesc" data-i18n="nav.logoutDesc">Sign out of your session</div>
+							</div>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</header>

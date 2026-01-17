@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}TrafficSafe{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23080F25' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'%3E%3C/path%3E%3Cline x1='12' y1='9' x2='12' y2='13'%3E%3C/line%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'%3E%3C/line%3E%3C/svg%3E">
+    <meta name="view-transition" content="same-origin">
+
+    <script>
+        // Enable pre-paint page fade-in (avoids refresh flicker/FOUC).
+        document.documentElement.classList.add('js');
+    </script>
+
+    <style>
+        html, body {
+            overflow-x: hidden;
+        }
+        
+        html {
+            height: 100%;
+        }
+        
+        body {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: var(--ui-bg);
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cross-document View Transitions for page-to-page nav */
+        @view-transition { navigation: auto; }
+        :root { view-transition-name: root; }
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 180ms;
+            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        ::view-transition-old(root) { animation-name: fadeOut; }
+        ::view-transition-new(root) { animation-name: fadeIn; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        html.js body.page-preload { opacity: 0; }
+        html.js body.page-ready { opacity: 1; transition: opacity 120ms ease; }
+        @media (prefers-reduced-motion: reduce) {
+            html.js body.page-ready { transition: none; }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: var(--ui-surface);
+            padding: 40px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(33, 44, 77, 0.08);
+            border: 1px solid var(--ui-border);
+            flex: 1;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-weight: 800;
+            letter-spacing: -0.015em;
+            line-height: 1.3;
+        }
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border-radius: 10px;
+            border: 1.5px solid var(--ui-border-strong);
+            transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+            font-family: inherit;
+        }
+
+        /* Scope width:100% only to form elements inside main content */
+        .container input,
+        .container select,
+        main input,
+        main select,
+        [class*="page"] input:not(.topnav input),
+        [class*="page"] select:not(.topnav select) {
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--ui-primary);
+            box-shadow: 0 0 0 4px var(--ui-focus);
+        }
+
+        /* Scope button styles to main content only, not navbar */
+        .container button,
+        main button,
+        .btn,
+        [class*="page"] button:not(.topnav button):not(.topnav__trigger) {
+            background-color: var(--ui-primary);
+            color: var(--brand-100);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 2px 8px rgba(33, 44, 77, 0.12);
+        }
+
+        .container button:hover,
+        main button:hover,
+        .btn:hover,
+        [class*="page"] button:not(.topnav button):not(.topnav__trigger):hover {
+            background-color: var(--ui-primary-hover);
+            box-shadow: 0 4px 16px rgba(33, 44, 77, 0.18);
+            transform: translateY(-2px);
+        }
+
+        .container button:active,
+        main button:active,
+        .btn:active,
+        [class*="page"] button:not(.topnav button):not(.topnav__trigger):active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(33, 44, 77, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(33, 44, 77, 0.08);
+        }
+
+        table th, table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--ui-border);
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        table th {
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(33, 44, 77, 0.02) 0%, rgba(33, 44, 77, 0) 100%);
+            color: var(--ui-text);
+        }
+
+        table tbody tr:hover {
+            background: rgba(33, 44, 77, 0.04);
+        }
+
+        .error {
+            color: var(--ui-primary);
+            margin-top: 10px;
+            background: rgba(255, 69, 58, 0.08);
+            border: 1.5px solid rgba(255, 69, 58, 0.3);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        /* Stat update animation */
+        .stat-updated {
+            animation: statPulse 0.5s ease;
+        }
+        @keyframes statPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); color: #3B82F6; }
+        }
+
+        /* New row highlight */
+        .new-row-highlight {
+            animation: newRowHighlight 3s ease;
+        }
+        @keyframes newRowHighlight {
+            0% { background: rgba(59, 130, 246, 0.2); }
+            100% { background: transparent; }
+        }
+    </style>
+
+    <!-- SF Pro Display Font -->
+    <link href="/static/css/fonts.css" rel="stylesheet">
+
+    <link href="/static/css/modern.css" rel="stylesheet">
+    <!-- Lucide (outline icons, consistent stroke) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link href="/static/css/ios-ui.css" rel="stylesheet">
+    <link href="/static/css/animations.css" rel="stylesheet">
+    <link href="/static/css/ui-enhancements.css" rel="stylesheet">
+    <link href="/static/css/polish.css" rel="stylesheet">
+    
+    <!-- New Feature Styles -->
+    <link href="/static/css/toast.css" rel="stylesheet">
+    <link href="/static/css/skeleton.css" rel="stylesheet">
+    <link href="/static/css/keyboard-shortcuts.css" rel="stylesheet">
+    <link href="/static/css/onboarding.css" rel="stylesheet">
+    <link href="/static/css/confirm-dialog.css" rel="stylesheet">
+    <link href="/static/css/progress.css" rel="stylesheet">
+    <link href="/static/css/global-search.css" rel="stylesheet">    
+    <!-- Internationalization - load early so translations are available -->
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/translations.js"></script></head>
+<body class="page-preload {% if session.dark_mode %}dark-mode{% endif %}">
+
+<script>
+    (function () {
+        function markPageReady() {
+            if (!document.body) return;
+            document.body.classList.add('page-ready');
+            document.body.classList.remove('page-preload');
+        }
+
+        function scheduleReveal() {
+            window.requestAnimationFrame(markPageReady);
+        }
+
+        if (document.readyState === 'loading') {
+            const onReadyStateChange = function () {
+                if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                    document.removeEventListener('readystatechange', onReadyStateChange);
+                    scheduleReveal();
+                }
+            };
+            document.addEventListener('readystatechange', onReadyStateChange);
+        } else {
+            scheduleReveal();
+        }
+        window.addEventListener('pageshow', scheduleReveal);
+    })();
+</script>
+
+{% include "navbar.html" %}
+
+<div class="container page-fade">
+    {% block content %}{% endblock %}
+</div>
+
+
+{% include '_footer.html' %}
+
+<script src="/static/js/smooth-nav.js"></script>
+<script src="/static/js/topnav.js"></script>
+<script src="/static/js/ui-enhancements.js"></script>
+
+<!-- New Feature Scripts -->
+<script src="/static/js/toast.js"></script>
+<script src="/static/js/keyboard-shortcuts.js"></script>
+<script src="/static/js/onboarding.js"></script>
+<script src="/static/js/realtime.js"></script>
+<script src="/static/js/confirm-dialog.js"></script>
+
+<script>
+    (function () {
+        function renderIcons() {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderIcons);
+        } else {
+            renderIcons();
+        }
+
+        document.addEventListener('content:loaded', renderIcons);
+        window.addEventListener('pageshow', renderIcons);
+    })();
+</script>
+
+<!-- Flash Messages to Toast -->
+<script>
+(function() {
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            document.addEventListener('DOMContentLoaded', function() {
+                {% for category, message in messages %}
+                    {% if category == 'success' %}
+                        Toast.success('{{ message|e }}');
+                    {% elif category == 'danger' or category == 'error' %}
+                        Toast.error('{{ message|e }}');
+                    {% elif category == 'warning' %}
+                        Toast.warning('{{ message|e }}');
+                    {% else %}
+                        Toast.info('{{ message|e }}');
+                    {% endif %}
+                {% endfor %}
+            });
+        {% endif %}
+    {% endwith %}
+})();
+</script>
+
+</body>
+</html>

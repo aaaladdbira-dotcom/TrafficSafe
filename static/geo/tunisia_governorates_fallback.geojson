@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "name": "Ariana" }, "geometry": { "type": "Point", "coordinates": [10.1647, 36.8665] } },
+    { "type": "Feature", "properties": { "name": "Beja" }, "geometry": { "type": "Point", "coordinates": [9.1833, 36.7333] } },
+    { "type": "Feature", "properties": { "name": "Ben Arous" }, "geometry": { "type": "Point", "coordinates": [10.2183, 36.7531] } },
+    { "type": "Feature", "properties": { "name": "Bizerte" }, "geometry": { "type": "Point", "coordinates": [9.8739, 37.2746] } },
+    { "type": "Feature", "properties": { "name": "Gabes" }, "geometry": { "type": "Point", "coordinates": [10.0982, 33.8815] } },
+    { "type": "Feature", "properties": { "name": "Gafsa" }, "geometry": { "type": "Point", "coordinates": [8.7842, 34.425] } },
+    { "type": "Feature", "properties": { "name": "Jendouba" }, "geometry": { "type": "Point", "coordinates": [8.78, 36.5019] } },
+    { "type": "Feature", "properties": { "name": "Kairouan" }, "geometry": { "type": "Point", "coordinates": [10.0963, 35.6781] } },
+    { "type": "Feature", "properties": { "name": "Kasserine" }, "geometry": { "type": "Point", "coordinates": [8.8365, 35.1676] } },
+    { "type": "Feature", "properties": { "name": "Kebili" }, "geometry": { "type": "Point", "coordinates": [8.969, 33.7044] } },
+    { "type": "Feature", "properties": { "name": "Kef" }, "geometry": { "type": "Point", "coordinates": [8.714, 36.1829] } },
+    { "type": "Feature", "properties": { "name": "Mahdia" }, "geometry": { "type": "Point", "coordinates": [11.0622, 35.5047] } },
+    { "type": "Feature", "properties": { "name": "Manouba" }, "geometry": { "type": "Point", "coordinates": [10.0868, 36.8086] } },
+    { "type": "Feature", "properties": { "name": "Medenine" }, "geometry": { "type": "Point", "coordinates": [10.5055, 33.3549] } },
+    { "type": "Feature", "properties": { "name": "Monastir" }, "geometry": { "type": "Point", "coordinates": [10.8262, 35.7779] } },
+    { "type": "Feature", "properties": { "name": "Nabeul" }, "geometry": { "type": "Point", "coordinates": [10.7376, 36.4513] } },
+    { "type": "Feature", "properties": { "name": "Sfax" }, "geometry": { "type": "Point", "coordinates": [10.7603, 34.7406] } },
+    { "type": "Feature", "properties": { "name": "Sidi Bouzid" }, "geometry": { "type": "Point", "coordinates": [9.4849, 35.0382] } },
+    { "type": "Feature", "properties": { "name": "Siliana" }, "geometry": { "type": "Point", "coordinates": [9.3667, 36.0833] } },
+    { "type": "Feature", "properties": { "name": "Sousse" }, "geometry": { "type": "Point", "coordinates": [10.63699, 35.8256] } },
+    { "type": "Feature", "properties": { "name": "Tataouine" }, "geometry": { "type": "Point", "coordinates": [10.4518, 32.9297] } },
+    { "type": "Feature", "properties": { "name": "Tozeur" }, "geometry": { "type": "Point", "coordinates": [8.1336, 33.92] } },
+    { "type": "Feature", "properties": { "name": "Tunis" }, "geometry": { "type": "Point", "coordinates": [10.1815, 36.8065] } },
+    { "type": "Feature", "properties": { "name": "Zaghouan" }, "geometry": { "type": "Point", "coordinates": [10.1429, 36.4029] } }
+  ]
+}

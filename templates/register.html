@@ -1,0 +1,429 @@
+{% extends "base_public.html" %}
+{% from "ui/icons.html" import ui_icon %}
+
+{% block title %}Create Account — TrafficSafe{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+  <!-- Left Panel - Brand -->
+  <div class="auth-brand-panel">
+    <div class="auth-brand-content">
+      <div class="auth-brand-header">
+        <div class="auth-logo">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h1 class="auth-brand-title">TrafficSafe</h1>
+      </div>
+      <p class="auth-brand-subtitle">Join Tunisia's Traffic Safety Network. Create your account to report accidents, access statistics, and contribute to road safety.</p>
+      
+      <div class="auth-stats auth-stats--horizontal">
+        <div class="auth-stat">
+          <span class="auth-stat-value auth-stat-value--huge">{{ stats.governorates if stats else '24' }}</span>
+          <span class="auth-stat-label auth-stat-label--huge" data-i18n="register.governorates">Governorates</span>
+        </div>
+        <div class="auth-stat">
+          <span class="auth-stat-value auth-stat-value--huge">{{ stats.reports if stats else '1K+' }}</span>
+          <span class="auth-stat-label auth-stat-label--huge" data-i18n="register.reports">Reports</span>
+        </div>
+        <div class="auth-stat">
+          <span class="auth-stat-value auth-stat-value--huge">{{ stats.users if stats else '100+' }}</span>
+          <span class="auth-stat-label auth-stat-label--huge" data-i18n="register.users">Users</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="auth-brand-footer">
+      <p data-i18n="footer.copyright">© 2026 TrafficSafe. All rights reserved.</p>
+    </div>
+  </div>
+
+  <!-- Right Panel - Form -->
+  <div class="auth-form-panel">
+    <div class="auth-form-container auth-form-container--wide">
+      <div class="auth-form-header">
+        <h2 data-i18n="register.createAccount">Create your account</h2>
+        <p data-i18n="register.fillDetails">Fill in your details to get started</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-sm">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" autocomplete="off" enctype="multipart/form-data" class="auth-form">
+        <!-- Avatar Upload -->
+        <div class="auth-avatar-upload">
+          <label for="avatar" class="auth-avatar-label">
+            <input type="file" id="avatar" name="avatar" accept="image/*" onchange="previewAvatar(event)">
+            <div class="auth-avatar-preview" id="avatarContainer">
+              <img id="avatarPreview" alt="Avatar" style="display: none;">
+              <span id="avatarIcon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </span>
+            </div>
+            <span class="auth-avatar-text" data-i18n="register.uploadPhoto">Upload photo</span>
+          </label>
+        </div>
+
+        <div class="auth-field">
+          <label for="full_name" data-i18n="register.fullName">Full Name</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <input type="text" id="full_name" name="full_name" placeholder="Your full name" required />
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="email" data-i18n="register.email">Email Address</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <input type="email" id="email" name="email" placeholder="you@email.com" required />
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="gender" data-i18n="register.gender">Gender</label>
+          <div class="auth-input-wrapper auth-select-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <select id="gender" name="gender" required>
+              <option value="" data-i18n="register.selectGender">Select gender</option>
+              <option value="male" data-i18n="register.male">Male</option>
+              <option value="female" data-i18n="register.female">Female</option>
+              <option value="other" data-i18n="register.other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="date_of_birth" data-i18n="register.dateOfBirth">Date of Birth</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <input type="date" id="date_of_birth" name="date_of_birth" required />
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="national_id">National ID</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="12" y2="12"></line></svg>
+            <input type="text" id="national_id" name="national_id" pattern="\d{8}" maxlength="8" placeholder="8 digits" required />
+          </div>
+          <span class="auth-hint">Tunisia national ID (8 digits)</span>
+        </div>
+        <div class="auth-field">
+          <label for="user_type">User Type</label>
+          <div class="auth-input-wrapper auth-select-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <select id="user_type" name="user_type" required onchange="showFields()">
+              <option value="">Select user type</option>
+              <option value="citizen">Citizen</option>
+              <option value="police">Police Officer</option>
+              <option value="media">Media / Journalist</option>
+            </select>
+          </div>
+        </div>
+        <div class="auth-field auth-field--full">
+          <label for="password" data-i18n="register.password">Password</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input type="password" id="password" name="password" placeholder="Create a strong password" required />
+          </div>
+        </div>
+
+        <!-- Conditional Fields -->
+        <div id="work_place_field" class="auth-field auth-conditional" style="display: none;">
+          <label for="work_place">Place of Work</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <input type="text" id="work_place" name="work_place" placeholder="e.g. Police Station, News Agency" />
+          </div>
+        </div>
+
+        <div id="badge_number_field" class="auth-field auth-conditional" style="display: none;">
+          <label for="badge_number">Police Badge Number</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <input type="text" id="badge_number" name="badge_number" placeholder="Your badge number" />
+          </div>
+        </div>
+
+        <div id="journalist_id_field" class="auth-field auth-conditional" style="display: none;">
+          <label for="journalist_id">Press Card / Journalist ID</label>
+          <div class="auth-input-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="12" y2="12"></line></svg>
+            <input type="text" id="journalist_id" name="journalist_id" placeholder="Your press card number" />
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="auth-terms">
+          <label class="auth-checkbox">
+            <input type="checkbox" name="terms" required />
+            <span class="checkmark"></span>
+            <span data-i18n="register.agreeTerms">I agree to the Terms of Service and Privacy Policy</span>
+          </label>
+        </div>
+
+        <button type="submit" class="auth-submit">
+          <span data-i18n="register.createAccountBtn">Create Account</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+
+        <p class="auth-footer-text">
+          <span data-i18n="register.haveAccount">Already have an account?</span> <a href="/ui/login" data-i18n="register.signIn">Sign in</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Copied and aligned with login page styles, plus avatar & stats additions */
+
+/* Auth Page Layout */
+.auth-page { display: flex; height: 100vh; overflow: hidden; }
+.auth-brand-panel { flex: 1; background: linear-gradient(135deg, #080F25 0%, #212C4D 50%, #37446B 100%); color: white; display: flex; flex-direction: column; justify-content: space-between; padding: 48px; position: relative; overflow: hidden; }
+.auth-brand-panel::before { content: ''; position: absolute; top: -50%; right: -50%; width: 100%; height: 100%; background: radial-gradient(circle, rgba(174,185,225,0.08) 0%, transparent 60%); pointer-events: none; animation: floatGlow 8s ease-in-out infinite; }
+.auth-brand-panel::after { content: ''; position: absolute; bottom: -30%; left: -30%; width: 80%; height: 80%; background: radial-gradient(circle, rgba(126,137,172,0.1) 0%, transparent 50%); pointer-events: none; animation: floatGlow 10s ease-in-out infinite reverse; }
+
+@keyframes floatGlow {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  50% { transform: translate(20px, -20px) scale(1.1); opacity: 1; }
+}
+
+.auth-brand-content { position: relative; z-index: 1; }
+.auth-brand-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+.auth-logo { width: 64px; height: 64px; background: rgba(255,255,255,0.12); border-radius: 18px; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(12px); border:1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 32px rgba(0,0,0,0.2); transition: transform 300ms ease, box-shadow 300ms ease; flex-shrink: 0; }
+.auth-logo:hover { transform: translateY(-4px) rotate(2deg); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+.auth-logo svg { color: white; }
+.auth-brand-title { font-size:32px; font-weight:700; margin:0; letter-spacing:-0.02em; color:#ffffff; text-shadow:0 2px 4px rgba(0,0,0,0.1); }
+.auth-brand-subtitle { font-size:16px; opacity:0.8; line-height:1.6; margin:0 0 48px 0; max-width:400px; }
+.auth-features { display:flex; flex-direction:column; gap:24px; }
+.auth-feature { display:flex; align-items:flex-start; gap:16px; }
+.auth-feature-icon { width:44px; height:44px; background:rgba(255,255,255,0.1); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#AEB9E1; transition: transform 200ms ease, background 200ms ease; }
+.auth-feature:hover .auth-feature-icon { transform: scale(1.1); background: rgba(255,255,255,0.15); }
+.auth-feature-text { display:flex; flex-direction:column; gap:4px; }
+.auth-feature-text strong { font-size:14px; font-weight:600; }
+.auth-feature-text span { font-size:13px; opacity:0.7; }
+.auth-brand-footer { position:relative; z-index:1; }
+.auth-brand-footer p { font-size:12px; opacity:0.5; margin:0; }
+
+/* Form Panel (Right) */
+.auth-form-panel { flex: 1; display:flex; align-items:center; justify-content:center; padding:32px; background:#f8fafc; overflow-y: auto; animation: fadeInRight 400ms ease; }
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.auth-form-panel--scroll { align-items:flex-start; overflow-y:auto; padding-top:32px; padding-bottom:32px; }
+.auth-form-container { width:100%; max-width:520px; }
+.auth-form-container--wide { max-width:520px; }
+.auth-form-header { margin-bottom:24px; text-align: center; }
+.auth-form-header h2 { font-size:28px; font-weight:700; color:#080F25; margin:0 0 8px 0; letter-spacing: -0.02em; }
+.auth-form-header p { font-size:14px; color:#7E89AC; margin:0; }
+
+/* Avatar & Stats (register-specific) */
+.auth-avatar-upload { display:flex; justify-content:center; margin-bottom:16px; grid-column: 1 / -1; }
+.auth-avatar-label { display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; }
+.auth-avatar-label input { display:none; }
+.auth-avatar-preview { width:80px; height:80px; border-radius:50%; background: linear-gradient(135deg, #D1DBF9 0%, #AEB9E1 100%); display:flex; align-items:center; justify-content:center; overflow:hidden; border:3px solid white; box-shadow:0 6px 20px rgba(0,0,0,0.10); transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1); }
+.auth-avatar-preview:hover { transform:scale(1.05) rotate(2deg); box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
+.auth-avatar-preview img { width:100%; height:100%; object-fit:cover; }
+.auth-avatar-preview span { color:#37446B; }
+.auth-avatar-text { font-size:12px; color:#7E89AC; font-weight:500; }
+.auth-stats--horizontal { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:40px; margin:40px 0 0 0; }
+.auth-stat { display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; opacity: 0; animation: fadeInUp 500ms ease forwards; }
+.auth-stat:nth-child(1) { animation-delay: 200ms; }
+.auth-stat:nth-child(2) { animation-delay: 350ms; }
+.auth-stat:nth-child(3) { animation-delay: 500ms; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-stat-value { font-size:36px; font-weight:800; color:#AEB9E1; letter-spacing:-0.02em; background: linear-gradient(135deg, #AEB9E1 0%, #D1DBF9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.auth-stat-label--huge { font-size:12px; opacity:0.8; letter-spacing:0.1em; font-weight:600; text-align:center; line-height:1.2; text-transform: uppercase; }
+
+/* Form Fields (matching login) */
+.auth-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.auth-field { display:flex; flex-direction:column; gap:6px; }
+
+/* Elements that should span both columns */
+.auth-field--full,
+.auth-avatar-upload,
+.auth-form-header,
+.auth-footer-text,
+.auth-terms,
+.auth-submit { grid-column: 1 / -1; }
+.auth-field label { font-size:12px; font-weight:600; color:#37446B; }
+.auth-field-header { display:flex; justify-content:space-between; align-items:center; }
+.auth-forgot { font-size:12px; color:#37446B; text-decoration:none; font-weight:500; }
+.auth-forgot:hover { color:#212C4D; text-decoration:underline; }
+.auth-input-wrapper { position:relative; display:flex; align-items:center; }
+.auth-input-wrapper svg { position:absolute; left:12px; color:#7E89AC; pointer-events:none; width:16px; height:16px; }
+.auth-input-wrapper input, .auth-input-wrapper select { width:100%; padding:12px 12px 12px 40px; font-size:14px; border:2px solid #E2E8F0; border-radius:12px; background:white; color:#080F25; transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.auth-input-wrapper--password input { padding-right:44px; }
+.auth-input-wrapper input:hover, .auth-input-wrapper select:hover { border-color: #CBD5E1; }
+.auth-input-wrapper input:focus, .auth-input-wrapper select:focus { outline:none; border-color:#37446B; box-shadow:0 0 0 3px rgba(55,68,107,0.10), 0 1px 2px rgba(0,0,0,0.04); }
+.auth-input-wrapper input::placeholder { color:#94A3B8; font-size:13px; }
+.auth-toggle-password { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#7E89AC; cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; transition: background-color 150ms ease, color 150ms ease; }
+.auth-toggle-password:hover { color:#37446B; background-color: rgba(55,68,107,0.08); }
+.auth-hint { font-size:11px; color:#94A3B8; margin-top:2px; }
+
+/* Remember / Terms / Checkbox */
+.auth-remember { display:flex; align-items:center; }
+.auth-checkbox { display:flex; align-items:center; gap:8px; font-size:12px; color:#37446B; cursor:pointer; line-height:1.4; }
+.auth-checkbox input { display:none; }
+.auth-checkbox .checkmark { width:16px; height:16px; border:2px solid #D1DBF9; border-radius:4px; display:flex; align-items:center; justify-content:center; transition:all 150ms ease; flex-shrink:0; }
+.auth-checkbox input:checked + .checkmark { background:#37446B; border-color:#37446B; }
+.auth-checkbox input:checked + .checkmark::after { content:''; width:4px; height:8px; border:solid white; border-width:0 2px 2px 0; transform:rotate(45deg); margin-bottom:2px; }
+.auth-checkbox a { color:#212C4D; font-weight:500; }
+.auth-terms { margin-top:4px; }
+
+/* Submit Button (matching login) */
+.auth-submit { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px 20px; font-size:15px; font-weight:600; color:white; background: linear-gradient(135deg, #212C4D 0%, #37446B 50%, #212C4D 100%); background-size: 200% 200%; border:none; border-radius:12px; cursor:pointer; transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 14px rgba(33,44,77,0.25); position: relative; overflow: hidden; margin-top:8px; }
+.auth-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%); opacity: 0; transition: opacity 200ms ease; }
+.auth-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(33,44,77,0.35); background-position: 100% 100%; }
+.auth-submit:hover::before { opacity: 1; }
+.auth-submit:active { transform: translateY(0); box-shadow: 0 4px 14px rgba(33,44,77,0.25); }
+.auth-submit svg { transition: transform 200ms ease; }
+.auth-submit:hover svg { transform: translateX(4px); }
+
+/* Divider / Social / Footer / Alerts */
+.auth-divider { display:flex; align-items:center; gap:16px; color:#AEB9E1; font-size:12px; }
+.auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:#D9E1FA; }
+.auth-social-buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.auth-social-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:10px; font-size:13px; font-weight:500; color:#37446B; background:white; border:1px solid #D1DBF9; border-radius:10px; cursor:pointer; transition:background 150ms ease, border-color 150ms ease; }
+.auth-social-btn:hover { background:#f8fafc; border-color:#AEB9E1; }
+.auth-footer-text { text-align:center; font-size:13px; color:#7E89AC; margin:8px 0 0 0; }
+.auth-footer-text a { color:#212C4D; font-weight:600; text-decoration:none; }
+.auth-footer-text a:hover { text-decoration:underline; }
+.alert-sm { padding:10px 14px; font-size:12px; border-radius:10px; margin-bottom:14px; grid-column: 1 / -1; }
+
+/* Responsive */
+@media (max-width: 1024px) { .auth-brand-panel { display:none; } .auth-form-panel { padding:20px; } }
+@media (max-width: 600px) {
+  .auth-form { grid-template-columns: 1fr; gap: 12px; }
+  .auth-form-container { max-width: 100%; }
+  .auth-social-buttons { grid-template-columns:1fr; }
+  .auth-form-header h2 { font-size: 24px; }
+}
+
+/* Dark Mode Styles */
+body.dark-mode .auth-form-panel {
+  background: var(--ui-bg);
+}
+
+body.dark-mode .auth-form-header h2 {
+  color: var(--ui-text);
+}
+
+body.dark-mode .auth-form-header p {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .auth-field label {
+  color: var(--ui-text);
+}
+
+body.dark-mode .auth-input-wrapper input,
+body.dark-mode .auth-input-wrapper select {
+  background: var(--brand-700);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text);
+}
+
+body.dark-mode .auth-input-wrapper input::placeholder {
+  color: var(--brand-400);
+}
+
+body.dark-mode .auth-input-wrapper input:focus,
+body.dark-mode .auth-input-wrapper select:focus {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 3px var(--ui-focus);
+}
+
+body.dark-mode .auth-input-wrapper svg {
+  color: var(--brand-400);
+}
+
+body.dark-mode .auth-avatar-preview {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 100%);
+  border-color: var(--ui-border);
+}
+
+body.dark-mode .auth-avatar-preview span {
+  color: var(--brand-200);
+}
+
+body.dark-mode .auth-avatar-text {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .auth-checkbox {
+  color: var(--ui-text);
+}
+
+body.dark-mode .auth-checkbox .checkmark {
+  border-color: var(--ui-border-strong);
+}
+
+body.dark-mode .auth-checkbox a {
+  color: var(--brand-300);
+}
+
+body.dark-mode .auth-footer-text {
+  color: var(--ui-muted);
+}
+
+body.dark-mode .auth-footer-text a {
+  color: var(--brand-300);
+}
+
+body.dark-mode .auth-hint {
+  color: var(--ui-muted);
+}
+</style>
+
+<script>
+function previewAvatar(event) {
+  const input = event.target;
+  const file = input.files && input.files[0];
+  const preview = document.getElementById('avatarPreview');
+  const icon = document.getElementById('avatarIcon');
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      icon.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.src = '';
+    preview.style.display = 'none';
+    icon.style.display = 'block';
+  }
+}
+
+function showFields() {
+  var userType = document.getElementById('user_type').value;
+  document.getElementById('work_place_field').style.display = 'none';
+  document.getElementById('badge_number_field').style.display = 'none';
+  document.getElementById('journalist_id_field').style.display = 'none';
+  
+  if (userType === 'police') {
+    document.getElementById('work_place_field').style.display = 'flex';
+    document.getElementById('badge_number_field').style.display = 'flex';
+  } else if (userType === 'media') {
+    document.getElementById('work_place_field').style.display = 'flex';
+    document.getElementById('journalist_id_field').style.display = 'flex';
+  }
+}
+</script>
+{% endblock %}

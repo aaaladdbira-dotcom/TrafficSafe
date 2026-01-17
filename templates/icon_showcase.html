@@ -1,0 +1,335 @@
+{% extends "base_private.html" %}
+{% from "ui/icons.html" import ui_icon %}
+
+{% block title %}Icon Showcase - Lucide Icons{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-3">Lucide Icon Showcase</h1>
+        <p class="lead text-muted">Beautiful modern icons for TrafficSafe</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Navigation & UI Icons -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ ui_icon('home', 'me-2') }} Navigation & UI</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('home', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">home</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('dashboard', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">dashboard</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('chart', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">chart</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('stats', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">stats</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('settings', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">settings</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('menu', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">menu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User & Account Icons -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{{ ui_icon('user', 'me-2') }} User & Account</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('user', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">user</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('users', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">users</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('user-add', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">user-add</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('id-card', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">id-card</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('shield', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">shield</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('lock', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">lock</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions & Controls -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">{{ ui_icon('bolt', 'me-2') }} Actions & Controls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('plus', 'ui-icon--xl ui-icon--success') }}</div>
+                            <small class="text-muted">plus</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('check', 'ui-icon--xl ui-icon--success') }}</div>
+                            <small class="text-muted">check</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('x', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">x / close</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('edit', 'ui-icon--xl ui-icon--primary') }}</div>
+                            <small class="text-muted">edit</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('delete', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">delete</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('search', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">search</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('filter', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">filter</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('refresh', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">refresh</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('arrow-left', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">arrow-left</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files & Data -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">{{ ui_icon('file', 'me-2') }} Files & Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('file', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">file</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('clipboard', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">clipboard</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('upload', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">upload</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('cloud-upload', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">cloud-upload</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('download', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">download</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('print', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">print</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background: #9333ea; color: white;">
+                    <h5 class="mb-0">{{ ui_icon('mail', 'me-2') }} Communication</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('mail', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">mail</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('bell', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">bell</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('eye', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">eye</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Special & Misc -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">{{ ui_icon('sparkles', 'me-2') }} Special & Misc</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('sparkles', 'ui-icon--xl ui-icon--warning') }}</div>
+                            <small class="text-muted">sparkles</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('wand', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">wand</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('bolt', 'ui-icon--xl ui-icon--warning') }}</div>
+                            <small class="text-muted">bolt</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('car', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">car</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('location', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">location</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('calendar', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">calendar</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('time', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">time</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('display', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">display</small>
+                        </div>
+                        <div class="col-6 col-lg-4 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('logout', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">logout</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Icons -->
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background: #06b6d4; color: white;">
+                    <h5 class="mb-0">{{ ui_icon('info', 'me-2') }} Status & Feedback</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('info', 'ui-icon--xl ui-icon--info') }}</div>
+                            <small class="text-muted">info</small>
+                        </div>
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('success', 'ui-icon--xl ui-icon--success') }}</div>
+                            <small class="text-muted">success</small>
+                        </div>
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('warning', 'ui-icon--xl ui-icon--warning') }}</div>
+                            <small class="text-muted">warning</small>
+                        </div>
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('error', 'ui-icon--xl ui-icon--danger') }}</div>
+                            <small class="text-muted">error</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Icons -->
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="mb-0">Social & Brand Icons</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('google', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">google</small>
+                        </div>
+                        <div class="col-6 col-lg-3 text-center p-3">
+                            <div class="mb-2">{{ ui_icon('facebook', 'ui-icon--xl') }}</div>
+                            <small class="text-muted">facebook</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Examples -->
+    <div class="card shadow-sm mt-5">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Usage Examples</h5>
+        </div>
+        <div class="card-body">
+            <h6 class="fw-bold mb-3">Basic Usage:</h6>
+            <pre class="bg-light p-3 rounded"><code>{% raw %}{% from "ui/icons.html" import ui_icon %}
+{{ ui_icon('user') }}  {# Default size and color #}
+{{ ui_icon('chart', 'ui-icon--xl') }}  {# Extra large #}
+{{ ui_icon('check', 'ui-icon--success') }}  {# Green color #}{% endraw %}</code></pre>
+
+            <h6 class="fw-bold mb-3 mt-4">Size Classes:</h6>
+            <div class="d-flex align-items-center gap-4 mb-3">
+                <div>{{ ui_icon('star', 'ui-icon--sm') }} <code>ui-icon--sm</code></div>
+                <div>{{ ui_icon('star', 'ui-icon--md') }} <code>ui-icon--md</code></div>
+                <div>{{ ui_icon('star', 'ui-icon--lg') }} <code>ui-icon--lg</code></div>
+                <div>{{ ui_icon('star', 'ui-icon--xl') }} <code>ui-icon--xl</code></div>
+            </div>
+
+            <h6 class="fw-bold mb-3 mt-4">Color Classes:</h6>
+            <div class="d-flex align-items-center gap-4">
+                <div>{{ ui_icon('shield', 'ui-icon--primary') }} <code>ui-icon--primary</code></div>
+                <div>{{ ui_icon('shield', 'ui-icon--success') }} <code>ui-icon--success</code></div>
+                <div>{{ ui_icon('shield', 'ui-icon--danger') }} <code>ui-icon--danger</code></div>
+                <div>{{ ui_icon('shield', 'ui-icon--warning') }} <code>ui-icon--warning</code></div>
+                <div>{{ ui_icon('shield', 'ui-icon--info') }} <code>ui-icon--info</code></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <strong>{{ ui_icon('info', 'me-2') }} Note:</strong> All icons are from <strong>Lucide</strong>, an outline icon library.
+        Icons automatically adapt to your theme (light/dark mode).
+    </div>
+</div>
+{% endblock %}

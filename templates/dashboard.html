@@ -1,0 +1,2875 @@
+{% extends "base_private.html" %}
+{% from "ui/icons.html" import ui_icon %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Ensure Bootstrap JS is loaded for modal functionality -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb-nav" aria-label="breadcrumb">
+  <a href="/ui/dashboard" class="breadcrumb-item active">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    <span data-i18n="dashboard.title">Dashboard</span>
+  </a>
+</nav>
+
+<h2 class="mb-4" data-i18n="dashboard.title">Dashboard</h2>
+
+<!-- User Details Modal (must be outside the card/grid for proper overlay) -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userDetailsModalLabel" data-i18n="dashboard.userDetails">User Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.name">Name:</strong> {{ user.full_name if user and user.full_name else 'N/A' }}</li>
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.email">Email:</strong> {{ user.email if user and user.email else 'N/A' }}</li>
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.role">Role:</strong> {{ user.role if user and user.role else role }}</li>
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.status">Status:</strong> <span data-i18n="common.active">Active</span></li>
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.dob">Date of Birth:</strong> {{ user.date_of_birth if user and user.date_of_birth else 'N/A' }}</li>
+          <li class="list-group-item"><strong data-i18n="dashboard.modal.age">Age:</strong> {{ user.age if user and user.age is not none else 'N/A' }}</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.close">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card">
+      <div class="card-body">
+        <div class="kpi-header">
+          <span class="kpi-icon kpi-icon--blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </span>
+          <span class="kpi-label" data-i18n="dashboard.totalAccidents">Total Accidents</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value">{{ accidents_count if accidents_count is not none else '—' }}</span>
+          <div class="kpi-sparkline" id="sparkline-accidents"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card">
+      <div class="card-body">
+        <div class="kpi-header">
+          <span class="kpi-icon kpi-icon--green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </span>
+          <span class="kpi-label" data-i18n="dashboard.imports24h">Imports (24h)</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value">{{ imports_today if imports_today is not none else '—' }}</span>
+          <div class="kpi-sparkline" id="sparkline-imports"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card">
+      <div class="card-body">
+        <div class="kpi-header">
+          <span class="kpi-icon kpi-icon--orange">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </span>
+          <span class="kpi-label" data-i18n="dashboard.lastImport">Last Import</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value kpi-value--sm">{{ last_import if last_import else 'Never' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card">
+      <div class="card-body">
+        <div class="kpi-header">
+          <span class="kpi-icon kpi-icon--red">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </span>
+          <span class="kpi-label" data-i18n="dashboard.skippedRows">Skipped Rows</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value">{{ skipped_rows_last if skipped_rows_last is not none else '—' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Cards Row -->
+<div class="row g-3">
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h6 class="card-subtitle mb-2 text-muted" data-i18n="dashboard.role">Role</h6>
+        <h5 class="card-title mb-3">{{ role }}</h5>
+        <p class="card-text text-muted small" data-i18n="dashboard.roleDesc">Permissions and available actions are tied to your role.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h6 class="card-subtitle mb-2 text-muted" data-i18n="dashboard.account">Account</h6>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div>
+            {% if gravatar_url %}
+              <img src="{{ gravatar_url }}" alt="avatar" class="rounded-circle" width="64" height="64">
+            {% else %}
+              <div class="bg-secondary rounded-circle" style="width:64px;height:64px"></div>
+            {% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="card-title mb-0">{{ email }}</h5>
+            <div class="small text-muted">{{ role }}</div>
+          </div>
+          <div>
+            <span class="badge bg-success">{{ status }}</span>
+          </div>
+        </div>
+        <p class="card-text text-muted small" data-i18n="dashboard.accountDesc">Manage your account settings and preferences.</p>
+        <div class="mt-auto">
+          <a href="/ui/account-settings" class="btn btn-sm btn-outline-success">{{ ui_icon('settings', 'ui-icon ui-icon--muted me-1') }}<span data-i18n="dashboard.accountSettings">Account settings</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h6 class="card-subtitle mb-2 text-muted" data-i18n="dashboard.quickActions">Quick actions</h6>
+        <h5 class="card-title mb-3" data-i18n="dashboard.manageData">Manage data</h5>
+        <p class="card-text text-muted small" data-i18n="dashboard.quickActionsDesc">Use these shortcuts to jump to common pages.</p>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <a href="{{ url_for('accidents_ui.accidents') }}" class="btn btn-sm btn-primary">
+            {{ ui_icon('eye', 'ui-icon ui-icon--muted me-1') }}
+            <span data-i18n="dashboard.viewAccidents">View accidents</span>
+          </a>
+          {% if role in ["government", "police"] %}
+          <a href="{{ url_for('import_ui.import_csv') }}" class="btn btn-sm btn-primary">
+            {{ ui_icon('cloud-upload', 'ui-icon ui-icon--muted me-1') }}
+            <span data-i18n="nav.importCSV">Import CSV</span>
+          </a>
+          {% endif %}
+          <a href="/ui/statistics" class="btn btn-sm btn-outline-secondary">
+            {{ ui_icon('bar-chart-2', 'ui-icon ui-icon--muted me-1') }}
+            <span data-i18n="nav.statistics">Statistics</span>
+          </a>
+        </div>
+        <div class="mt-auto text-muted small pt-3">
+          <kbd>Shift</kbd> + <kbd>?</kbd> for keyboard shortcuts
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Weather & Risk Insights Row -->
+<div class="row g-3 mt-3 mb-4">
+  <div class="col-12 col-md-6">
+    <div class="card h-100 weather-widget">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 class="card-subtitle mb-0 text-muted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+            <span data-i18n="dashboard.weather">Weather</span>
+            <span class="live-indicator ms-2" id="weatherLiveIndicator" title="Real-time data">
+              <span class="live-dot"></span>
+              <span class="live-text">LIVE</span>
+            </span>
+          </h6>
+          <div class="d-flex align-items-center gap-2">
+            <small class="text-muted live-clock" id="weatherLastUpdate">--:--:--</small>
+            <select id="weatherRegion" class="form-select form-select-sm weather-region-select">
+              <optgroup label="Greater Tunis">
+                <option value="Tunis">Tunis</option>
+                <option value="Ariana">Ariana</option>
+                <option value="Ben Arous">Ben Arous</option>
+                <option value="Manouba">Manouba</option>
+              </optgroup>
+              <optgroup label="North East">
+                <option value="Nabeul">Nabeul</option>
+                <option value="Zaghouan">Zaghouan</option>
+                <option value="Bizerte">Bizerte</option>
+              </optgroup>
+              <optgroup label="North West">
+                <option value="Béja">Béja</option>
+                <option value="Jendouba">Jendouba</option>
+                <option value="Le Kef">Le Kef</option>
+                <option value="Siliana">Siliana</option>
+              </optgroup>
+              <optgroup label="Central East (Sahel)">
+                <option value="Sousse">Sousse</option>
+                <option value="Monastir">Monastir</option>
+                <option value="Mahdia">Mahdia</option>
+                <option value="Sfax">Sfax</option>
+              </optgroup>
+              <optgroup label="Central West">
+                <option value="Kairouan">Kairouan</option>
+                <option value="Kasserine">Kasserine</option>
+                <option value="Sidi Bouzid">Sidi Bouzid</option>
+              </optgroup>
+              <optgroup label="South East">
+                <option value="Gabès">Gabès</option>
+                <option value="Médenine">Médenine</option>
+                <option value="Tataouine">Tataouine</option>
+              </optgroup>
+              <optgroup label="South West">
+                <option value="Gafsa">Gafsa</option>
+                <option value="Tozeur">Tozeur</option>
+                <option value="Kébili">Kébili</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div id="weatherContent" class="weather-content weather-animated">
+          <div class="skeleton skeleton-text" style="width: 60%;"></div>
+          <div class="skeleton skeleton-text" style="width: 40%;"></div>
+          <div class="skeleton skeleton-text" style="width: 80%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12 col-md-6">
+    <div class="card h-100 risk-widget">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 class="card-subtitle mb-0 text-muted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span data-i18n="dashboard.drivingRisk">Driving Risk Assessment</span>
+            <span class="live-indicator ms-2" id="riskLiveIndicator" title="Real-time data">
+              <span class="live-dot"></span>
+              <span class="live-text">LIVE</span>
+            </span>
+          </h6>
+          <div class="d-flex align-items-center gap-2">
+            <small class="text-muted live-clock" id="riskLastUpdate">--:--:--</small>
+            <span class="badge bg-secondary" id="riskBadge">Loading...</span>
+          </div>
+        </div>
+        <div id="riskContent" class="risk-content risk-animated">
+          <div class="skeleton skeleton-text" style="width: 70%;"></div>
+          <div class="skeleton skeleton-text" style="width: 50%;"></div>
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* KPI Card Styles */
+.kpi-card {
+  border: 1px solid var(--ui-border);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--ui-surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--kpi-color, #3b82f6), transparent);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: var(--kpi-color, #3b82f6);
+}
+
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+.kpi-card .card-body {
+  padding: 20px;
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 300ms ease, box-shadow 300ms ease;
+}
+
+.kpi-card:hover .kpi-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-icon--blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.08) 100%); color: #3b82f6; --kpi-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+.kpi-icon--green { background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.08) 100%); color: #22c55e; --kpi-color: #22c55e; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15); }
+.kpi-icon--orange { background: linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(249, 115, 22, 0.08) 100%); color: #f97316; --kpi-color: #f97316; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15); }
+.kpi-icon--red { background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.08) 100%); color: #ef4444; --kpi-color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+
+/* Pass kpi-color to parent card with gradient borders */
+.kpi-card:has(.kpi-icon--blue) { --kpi-color: #3b82f6; border: 1.5px solid rgba(59, 130, 246, 0.25); background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.01) 100%); }
+.kpi-card:has(.kpi-icon--green) { --kpi-color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.25); background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, rgba(34, 197, 94, 0.01) 100%); }
+.kpi-card:has(.kpi-icon--orange) { --kpi-color: #f97316; border: 1.5px solid rgba(249, 115, 22, 0.25); background: linear-gradient(135deg, rgba(249, 115, 22, 0.03) 0%, rgba(249, 115, 22, 0.01) 100%); }
+.kpi-card:has(.kpi-icon--red) { --kpi-color: #ef4444; border: 1.5px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(239, 68, 68, 0.01) 100%); }
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ui-text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.kpi-value--sm {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kpi-sparkline {
+  width: 80px;
+  height: 32px;
+}
+
+/* Quick Action Cards */
+.card {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(174, 185, 225, 0.15);
+  box-shadow: 0 8px 24px rgba(55, 68, 107, 0.06);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(55, 68, 107, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+  border-color: rgba(174, 185, 225, 0.3);
+}
+
+/* Stagger animation for cards */
+.row > [class*="col-"] {
+  opacity: 0;
+  animation: fadeInUp 400ms ease forwards;
+}
+
+.row > [class*="col-"]:nth-child(1) { animation-delay: 0ms; }
+.row > [class*="col-"]:nth-child(2) { animation-delay: 100ms; }
+.row > [class*="col-"]:nth-child(3) { animation-delay: 200ms; }
+.row > [class*="col-"]:nth-child(4) { animation-delay: 300ms; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Better button styling */
+.btn {
+  transition: all 200ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--ui-primary) 0%, var(--brand-600) 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(33, 44, 77, 0.2);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(33, 44, 77, 0.3);
+}
+
+/* Keyboard shortcut hint */
+kbd {
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Weather Region Select - Styled */
+.weather-region-select {
+  width: auto;
+  min-width: 140px;
+  max-width: 160px;
+  padding: 6px 28px 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background-color: var(--ui-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.weather-region-select:hover {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.weather-region-select:focus {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+
+.weather-region-select optgroup {
+  font-weight: 600;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weather-region-select option {
+  font-weight: 500;
+  padding: 8px;
+}
+
+/* Weather Widget Styles - Enhanced Real-time */
+.weather-widget, .risk-widget {
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  overflow: hidden;
+}
+
+.weather-widget .card-body,
+.risk-widget .card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.weather-content, .risk-content {
+  min-height: 120px;
+  position: relative;
+}
+
+/* Weather Animation Styles - Fast & Smooth */
+.weather-animated, .risk-animated {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.weather-animated.switching, .risk-animated.switching {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+
+.weather-animated.entering {
+  animation: weatherSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.risk-animated.entering {
+  animation: riskSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes weatherSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes riskSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Individual element animations - Only on entering */
+.weather-animated.entering .weather-main {
+  animation: fadeSlideUp 0.2s ease forwards;
+  animation-delay: 0.02s;
+}
+
+.weather-animated.entering .weather-stats-grid {
+  animation: fadeSlideUp 0.2s ease forwards;
+  animation-delay: 0.08s;
+}
+
+.weather-animated.entering .weather-stats-grid .weather-stat {
+  animation: statPop 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(1) { animation-delay: 0.05s; }
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(2) { animation-delay: 0.08s; }
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(3) { animation-delay: 0.11s; }
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(4) { animation-delay: 0.14s; }
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(5) { animation-delay: 0.17s; }
+.weather-animated.entering .weather-stats-grid .weather-stat:nth-child(6) { animation-delay: 0.2s; }
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes statPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Weather icon bounce animation - Only on entering */
+.weather-animated.entering .weather-icon-large {
+  animation: iconBounce 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.02s;
+}
+
+@keyframes iconBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Temperature counter animation - Only on entering */
+.weather-animated.entering .weather-temp-main {
+  animation: tempCount 0.2s ease forwards;
+  animation-delay: 0.05s;
+}
+
+@keyframes tempCount {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gaugeAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Risk sections stagger animation - Only on entering */
+.risk-animated.entering .risk-header {
+  animation: fadeSlideUp 0.2s ease forwards;
+  animation-delay: 0.02s;
+}
+
+.risk-animated.entering .risk-section {
+  animation: fadeSlideUp 0.2s ease forwards;
+  opacity: 0;
+}
+
+.risk-animated.entering .risk-sections .risk-section:nth-child(1) { animation-delay: 0.08s; }
+.risk-animated.entering .risk-sections .risk-section:nth-child(2) { animation-delay: 0.14s; }
+.risk-animated.entering .risk-sections .risk-section:nth-child(3) { animation-delay: 0.2s; }
+
+/* Condition items pop animation */
+.risk-animated.entering .condition-item,
+.risk-animated.entering .speed-item {
+  animation: statPop 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.risk-animated.entering .condition-item:nth-child(1) { animation-delay: 0.1s; }
+.risk-animated.entering .condition-item:nth-child(2) { animation-delay: 0.13s; }
+.risk-animated.entering .condition-item:nth-child(3) { animation-delay: 0.16s; }
+.risk-animated.entering .speed-item:nth-child(1) { animation-delay: 0.18s; }
+.risk-animated.entering .speed-item:nth-child(2) { animation-delay: 0.21s; }
+
+/* Risk factor tags stagger animation */
+.risk-animated.entering .risk-factor-tag {
+  animation: tagPop 0.15s ease forwards;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.risk-animated.entering .risk-factor-tag:nth-child(1) { animation-delay: 0.22s; }
+.risk-animated.entering .risk-factor-tag:nth-child(2) { animation-delay: 0.25s; }
+.risk-animated.entering .risk-factor-tag:nth-child(3) { animation-delay: 0.28s; }
+.risk-animated.entering .risk-factor-tag:nth-child(4) { animation-delay: 0.31s; }
+.risk-animated.entering .risk-factor-tag:nth-child(5) { animation-delay: 0.34s; }
+
+@keyframes tagPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Value change highlight animation */
+.value-changed {
+  animation: valueFlash 0.5s ease;
+}
+
+@keyframes valueFlash {
+  0%, 100% { 
+    background: transparent; 
+  }
+  50% { 
+    background: rgba(59, 130, 246, 0.2);
+    border-radius: 4px;
+  }
+}
+
+/* Live indicator */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: livePulse 1.5s infinite;
+}
+
+.live-indicator.updating .live-dot {
+  animation: liveUpdate 0.3s ease;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes liveUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); background: #22c55e; }
+  100% { transform: scale(1); }
+}
+
+/* Animated Weather Icons */
+.animated-weather-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Sun Icon */
+.weather-sun {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3);
+  animation: sunPulse 3s ease-in-out infinite;
+}
+
+.weather-sun::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border: 2px dashed rgba(251, 191, 36, 0.4);
+  border-radius: 50%;
+  animation: sunRays 10s linear infinite;
+}
+
+@keyframes sunPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 0 50px rgba(251, 191, 36, 0.4); }
+}
+
+@keyframes sunRays {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Moon Icon */
+.weather-moon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(241, 245, 249, 0.6), 0 0 40px rgba(203, 213, 225, 0.3);
+  animation: moonGlow 4s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.weather-moon::before {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: var(--ui-card, #1e293b);
+  border-radius: 50%;
+  top: -8px;
+  right: -8px;
+}
+
+.weather-moon::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 50%;
+  top: 20px;
+  left: 12px;
+  box-shadow: 8px -10px 0 2px rgba(148, 163, 184, 0.3), 14px -4px 0 1px rgba(148, 163, 184, 0.2);
+}
+
+@keyframes moonGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(241, 245, 249, 0.6), 0 0 40px rgba(203, 213, 225, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(241, 245, 249, 0.8), 0 0 50px rgba(203, 213, 225, 0.5); }
+}
+
+/* Cloud Icon */
+.weather-cloud {
+  position: relative;
+  width: 44px;
+  height: 28px;
+  background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-radius: 20px;
+  animation: cloudFloat 4s ease-in-out infinite;
+}
+
+.weather-cloud::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  top: -10px;
+  left: 8px;
+}
+
+.weather-cloud::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  top: -6px;
+  left: 22px;
+}
+
+@keyframes cloudFloat {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+/* Partly Cloudy (Sun + Cloud) */
+.weather-partly-cloudy .weather-sun {
+  width: 28px;
+  height: 28px;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.weather-partly-cloudy .weather-sun::before {
+  width: 38px;
+  height: 38px;
+}
+
+.weather-partly-cloudy .weather-cloud {
+  width: 38px;
+  height: 24px;
+  position: absolute;
+  bottom: 6px;
+  left: 4px;
+}
+
+.weather-partly-cloudy .weather-cloud::before {
+  width: 16px;
+  height: 16px;
+  top: -8px;
+  left: 6px;
+}
+
+.weather-partly-cloudy .weather-cloud::after {
+  width: 12px;
+  height: 12px;
+  top: -4px;
+  left: 18px;
+}
+
+/* Rain */
+.weather-rain {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+.weather-rain .weather-cloud {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  flex-shrink: 0;
+}
+
+.weather-rain .weather-cloud::before,
+.weather-rain .weather-cloud::after {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+}
+
+.rain-drops {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.8) 0%, #3b82f6 100%);
+  border-radius: 2px;
+  animation: rainFall 0.8s linear infinite;
+}
+
+.rain-drop:nth-child(1) { left: 6px; animation-delay: 0s; }
+.rain-drop:nth-child(2) { left: 14px; animation-delay: 0.2s; }
+.rain-drop:nth-child(3) { left: 22px; animation-delay: 0.4s; }
+.rain-drop:nth-child(4) { left: 30px; animation-delay: 0.1s; }
+.rain-drop:nth-child(5) { left: 10px; animation-delay: 0.5s; }
+.rain-drop:nth-child(6) { left: 26px; animation-delay: 0.3s; }
+
+@keyframes rainFall {
+  0% { transform: translateY(-8px); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(24px); opacity: 0; }
+}
+
+/* Heavy Rain / Storm */
+.weather-storm .rain-drop {
+  height: 12px;
+  animation-duration: 0.5s;
+}
+
+.weather-storm .weather-cloud {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+}
+
+.weather-storm .weather-cloud::before,
+.weather-storm .weather-cloud::after {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+}
+
+/* Lightning */
+.lightning {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 20px;
+  opacity: 0;
+  animation: lightning 3s ease-in-out infinite;
+}
+
+.lightning svg {
+  fill: #fbbf24;
+  filter: drop-shadow(0 0 4px #fbbf24);
+}
+
+@keyframes lightning {
+  0%, 89%, 91%, 93%, 100% { opacity: 0; }
+  90%, 92% { opacity: 1; }
+}
+
+/* Snow */
+.snow-flakes {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 28px;
+  overflow: hidden;
+}
+
+.snow-flake {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #e0f2fe;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(224, 242, 254, 0.9);
+  animation: snowFall 2s linear infinite;
+}
+
+.snow-flake:nth-child(1) { left: 6px; animation-delay: 0s; }
+.snow-flake:nth-child(2) { left: 16px; animation-delay: 0.5s; }
+.snow-flake:nth-child(3) { left: 26px; animation-delay: 0.2s; }
+.snow-flake:nth-child(4) { left: 36px; animation-delay: 0.8s; }
+.snow-flake:nth-child(5) { left: 11px; animation-delay: 1.2s; }
+.snow-flake:nth-child(6) { left: 31px; animation-delay: 0.6s; }
+
+@keyframes snowFall {
+  0% { transform: translateY(-8px) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(28px) rotate(360deg); opacity: 0; }
+}
+
+/* Fog */
+.weather-fog {
+  position: relative;
+  width: 56px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fog-line {
+  position: absolute;
+  height: 5px;
+  background: linear-gradient(90deg, transparent 0%, #94a3b8 15%, #94a3b8 85%, transparent 100%);
+  border-radius: 3px;
+  animation: fogDrift 3s ease-in-out infinite;
+}
+
+.fog-line:nth-child(1) { top: 4px; width: 36px; left: 10px; animation-delay: 0s; }
+.fog-line:nth-child(2) { top: 14px; width: 50px; left: 3px; animation-delay: 0.5s; }
+.fog-line:nth-child(3) { top: 24px; width: 42px; left: 7px; animation-delay: 1s; }
+.fog-line:nth-child(4) { top: 34px; width: 46px; left: 5px; animation-delay: 0.3s; }
+
+@keyframes fogDrift {
+  0%, 100% { transform: translateX(-3px); opacity: 0.5; }
+  50% { transform: translateX(3px); opacity: 1; }
+}
+
+/* Drizzle (Light rain with sun) */
+.weather-drizzle .weather-sun {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 0;
+  right: 6px;
+  opacity: 0.9;
+}
+
+.weather-drizzle .weather-sun::before {
+  width: 32px;
+  height: 32px;
+}
+
+.weather-drizzle .weather-cloud {
+  position: absolute;
+  bottom: 14px;
+  left: 6px;
+  width: 34px;
+  height: 20px;
+}
+
+.weather-drizzle .weather-cloud::before {
+  width: 14px;
+  height: 14px;
+  top: -7px;
+  left: 5px;
+}
+
+.weather-drizzle .weather-cloud::after {
+  width: 11px;
+  height: 11px;
+  top: -4px;
+  left: 16px;
+}
+
+.weather-drizzle .rain-drops {
+  bottom: 2px;
+  width: 30px;
+}
+
+.weather-drizzle .rain-drop {
+  height: 6px;
+  width: 2px;
+  animation-duration: 1.2s;
+  opacity: 0.8;
+}
+
+/* Animated Weather Emoji Icons */
+.weather-emoji-icon {
+  font-size: 48px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weather-anim-pulse {
+  animation: weatherPulse 2s ease-in-out infinite;
+}
+
+.weather-anim-glow {
+  animation: weatherGlow 3s ease-in-out infinite;
+}
+
+.weather-anim-float {
+  animation: weatherFloat 3s ease-in-out infinite;
+}
+
+.weather-anim-bounce {
+  animation: weatherBounce 1s ease-in-out infinite;
+}
+
+.weather-anim-shake {
+  animation: weatherShake 0.5s ease-in-out infinite;
+}
+
+.weather-anim-fade {
+  animation: weatherFade 3s ease-in-out infinite;
+}
+
+@keyframes weatherPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.8)); }
+}
+
+@keyframes weatherGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(226, 232, 240, 0.4)); opacity: 0.9; }
+  50% { filter: drop-shadow(0 0 12px rgba(226, 232, 240, 0.8)); opacity: 1; }
+}
+
+@keyframes weatherFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-2px) translateX(1px); }
+  75% { transform: translateY(2px) translateX(-1px); }
+}
+
+@keyframes weatherBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes weatherShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes weatherFade {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Main weather display */
+.weather-icon-container {
+  min-width: 64px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Main weather display */
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.weather-icon-large {
+  font-size: 56px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.weather-temp-block {
+  flex: 0 0 auto;
+}
+
+.weather-temp-main {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.weather-feels-like {
+  font-size: 0.75rem;
+  color: var(--ui-muted);
+  margin-top: 2px;
+}
+
+.weather-condition {
+  margin-left: auto;
+  text-align: right;
+}
+
+.condition-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.condition-detail {
+  font-size: 0.75rem;
+  color: var(--ui-muted);
+}
+
+/* Weather stats grid */
+.weather-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.weather-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--ui-bg);
+  border-radius: 10px;
+  transition: all 200ms ease;
+}
+
+.weather-stat:hover {
+  background: var(--ui-border);
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.stat-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stat-icon.rain-icon { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+.stat-icon.humidity-icon { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
+.stat-icon.wind-icon { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+.stat-icon.uv-icon { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.stat-icon.cloud-icon { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+.stat-icon.gust-icon { background: linear-gradient(135deg, #ec4899, #f472b6); }
+
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  line-height: 1.1;
+}
+
+.stat-value small {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--ui-muted);
+}
+
+.stat-value.high { color: #ef4444; }
+.stat-value.medium { color: #f59e0b; }
+.stat-value.low { color: #22c55e; }
+
+.stat-value.uv-extreme { color: #dc2626; }
+.stat-value.uv-high { color: #ea580c; }
+.stat-value.uv-medium { color: #ca8a04; }
+.stat-value.uv-low { color: #22c55e; }
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Precipitation alert */
+.weather-precipitation-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(96, 165, 250, 0.1));
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+/* Weather Driving Tip */
+.weather-driving-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg);
+}
+
+.weather-driving-tip.success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.03));
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.weather-driving-tip.info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.03));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.weather-driving-tip.warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.03));
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.weather-driving-tip.danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03));
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.driving-tip-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.driving-tip-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.driving-tip-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ui-muted);
+  margin-bottom: 3px;
+}
+
+.weather-driving-tip.success .driving-tip-label { color: #16a34a; }
+.weather-driving-tip.info .driving-tip-label { color: #3b82f6; }
+.weather-driving-tip.warning .driving-tip-label { color: #d97706; }
+.weather-driving-tip.danger .driving-tip-label { color: #dc2626; }
+
+.driving-tip-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ui-text);
+  line-height: 1.4;
+}
+
+/* Weather Tips Container */
+.weather-tips-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.weather-tips-container .weather-driving-tip {
+  margin-top: 0;
+}
+
+.weather-driving-tip.general {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(139, 92, 246, 0.03));
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.weather-driving-tip.general .driving-tip-label {
+  color: #8b5cf6;
+}
+
+/* Live Clock Styling */
+.live-clock {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  background: var(--ui-bg);
+  border-radius: 6px;
+  border: 1px solid var(--ui-border);
+}
+
+/* Weather error state */
+.weather-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--ui-muted);
+  text-align: center;
+}
+
+/* Risk widget enhanced */
+.risk-widget {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  transition: all 0.3s ease;
+}
+
+.risk-widget:hover {
+  border-color: var(--ui-border-hover, #475569);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.risk-widget .card-body {
+  padding: 16px 20px;
+}
+
+/* ===== REDESIGNED RISK ASSESSMENT LAYOUT ===== */
+
+/* Main Header with Score */
+.risk-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(var(--risk-color-rgb, 34, 197, 94), 0.08) 0%, rgba(var(--risk-color-rgb, 34, 197, 94), 0.02) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(var(--risk-color-rgb, 34, 197, 94), 0.15);
+  margin-bottom: 12px;
+}
+
+.risk-header.low { --risk-color-rgb: 34, 197, 94; }
+.risk-header.medium { --risk-color-rgb: 245, 158, 11; }
+.risk-header.high { --risk-color-rgb: 239, 68, 68; }
+
+/* Score Circle */
+.risk-score-circle {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.risk-gauge {
+  width: 56px;
+  height: 56px;
+  transform: rotate(-90deg);
+  display: block;
+  overflow: visible;
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: var(--ui-border);
+  stroke-width: 3;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.8s ease;
+}
+
+.risk-score-circle.low .gauge-fill { stroke: #22c55e; }
+.risk-score-circle.medium .gauge-fill { stroke: #f59e0b; }
+.risk-score-circle.high .gauge-fill { stroke: #ef4444; }
+
+.gauge-text {
+  fill: var(--ui-text);
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+/* Header Info */
+.risk-header-info {
+  flex: 1;
+}
+
+.risk-score-label {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.risk-header.low .risk-score-label { color: #22c55e; }
+.risk-header.medium .risk-score-label { color: #f59e0b; }
+.risk-header.high .risk-score-label { color: #ef4444; }
+
+.risk-location {
+  font-size: 0.8rem;
+  color: var(--ui-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.risk-location svg {
+  opacity: 0.6;
+}
+
+/* Sections Container */
+.risk-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Section Card */
+.risk-section {
+  background: var(--ui-bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+}
+
+.risk-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.risk-section-title svg {
+  color: var(--ui-primary);
+  width: 12px;
+  height: 12px;
+}
+
+/* Conditions Grid - 3 items in a row */
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.condition-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 6px;
+  background: var(--ui-surface);
+  border-radius: 8px;
+  transition: all 200ms ease;
+}
+
+.condition-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.condition-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.condition-icon.time { background: linear-gradient(135deg, #6366f1, #818cf8); }
+.condition-icon.road { background: linear-gradient(135deg, #22c55e, #4ade80); }
+.condition-icon.visibility { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+
+.condition-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  margin-bottom: 1px;
+}
+
+.condition-value.success { color: #22c55e; }
+.condition-value.warning { color: #f59e0b; }
+.condition-value.danger { color: #ef4444; }
+
+.condition-label {
+  font-size: 0.6rem;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Speed Recommendations - 2 columns */
+.speed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.speed-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--ui-surface);
+  border-radius: 8px;
+  transition: all 200ms ease;
+}
+
+.speed-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.speed-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.speed-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.speed-icon.highway { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.speed-icon.urban { background: linear-gradient(135deg, #ec4899, #f472b6); }
+
+.speed-info {
+  flex: 1;
+}
+
+.speed-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  line-height: 1.1;
+}
+
+.speed-value small {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--ui-muted);
+}
+
+.speed-label {
+  font-size: 0.6rem;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Risk Factors Section */
+.risk-factors-section {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+.risk-factors-section .risk-section-title {
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+.risk-factors-section .risk-section-title svg {
+  color: #dc2626;
+}
+
+.risk-factors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.risk-factor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #dc2626;
+  transition: all 0.2s ease;
+}
+
+.risk-factor-tag:hover {
+  background: rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
+}
+
+.risk-factor-tag.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.risk-factor-tag.warning:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.factor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Safe Conditions Section */
+.risk-safe-section {
+  background: rgba(34, 197, 94, 0.04);
+  border-color: rgba(34, 197, 94, 0.12);
+}
+
+.safe-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.safe-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.safe-icon-circle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.safe-text h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0 0 2px 0;
+}
+
+.safe-text p {
+  font-size: 0.7rem;
+  color: var(--ui-muted);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Risk Count Badge */
+.risk-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* Status colors for conditions */
+.road-success, .vis-success { color: #22c55e; }
+.road-warning, .vis-warning { color: #f59e0b; }
+.road-danger, .vis-danger { color: #ef4444; }
+
+/* Responsive for Risk Widget */
+@media (max-width: 576px) {
+  .conditions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .conditions-grid .condition-item:last-child {
+    grid-column: span 2;
+  }
+  
+  .speed-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .risk-header {
+    padding: 12px;
+  }
+  
+  .risk-score-circle {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+  }
+  
+  .risk-gauge {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ============================================
+   DASHBOARD DARK MODE STYLES
+   ============================================ */
+
+body.dark-mode .kpi-card,
+body.dark-mode .card {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .kpi-value {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .kpi-label {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .card-subtitle,
+body.dark-mode .text-muted {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode .card-title {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .card-text {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode kbd {
+  background: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .weather-widget,
+body.dark-mode .risk-widget {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+}
+
+body.dark-mode .weather-region-select {
+  background-color: var(--ui-bg) !important;
+  border-color: var(--ui-border) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .weather-region-select option {
+  background: var(--ui-surface) !important;
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .risk-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .condition-item,
+body.dark-mode .speed-item {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .condition-item:hover,
+body.dark-mode .speed-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode .risk-factors-section {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+body.dark-mode .risk-factor-tag {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+body.dark-mode .risk-factor-tag.warning {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+body.dark-mode .risk-safe-section {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+body.dark-mode .weather-stat {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .weather-stat:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode .breadcrumb-nav {
+  color: var(--ui-text) !important;
+}
+
+body.dark-mode .breadcrumb-nav a {
+  color: var(--ui-muted) !important;
+}
+
+body.dark-mode h2 {
+  color: var(--ui-text) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .weather-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .weather-main {
+    flex-wrap: wrap;
+  }
+  
+  .weather-condition {
+    margin-left: 0;
+    margin-top: 12px;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .weather-temp-main {
+    font-size: 2.5rem;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // === ANIMATED COUNTERS ===
+  function animateCounter(element, target, duration = 1500) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      element.textContent = formatNumber(target);
+      return;
+    }
+    
+    const start = 0;
+    const startTime = performance.now();
+    
+    function formatNumber(num) {
+      return num.toLocaleString();
+    }
+    
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease-out cubic for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(start + (target - start) * eased);
+      
+      element.textContent = formatNumber(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        element.textContent = formatNumber(target);
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+  
+  // Animate KPI values on page load
+  document.querySelectorAll('.kpi-value').forEach(el => {
+    const text = el.textContent.trim();
+    const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(num) && num > 0) {
+      el.textContent = '0';
+      setTimeout(() => animateCounter(el, num), 300);
+    }
+  });
+
+  // === SPARKLINE CHARTS ===
+  function createSparkline(containerId, data, color) {
+    const container = document.getElementById(containerId);
+    if (!container || !data || data.length === 0) return;
+    
+    const width = 80;
+    const height = 32;
+    const padding = 2;
+    
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    
+    const points = data.map((val, i) => {
+      const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((val - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    }).join(' ');
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    
+    // Gradient fill
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.id = `grad-${containerId}`;
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '0%');
+    gradient.setAttribute('x2', '0%');
+    gradient.setAttribute('y2', '100%');
+    
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('style', `stop-color:${color};stop-opacity:0.3`);
+    
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('style', `stop-color:${color};stop-opacity:0`);
+    
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    defs.appendChild(gradient);
+    svg.appendChild(defs);
+    
+    // Area fill
+    const area = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const areaPoints = `${padding},${height - padding} ${points} ${width - padding},${height - padding}`;
+    area.setAttribute('points', areaPoints);
+    area.setAttribute('fill', `url(#grad-${containerId})`);
+    svg.appendChild(area);
+    
+    // Line
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', points);
+    polyline.setAttribute('fill', 'none');
+    polyline.setAttribute('stroke', color);
+    polyline.setAttribute('stroke-width', '2');
+    polyline.setAttribute('stroke-linecap', 'round');
+    polyline.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(polyline);
+    
+    // Animate line drawing
+    const length = polyline.getTotalLength ? polyline.getTotalLength() : 200;
+    polyline.style.strokeDasharray = length;
+    polyline.style.strokeDashoffset = length;
+    polyline.style.animation = 'sparklineDraw 1s ease forwards 0.5s';
+    
+    container.innerHTML = '';
+    container.appendChild(svg);
+  }
+  
+  // Add sparkline animation style
+  if (!document.getElementById('sparkline-style')) {
+    const style = document.createElement('style');
+    style.id = 'sparkline-style';
+    style.textContent = `
+      @keyframes sparklineDraw {
+        to { stroke-dashoffset: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Fetch real trend data and create sparklines
+  async function loadSparklineData() {
+    try {
+      const response = await fetch('/api/v1/stats/accidents/by_month?granularity=day');
+      if (response.ok) {
+        const data = await response.json();
+        const values = data.values || [];
+        const last7 = values.slice(-7);
+        if (last7.length > 0) {
+          createSparkline('sparkline-accidents', last7, '#3b82f6');
+        }
+      }
+    } catch (e) {
+      // Use placeholder data
+      createSparkline('sparkline-accidents', [12, 19, 15, 22, 18, 25, 21], '#3b82f6');
+    }
+    
+    // Placeholder for imports sparkline
+    createSparkline('sparkline-imports', [2, 1, 3, 2, 4, 2, 3], '#22c55e');
+  }
+  
+  loadSparklineData();
+  
+  // === REAL-TIME INDICATORS ===
+  // Live indicator is already in the HTML for weather card
+  // This function adds live indicators to KPI cards if needed
+  function addLiveIndicator() {
+    // Skip - we already have the live indicator in the weather card HTML
+    return;
+  }
+  
+  // Add live indicator styles
+  if (!document.getElementById('live-indicator-style')) {
+    const style = document.createElement('style');
+    style.id = 'live-indicator-style';
+    style.textContent = `
+      .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        margin-left: auto;
+        padding: 4px 8px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #22c55e;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+        margin-right: 6px;
+        animation: livePulse 2s infinite;
+      }
+      @keyframes livePulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  addLiveIndicator();
+  
+  // === KEYBOARD SHORTCUTS ===
+  document.addEventListener('keydown', function(e) {
+    if (e.shiftKey && e.key === '?') {
+      e.preventDefault();
+      showKeyboardShortcuts();
+    }
+  });
+  
+  function showKeyboardShortcuts() {
+    // Create modal if doesn't exist
+    let modal = document.getElementById('shortcuts-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'shortcuts-modal';
+      modal.className = 'shortcuts-modal';
+      modal.innerHTML = `
+        <div class="shortcuts-content">
+          <div class="shortcuts-header">
+            <h5>Keyboard Shortcuts</h5>
+            <button class="shortcuts-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="shortcuts-body">
+            <div class="shortcut-row"><kbd>Shift</kbd> + <kbd>?</kbd> <span>Show this help</span></div>
+            <div class="shortcut-row"><kbd>G</kbd> + <kbd>D</kbd> <span>Go to Dashboard</span></div>
+            <div class="shortcut-row"><kbd>G</kbd> + <kbd>A</kbd> <span>Go to Accidents</span></div>
+            <div class="shortcut-row"><kbd>G</kbd> + <kbd>S</kbd> <span>Go to Statistics</span></div>
+            <div class="shortcut-row"><kbd>G</kbd> + <kbd>I</kbd> <span>Go to Import</span></div>
+            <div class="shortcut-row"><kbd>/</kbd> <span>Focus search</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd> <span>Close modal/menu</span></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      modal.querySelector('.shortcuts-close').addEventListener('click', () => {
+        modal.classList.remove('show');
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+      });
+    }
+    
+    modal.classList.add('show');
+  }
+  
+  // Add shortcuts modal styles
+  if (!document.getElementById('shortcuts-style')) {
+    const style = document.createElement('style');
+    style.id = 'shortcuts-style';
+    style.textContent = `
+      .shortcuts-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 200ms ease, visibility 200ms ease;
+        backdrop-filter: blur(4px);
+      }
+      .shortcuts-modal.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      .shortcuts-content {
+        background: var(--ui-surface, #fff);
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-width: 400px;
+        width: 90%;
+        transform: scale(0.95);
+        transition: transform 200ms ease;
+      }
+      .shortcuts-modal.show .shortcuts-content {
+        transform: scale(1);
+      }
+      .shortcuts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--ui-border, #e5e7eb);
+      }
+      .shortcuts-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .shortcuts-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--ui-muted, #6b7280);
+        line-height: 1;
+      }
+      .shortcuts-body {
+        padding: 16px 20px;
+      }
+      .shortcut-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+        font-size: 14px;
+      }
+      .shortcut-row kbd {
+        background: var(--ui-bg, #f3f4f6);
+        border: 1px solid var(--ui-border, #e5e7eb);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-family: inherit;
+        min-width: 28px;
+        text-align: center;
+      }
+      .shortcut-row span {
+        color: var(--ui-muted, #6b7280);
+        margin-left: auto;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Navigation shortcuts
+  let lastKey = null;
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    const key = e.key.toLowerCase();
+    
+    if (lastKey === 'g') {
+      if (key === 'd') window.location.href = '/ui/dashboard';
+      else if (key === 'a') window.location.href = '/ui/accidents';
+      else if (key === 's') window.location.href = '/ui/statistics';
+      else if (key === 'i') window.location.href = '/ui/import-csv';
+      lastKey = null;
+    } else {
+      lastKey = key;
+      setTimeout(() => { lastKey = null; }, 1000);
+    }
+    
+    if (key === 'escape') {
+      const modal = document.getElementById('shortcuts-modal');
+      if (modal) modal.classList.remove('show');
+    }
+  });
+  
+  // === REAL-TIME WEATHER WIDGET ===
+  const weatherRegion = document.getElementById('weatherRegion');
+  const weatherContent = document.getElementById('weatherContent');
+  const riskContent = document.getElementById('riskContent');
+  const riskBadge = document.getElementById('riskBadge');
+  const weatherLastUpdate = document.getElementById('weatherLastUpdate');
+  const weatherLiveIndicator = document.getElementById('weatherLiveIndicator');
+  const riskLastUpdate = document.getElementById('riskLastUpdate');
+  const riskLiveIndicator = document.getElementById('riskLiveIndicator');
+  
+  // Live Clock - Updates every second
+  function updateLiveClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: false 
+    });
+    
+    if (weatherLastUpdate) {
+      weatherLastUpdate.textContent = timeStr;
+    }
+    if (riskLastUpdate) {
+      riskLastUpdate.textContent = timeStr;
+    }
+  }
+  
+  // Start the live clock
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
+  
+  // Weather icons mapping with animation types
+  const weatherIcons = {
+    'Clear': { icon: '☀️', night: '🌙', anim: 'sun', animNight: 'moon' },
+    'Clear sky': { icon: '☀️', night: '🌙', anim: 'sun', animNight: 'moon' },
+    'Partly Cloudy': { icon: '⛅', night: '☁️', anim: 'partly-cloudy', animNight: 'cloud' },
+    'Mainly clear': { icon: '⛅', night: '☁️', anim: 'partly-cloudy', animNight: 'cloud' },
+    'Cloudy': { icon: '☁️', night: '☁️', anim: 'cloud', animNight: 'cloud' },
+    'Overcast': { icon: '☁️', night: '☁️', anim: 'cloud', animNight: 'cloud' },
+    'Drizzle': { icon: '🌦️', night: '🌧️', anim: 'drizzle', animNight: 'rain' },
+    'Light drizzle': { icon: '🌦️', night: '🌧️', anim: 'drizzle', animNight: 'rain' },
+    'Rain': { icon: '🌧️', night: '🌧️', anim: 'rain', animNight: 'rain' },
+    'Light rain': { icon: '🌧️', night: '🌧️', anim: 'rain', animNight: 'rain' },
+    'Moderate rain': { icon: '🌧️', night: '🌧️', anim: 'rain', animNight: 'rain' },
+    'Heavy Rain': { icon: '⛈️', night: '⛈️', anim: 'storm', animNight: 'storm' },
+    'Heavy rain': { icon: '⛈️', night: '⛈️', anim: 'storm', animNight: 'storm' },
+    'Showers': { icon: '🌦️', night: '🌧️', anim: 'drizzle', animNight: 'rain' },
+    'Rain showers': { icon: '🌦️', night: '🌧️', anim: 'rain', animNight: 'rain' },
+    'Fog': { icon: '🌫️', night: '🌫️', anim: 'fog', animNight: 'fog' },
+    'Snow': { icon: '❄️', night: '❄️', anim: 'snow', animNight: 'snow' },
+    'Snowfall': { icon: '❄️', night: '❄️', anim: 'snow', animNight: 'snow' },
+    'Thunderstorm': { icon: '⛈️', night: '⛈️', anim: 'thunder', animNight: 'thunder' }
+  };
+
+  // Generate animated weather icon HTML - using emoji with CSS animation wrapper
+  function getAnimatedWeatherIcon(condition, isDay) {
+    const iconSet = weatherIcons[condition] || weatherIcons['Clear'];
+    const isDayBool = isDay === 1 || isDay === true;
+    const emoji = isDayBool ? iconSet.icon : iconSet.night;
+    const animType = isDayBool ? iconSet.anim : iconSet.animNight;
+    
+    // Map animation types to CSS classes
+    const animClass = {
+      'sun': 'weather-anim-pulse',
+      'moon': 'weather-anim-glow',
+      'cloud': 'weather-anim-float',
+      'partly-cloudy': 'weather-anim-float',
+      'rain': 'weather-anim-bounce',
+      'drizzle': 'weather-anim-bounce',
+      'storm': 'weather-anim-shake',
+      'thunder': 'weather-anim-shake',
+      'snow': 'weather-anim-float',
+      'fog': 'weather-anim-fade'
+    };
+    
+    const cssClass = animClass[animType] || 'weather-anim-pulse';
+    
+    return `<div class="weather-emoji-icon ${cssClass}">${emoji}</div>`;
+  }
+  
+  // Generate driving tip based on weather conditions
+  function getWeatherDrivingTip(data, rainChance, uvIndex) {
+    const condition = (data.conditions || '').toLowerCase();
+    const windSpeed = data.wind_speed || 0;
+    const visibility = data.visibility || 10;
+    const temp = data.temperature || 20;
+    const humidity = data.humidity || 50;
+    
+    let tipIcon, tipText, tipClass;
+    
+    // Priority-based tips
+    if (condition.includes('storm') || condition.includes('thunder')) {
+      tipIcon = '⛈️';
+      tipText = 'Thunderstorm alert: Avoid driving if possible. If caught, pull over safely and wait.';
+      tipClass = 'danger';
+    } else if (condition.includes('fog') || visibility < 2) {
+      tipIcon = '🌫️';
+      tipText = 'Low visibility: Use fog lights, reduce speed significantly, and increase following distance.';
+      tipClass = 'warning';
+    } else if (rainChance > 70 || condition.includes('rain') || condition.includes('shower')) {
+      tipIcon = '🌧️';
+      tipText = 'Wet roads expected: Reduce speed by 10-20%, avoid sudden braking, and watch for hydroplaning.';
+      tipClass = 'warning';
+    } else if (condition.includes('snow') || temp < 3) {
+      tipIcon = '❄️';
+      tipText = 'Cold/icy conditions: Check road conditions, allow extra braking distance, accelerate gently.';
+      tipClass = 'warning';
+    } else if (windSpeed > 50) {
+      tipIcon = '💨';
+      tipText = 'High winds: Keep both hands on wheel, watch for debris, be careful near trucks and bridges.';
+      tipClass = 'warning';
+    } else if (uvIndex > 7) {
+      tipIcon = '😎';
+      tipText = 'Strong sun glare possible: Wear sunglasses, use sun visor, and watch for sudden visibility changes.';
+      tipClass = 'info';
+    } else if (humidity > 85 && temp > 25) {
+      tipIcon = '💧';
+      tipText = 'High humidity: Windows may fog up. Use AC or defrost to maintain visibility.';
+      tipClass = 'info';
+    } else if (!data.is_day) {
+      tipIcon = '🌙';
+      tipText = 'Night driving: Ensure headlights are clean, stay alert, and watch for pedestrians.';
+      tipClass = 'info';
+    } else {
+      tipIcon = '✅';
+      tipText = 'Good driving conditions: Stay alert, maintain safe following distance, enjoy the road.';
+      tipClass = 'success';
+    }
+    
+    // General safety tips that rotate
+    const generalTips = [
+      { icon: '🚗', text: 'Always wear your seatbelt and ensure all passengers are buckled up.' },
+      { icon: '📱', text: 'Keep your phone away while driving. One text can change everything.' },
+      { icon: '⏰', text: 'Take breaks every 2 hours on long trips to stay alert and focused.' },
+      { icon: '🔍', text: 'Check your mirrors frequently and be aware of your blind spots.' },
+      { icon: '🚦', text: 'Obey speed limits – they\'re set based on road safety analysis.' },
+      { icon: '🛞', text: 'Maintain proper tire pressure for better fuel efficiency and safety.' }
+    ];
+    
+    // Pick a random general tip based on current minute
+    const tipIndex = new Date().getMinutes() % generalTips.length;
+    const generalTip = generalTips[tipIndex];
+    
+    return `
+      <div class="weather-tips-container">
+        <div class="weather-driving-tip ${tipClass}">
+          <div class="driving-tip-icon">${tipIcon}</div>
+          <div class="driving-tip-content">
+            <div class="driving-tip-label">Weather Advisory</div>
+            <div class="driving-tip-text">${tipText}</div>
+          </div>
+        </div>
+        <div class="weather-driving-tip general">
+          <div class="driving-tip-icon">${generalTip.icon}</div>
+          <div class="driving-tip-content">
+            <div class="driving-tip-label">Safety Reminder</div>
+            <div class="driving-tip-text">${generalTip.text}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Auto-refresh interval (every 60 seconds for real-time)
+  let weatherRefreshInterval = null;
+  let currentRegion = '';
+  
+  async function loadWeather(region, showLoading = true, animate = false) {
+    try {
+      // Pulse the live indicators
+      if (weatherLiveIndicator) {
+        weatherLiveIndicator.classList.add('updating');
+      }
+      if (riskLiveIndicator) {
+        riskLiveIndicator.classList.add('updating');
+      }
+      
+      // Animate out if switching regions (fast transition)
+      if (animate && currentRegion !== region) {
+        weatherContent.classList.add('switching');
+        riskContent.classList.add('switching');
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+      
+      currentRegion = region;
+      
+      if (showLoading && weatherContent.querySelector('.skeleton')) {
+        // Keep skeleton if first load
+      }
+      
+      const response = await fetch(`/api/v1/stats/weather?region=${encodeURIComponent(region)}&_t=${Date.now()}`);
+      if (!response.ok) throw new Error('Failed to fetch weather');
+      
+      const data = await response.json();
+      
+      // Get animated weather icon
+      const animatedIcon = getAnimatedWeatherIcon(data.conditions, data.is_day);
+      
+      // Rain chance styling
+      const rainChance = data.rain_chance || 0;
+      const rainClass = rainChance > 60 ? 'high' : rainChance > 30 ? 'medium' : 'low';
+      
+      // UV index styling  
+      const uvIndex = data.uv_index || 0;
+      const uvClass = uvIndex > 7 ? 'extreme' : uvIndex > 5 ? 'high' : uvIndex > 2 ? 'medium' : 'low';
+      
+      // Display comprehensive weather data
+      weatherContent.innerHTML = `
+        <div class="weather-main">
+          <div class="weather-icon-container">${animatedIcon}</div>
+          <div class="weather-temp-block">
+            <div class="weather-temp-main">${data.temperature}°</div>
+            <div class="weather-feels-like">Feels like ${data.feels_like || data.temperature}°C</div>
+          </div>
+          <div class="weather-condition">
+            <div class="condition-text">${data.conditions}</div>
+            <div class="condition-detail">${data.conditions_detail || data.conditions}</div>
+          </div>
+        </div>
+        
+        <div class="weather-stats-grid">
+          <div class="weather-stat">
+            <div class="stat-icon rain-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value ${rainClass}">${rainChance}%</div>
+              <div class="stat-label">Rain Chance</div>
+            </div>
+          </div>
+          
+          <div class="weather-stat">
+            <div class="stat-icon humidity-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path><path d="M12 12v6"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">${data.humidity || 0}%</div>
+              <div class="stat-label">Humidity</div>
+            </div>
+          </div>
+          
+          <div class="weather-stat">
+            <div class="stat-icon wind-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path><path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path><path d="M12.6 19.4A2 2 0 1 0 14 16H2"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">${data.wind_speed} <small>km/h</small></div>
+              <div class="stat-label">Wind ${data.wind_compass || ''}</div>
+            </div>
+          </div>
+          
+          <div class="weather-stat">
+            <div class="stat-icon uv-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value uv-${uvClass}">${uvIndex}</div>
+              <div class="stat-label">UV Index</div>
+            </div>
+          </div>
+          
+          <div class="weather-stat">
+            <div class="stat-icon cloud-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">${data.cloud_cover || 0}%</div>
+              <div class="stat-label">Cloud Cover</div>
+            </div>
+          </div>
+          
+          <div class="weather-stat">
+            <div class="stat-icon gust-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path><path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path></svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">${data.wind_gusts || 0} <small>km/h</small></div>
+              <div class="stat-label">Wind Gusts</div>
+            </div>
+          </div>
+        </div>
+        
+        ${getWeatherDrivingTip(data, rainChance, uvIndex)}
+        
+        ${data.precipitation > 0 ? `
+        <div class="weather-precipitation-alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+          <span>Current precipitation: ${data.precipitation}mm</span>
+        </div>
+        ` : ''}
+      `;
+      
+      // Display risk assessment
+      const riskScore = data.risk_score || 0;
+      const riskClass = riskScore <= 30 ? 'low' : riskScore <= 60 ? 'medium' : 'high';
+      const riskLabel = riskScore <= 30 ? 'Low Risk' : riskScore <= 60 ? 'Moderate Risk' : 'High Risk';
+      const riskEmoji = riskScore <= 30 ? '✅' : riskScore <= 60 ? '⚠️' : '🚨';
+      
+      riskBadge.className = `badge bg-${riskScore <= 30 ? 'success' : riskScore <= 60 ? 'warning' : 'danger'}`;
+      riskBadge.textContent = riskLabel;
+      
+      const factors = data.risk_factors || [];
+      
+      // Generate safety tips based on conditions
+      const getSafetyTip = () => {
+        if (riskScore > 60) {
+          return {
+            icon: '🚗',
+            title: 'High Risk Advisory',
+            tip: 'Consider delaying non-essential travel. If you must drive, reduce speed by 20-30% and increase following distance.'
+          };
+        } else if (riskScore > 30) {
+          return {
+            icon: '💡',
+            title: 'Drive Cautiously',
+            tip: 'Be extra alert and maintain safe following distances. Keep headlights on for visibility.'
+          };
+        } else {
+          return {
+            icon: '👍',
+            title: 'Safe to Drive',
+            tip: 'Road conditions are favorable. Always remain vigilant and follow traffic rules.'
+          };
+        }
+      };
+      
+      const safetyTip = getSafetyTip();
+      
+      // Calculate recommended speed based on risk
+      const getSpeedRecommendation = () => {
+        if (riskScore > 70) return { highway: '80-90', urban: '30-40', label: 'Significantly Reduced' };
+        if (riskScore > 50) return { highway: '90-100', urban: '40-50', label: 'Moderately Reduced' };
+        if (riskScore > 30) return { highway: '100-110', urban: '45-50', label: 'Slightly Reduced' };
+        return { highway: '110-120', urban: '50', label: 'Normal' };
+      };
+      
+      const speedRec = getSpeedRecommendation();
+      
+      // Generate visibility status
+      const visibilityStatus = data.conditions && (data.conditions.includes('Fog') || data.conditions.includes('Mist')) 
+        ? { status: 'Poor', color: 'danger', icon: '🌫️' }
+        : data.rain > 2 
+          ? { status: 'Reduced', color: 'warning', icon: '🌧️' }
+          : { status: 'Good', color: 'success', icon: '👁️' };
+      
+      // Get time of day indicator
+      const timeIndicator = data.is_day ? { icon: '☀️', label: 'Daytime' } : { icon: '🌙', label: 'Night time' };
+      
+      // Road condition estimate
+      const roadCondition = data.rain > 0 || data.precipitation > 0
+        ? { status: 'Wet', color: 'warning', icon: '💧' }
+        : data.conditions && data.conditions.includes('Snow')
+          ? { status: 'Icy', color: 'danger', icon: '❄️' }
+          : { status: 'Dry', color: 'success', icon: '🛣️' };
+      
+      riskContent.innerHTML = `
+        <!-- Risk Score Header -->
+        <div class="risk-header ${riskClass}">
+          <div class="risk-score-circle ${riskClass}">
+            <svg viewBox="0 0 36 36" class="risk-gauge">
+              <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <path class="gauge-fill" stroke-dasharray="${riskScore}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <text x="18" y="20.35" class="gauge-text">${riskScore}</text>
+            </svg>
+          </div>
+          <div class="risk-header-info">
+            <div class="risk-score-label">${riskLabel}</div>
+            <div class="risk-location">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              ${data.governorate}
+            </div>
+          </div>
+        </div>
+        
+        <div class="risk-sections">
+          <!-- Driving Conditions Section -->
+          <div class="risk-section">
+            <div class="risk-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              Current Conditions
+            </div>
+            <div class="conditions-grid">
+              <div class="condition-item">
+                <div class="condition-icon time">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="condition-value">${timeIndicator.label}</div>
+                <div class="condition-label">Time</div>
+              </div>
+              <div class="condition-item">
+                <div class="condition-icon road">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h4l4-14h4l4 14"/></svg>
+                </div>
+                <div class="condition-value ${roadCondition.color}">${roadCondition.status}</div>
+                <div class="condition-label">Road</div>
+              </div>
+              <div class="condition-item">
+                <div class="condition-icon visibility">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+                <div class="condition-value ${visibilityStatus.color}">${visibilityStatus.status}</div>
+                <div class="condition-label">Visibility</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Speed Recommendations Section -->
+          <div class="risk-section">
+            <div class="risk-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M12 12l3-2"/><path d="M12 7v1"/></svg>
+              Recommended Speed
+            </div>
+            <div class="speed-grid">
+              <div class="speed-item">
+                <div class="speed-icon highway">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 18h14M5 14h14M5 10h14M5 6h14"/></svg>
+                </div>
+                <div class="speed-info">
+                  <div class="speed-value">${speedRec.highway} <small>km/h</small></div>
+                  <div class="speed-label">Highway</div>
+                </div>
+              </div>
+              <div class="speed-item">
+                <div class="speed-icon urban">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16"/><path d="M1 21h22"/><path d="M9 7h1"/><path d="M14 7h1"/></svg>
+                </div>
+                <div class="speed-info">
+                  <div class="speed-value">${speedRec.urban} <small>km/h</small></div>
+                  <div class="speed-label">Urban</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Risk Factors or Safe Section -->
+          ${factors.length > 0 ? `
+          <div class="risk-section risk-factors-section">
+            <div class="risk-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Active Risk Factors
+              <span class="risk-count-badge">${factors.length}</span>
+            </div>
+            <div class="risk-factors-grid">
+              ${factors.map(f => {
+                const isWarning = f.includes('⚠️') || f.includes('💨') || f.includes('💧') || f.includes('🌙');
+                const isDanger = f.includes('❄️') || f.includes('⛈️') || f.includes('Hydroplaning');
+                const factorClass = isDanger ? '' : isWarning ? 'warning' : '';
+                const cleanText = f.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}⚠️❄️⛈️💨💧🌙☀️🌧️]+\s*/u, '');
+                return `<span class="risk-factor-tag ${factorClass}">
+                  <span class="factor-dot"></span>
+                  ${cleanText}
+                </span>`;
+              }).join('')}
+            </div>
+          </div>
+          ` : `
+          <div class="risk-section risk-safe-section">
+            <div class="safe-message">
+              <div class="safe-icon-circle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="safe-text">
+                <h4>All Clear</h4>
+                <p>No active risk factors detected. Conditions are favorable for safe driving.</p>
+              </div>
+            </div>
+          </div>
+          `}
+        </div>
+      `;
+      
+      // Trigger animations only when switching regions (not on auto-refresh or visibility change)
+      weatherContent.classList.remove('switching');
+      riskContent.classList.remove('switching');
+      
+      if (animate) {
+        weatherContent.classList.add('entering');
+        riskContent.classList.add('entering');
+        
+        // Remove animation classes after animation completes
+        setTimeout(() => {
+          weatherContent.classList.remove('entering');
+          riskContent.classList.remove('entering');
+        }, 300);
+      }
+      
+    } catch (error) {
+      console.error('Weather fetch error:', error);
+      weatherContent.innerHTML = `
+        <div class="weather-error">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div>Unable to load weather data</div>
+          <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadWeather('${region}')">Retry</button>
+        </div>
+      `;
+      riskContent.innerHTML = `<div class="text-muted">Risk data unavailable</div>`;
+      riskBadge.textContent = 'Unknown';
+      riskBadge.className = 'badge bg-secondary';
+    } finally {
+      if (weatherLiveIndicator) {
+        weatherLiveIndicator.classList.remove('updating');
+      }
+      if (riskLiveIndicator) {
+        riskLiveIndicator.classList.remove('updating');
+      }
+    }
+  }
+  
+  // Start real-time weather updates
+  function startWeatherUpdates() {
+    if (weatherRefreshInterval) clearInterval(weatherRefreshInterval);
+    
+    // Refresh every 60 seconds
+    weatherRefreshInterval = setInterval(() => {
+      loadWeather(weatherRegion.value, false, false);
+    }, 60000);
+  }
+  
+  // Load weather on region change and start auto-refresh
+  if (weatherRegion) {
+    weatherRegion.addEventListener('change', () => {
+      // Animate when user switches region
+      loadWeather(weatherRegion.value, true, true);
+    });
+    
+    // Initial load (no animation)
+    loadWeather(weatherRegion.value, true, false);
+    
+    // Start auto-refresh
+    startWeatherUpdates();
+  }
+  
+  // Stop updates when page is not visible (battery saver)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (weatherRefreshInterval) clearInterval(weatherRefreshInterval);
+    } else {
+      // Only restart the timer, don't reload immediately to avoid animation
+      startWeatherUpdates();
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - TrafficSafe{% endblock %}
+
+{% block content %}
+<style>
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 100% 80% at 50% -30%, rgba(55, 68, 107, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 85% 20%, rgba(126, 137, 172, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 15% 30%, rgba(174, 185, 225, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(55, 68, 107, 0.07) 0%, transparent 50%);
+      animation: gradientShift 15s ease-in-out infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+
+    .faq-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .faq-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .faq-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        color: var(--ui-text);
+    }
+
+    .faq-header p {
+        font-size: 1.1rem;
+        color: var(--ui-text-muted);
+    }
+
+    .faq-item {
+        margin-bottom: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(174, 185, 225, 0.2);
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 24px rgba(55, 68, 107, 0.08);
+    }
+
+    .faq-item:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+        border-color: rgba(174, 185, 225, 0.35);
+        box-shadow: 0 20px 50px rgba(55, 68, 107, 0.12);
+        transform: translateY(-4px);
+    }
+
+    .faq-item.open {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
+    }
+
+    .faq-question {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(174, 185, 225, 0.1);
+    }
+
+    .faq-question:hover {
+        background: linear-gradient(135deg, rgba(126, 137, 172, 0.12) 0%, rgba(174, 185, 225, 0.08) 100%);
+    }
+
+    .faq-question-text {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ui-text);
+        margin: 0;
+    }
+
+    .faq-toggle {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ui-primary);
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-toggle {
+        transform: rotate(180deg);
+    }
+
+    .faq-answer {
+        display: none;
+        padding: 1.25rem;
+        color: var(--ui-text-muted);
+        line-height: 1.6;
+        border-top: 1px solid var(--ui-border);
+        font-size: 0.95rem;
+    }
+
+    .faq-item.open .faq-answer {
+        display: block;
+    }
+
+    /* Dark mode */
+    body.dark-mode .faq-header h1 {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .faq-item {
+        background: var(--ui-surface);
+        border-color: var(--ui-border);
+    }
+
+    body.dark-mode .faq-question {
+        background: var(--ui-bg);
+    }
+
+    body.dark-mode .faq-question:hover {
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    body.dark-mode .faq-question-text {
+        color: var(--brand-100);
+    }
+
+    body.dark-mode .faq-answer {
+        color: var(--brand-300);
+        border-top-color: var(--ui-border);
+    }
+</style>
+
+<div class="faq-container">
+    <div class="faq-header">
+        <h1>Frequently Asked Questions</h1>
+        <p>Find answers to common questions about TrafficSafe</p>
+    </div>
+
+    <div class="faq-list">
+        <!-- FAQ Item 1 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">What is TrafficSafe?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                TrafficSafe is a comprehensive traffic accident reporting and management system for Tunisia. It helps citizens report accidents, authorities analyze traffic patterns, and promotes road safety through data-driven insights and public intelligence.
+            </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">How do I report an accident?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                You can report an accident by logging into your account and clicking "Report Accident" from the navigation menu. Fill in the location, date, time, severity level, and any additional details. Your report will be reviewed by authorities and help improve road safety.
+            </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">Is my accident report anonymous?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                While you need to create an account to submit reports, your personal information is protected and kept confidential. Government authorities only access necessary details for investigation and safety improvement purposes.
+            </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">What data does the dashboard show?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                The dashboard displays comprehensive traffic accident statistics including total accidents, injury and fatality counts, accident severity levels, distribution by location and cause, temporal trends, and weather-related factors. This data helps identify high-risk areas and times for targeted safety interventions.
+            </div>
+        </div>
+
+        <!-- FAQ Item 5 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">How can I access safety resources?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Visit the Services page to access emergency contacts, traffic speed limits, fuel prices, fine calculators, route planners, and driving safety tips. These resources are available to all users and help promote responsible driving habits.
+            </div>
+        </div>
+
+        <!-- FAQ Item 6 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">How do I create an account?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Click "Get Started" on the landing page or "Sign Up" in the authentication area. Provide your email, full name, date of birth, and create a secure password. You'll receive a confirmation email to verify your account.
+            </div>
+        </div>
+
+        <!-- FAQ Item 7 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">Is the platform available on mobile?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Yes, TrafficSafe is fully responsive and works on desktop, tablet, and mobile devices. You can access all features from any device through your web browser.
+            </div>
+        </div>
+
+        <!-- FAQ Item 8 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">How often is traffic data updated?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Traffic accident data and statistics are updated in real-time as reports are submitted. Traffic news and alerts refresh automatically to provide the latest information about road conditions and safety concerns.
+            </div>
+        </div>
+
+        <!-- FAQ Item 9 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">What does the dark mode do?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Dark mode switches the interface to a darker color scheme that's easier on the eyes during low-light conditions. You can toggle between light and dark modes using the theme switcher in the account menu.
+            </div>
+        </div>
+
+        <!-- FAQ Item 10 -->
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3 class="faq-question-text">How do I report a problem or give feedback?</h3>
+                <div class="faq-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="faq-answer">
+                Use the Contact Us page to send us feedback, report issues, or share suggestions. We value your input and use it to continuously improve TrafficSafe. You can also reach us at trafficaccidentstn@gmail.com.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // FAQ toggle functionality
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', () => {
+            const item = question.parentElement;
+            item.classList.toggle('open');
+        });
+    });
+</script>
+{% endblock %}

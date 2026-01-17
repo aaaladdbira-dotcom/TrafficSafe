@@ -1,0 +1,17 @@
+flask
+flask-restx
+flask_sqlalchemy
+flask-jwt-extended
+flask-migrate
+flask-smorest
+authlib
+flask-limiter
+flask-socketio
+python-socketio
+python-engineio
+openpyxl
+reportlab
+requests
+python-dotenv
+feedparser
+gunicorn

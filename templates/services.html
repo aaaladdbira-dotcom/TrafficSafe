@@ -1,0 +1,5305 @@
+{% extends "base.html" %}
+
+{% block title %}Services & Tools - TrafficSafe{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    :root {
+        --services-primary: #3b82f6;
+        --services-danger: #dc2626;
+        --services-warning: #f59e0b;
+        --services-success: #10b981;
+        --services-purple: #8b5cf6;
+    }
+    
+    body.dark-mode {
+        --services-danger: #f87171;
+        --services-warning: #fbbf24;
+        --services-success: #34d399;
+    }
+
+    .services-page {
+        padding: 1.5rem 2rem 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Header */
+    .services-header {
+        margin-bottom: 2rem;
+    }
+    
+    .services-header-content h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .services-header-content p {
+        color: var(--ui-text-muted);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+    
+    /* Tab Navigation - Exact Match to Statistics Page */
+    .services-tabs-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
+    
+    .services-tabs {
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        scroll-padding: 0 20px;
+    }
+    
+    .services-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    button.services-tab {
+        all: unset;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--brand-600);
+        cursor: pointer;
+        transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    
+    button.services-tab:hover {
+        color: var(--ui-text);
+        background: rgba(59, 130, 246, 0.06);
+    }
+    
+    button.services-tab.active {
+        background: linear-gradient(135deg, var(--ui-primary) 0%, var(--brand-600) 100%);
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    button.services-tab .tab-icon {
+        font-size: 1rem;
+        line-height: 1;
+    }
+    
+    body.dark-mode .services-tabs {
+        background: var(--brand-700);
+        border-color: var(--ui-border-strong);
+    }
+    
+    body.dark-mode button.services-tab {
+        color: var(--brand-300);
+    }
+    
+    body.dark-mode button.services-tab:hover {
+        background: rgba(209, 219, 249, 0.08);
+    }
+    
+    /* ============================================
+       SERVICES PAGE COMPREHENSIVE DARK MODE
+       ============================================ */
+    
+    /* Service Cards */
+    body.dark-mode .service-card {
+        background: var(--ui-surface) !important;
+        border-color: var(--ui-border) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    body.dark-mode .service-card:hover {
+        border-color: var(--brand-500) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    body.dark-mode .service-card-header {
+        border-color: var(--ui-border) !important;
+    }
+    
+    body.dark-mode .service-card-icon.emergency { background: linear-gradient(135deg, rgba(254, 202, 202, 0.15), rgba(248, 113, 113, 0.15)) !important; }
+    body.dark-mode .service-card-icon.speed { background: linear-gradient(135deg, rgba(191, 219, 254, 0.15), rgba(96, 165, 250, 0.15)) !important; }
+    body.dark-mode .service-card-icon.risk { background: linear-gradient(135deg, rgba(254, 243, 199, 0.15), rgba(251, 191, 36, 0.15)) !important; }
+    body.dark-mode .service-card-icon.route { background: linear-gradient(135deg, rgba(237, 233, 254, 0.15), rgba(167, 139, 250, 0.15)) !important; }
+    body.dark-mode .service-card-icon.tips { background: linear-gradient(135deg, rgba(209, 250, 229, 0.15), rgba(52, 211, 153, 0.15)) !important; }
+    body.dark-mode .service-card-icon.stats { background: linear-gradient(135deg, rgba(191, 219, 254, 0.15), rgba(96, 165, 250, 0.15)) !important; }
+    body.dark-mode .service-card-icon.insurance { background: linear-gradient(135deg, rgba(254, 215, 170, 0.15), rgba(251, 146, 60, 0.15)) !important; }
+    body.dark-mode .service-card-icon.fuel { background: linear-gradient(135deg, rgba(187, 247, 208, 0.15), rgba(74, 222, 128, 0.15)) !important; }
+    
+    body.dark-mode .service-card-title h3 {
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .service-card-title p {
+        color: var(--ui-muted) !important;
+    }
+    
+    /* ============================================
+       REPAIR COST ESTIMATOR - POLISHED DARK MODE
+       ============================================ */
+    
+    body.dark-mode .estimator-form {
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .estimator-form label {
+        color: var(--ui-text) !important;
+        font-weight: 600;
+    }
+    
+    body.dark-mode .estimator-form .form-control,
+    body.dark-mode .estimator-form select {
+        background: var(--brand-800) !important;
+        border: 2px solid var(--ui-border) !important;
+        color: var(--ui-text) !important;
+        border-radius: 10px !important;
+    }
+    
+    body.dark-mode .estimator-form .form-control:focus,
+    body.dark-mode .estimator-form select:focus {
+        border-color: var(--brand-500) !important;
+        box-shadow: 0 0 0 4px rgba(126, 137, 172, 0.2) !important;
+        outline: none !important;
+    }
+    
+    body.dark-mode .estimator-form .form-control option,
+    body.dark-mode .estimator-form select option {
+        background: var(--brand-700) !important;
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .car-damage-selector {
+        background: var(--brand-800) !important;
+        border-radius: 12px !important;
+        padding: 0.5rem !important;
+    }
+    
+    /* Damage Categories - Dark Mode */
+    body.dark-mode .damage-category {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    
+    body.dark-mode .damage-category-header {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
+        border-bottom: 1px solid var(--brand-500) !important;
+        color: var(--brand-100) !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    body.dark-mode .damage-category-header .category-icon {
+        background: var(--brand-500) !important;
+        color: var(--brand-100) !important;
+    }
+    
+    body.dark-mode .damage-category-items {
+        background: var(--brand-800) !important;
+        padding: 0.875rem !important;
+    }
+    
+    /* Damage Items - Dark Mode */
+    body.dark-mode .damage-item {
+        background: var(--brand-700) !important;
+        border: 2px solid var(--brand-600) !important;
+        color: var(--brand-200) !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    body.dark-mode .damage-item:hover {
+        border-color: var(--brand-400) !important;
+        background: var(--brand-600) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    body.dark-mode .damage-item.selected {
+        background: linear-gradient(135deg, var(--brand-500), var(--brand-600)) !important;
+        border-color: var(--brand-400) !important;
+        color: var(--brand-100) !important;
+        box-shadow: 0 4px 12px rgba(126, 137, 172, 0.3) !important;
+    }
+    
+    body.dark-mode .damage-item .check-indicator {
+        background: var(--brand-800) !important;
+        border: 2px solid var(--brand-500) !important;
+        border-radius: 5px !important;
+    }
+    
+    body.dark-mode .damage-item.selected .check-indicator {
+        background: var(--brand-300) !important;
+        border-color: var(--brand-300) !important;
+    }
+    
+    body.dark-mode .damage-item.selected .check-indicator::after {
+        border-left-color: var(--brand-800) !important;
+        border-bottom-color: var(--brand-800) !important;
+    }
+    
+    /* Selected Parts Summary - Dark Mode */
+    body.dark-mode .selected-parts-summary {
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
+        border: 1px solid var(--brand-500) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    body.dark-mode .summary-label {
+        color: var(--brand-200) !important;
+    }
+    
+    body.dark-mode .summary-count {
+        background: var(--brand-400) !important;
+        color: var(--brand-800) !important;
+        font-weight: 700 !important;
+    }
+    
+    body.dark-mode .selected-tag {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-500) !important;
+        color: var(--brand-200) !important;
+        border-radius: 6px !important;
+    }
+    
+    body.dark-mode .selected-tag .remove-tag {
+        color: var(--brand-400) !important;
+    }
+    
+    body.dark-mode .selected-tag .remove-tag:hover {
+        color: #f87171 !important;
+    }
+    
+    /* Estimate Result - Dark Mode */
+    body.dark-mode .estimate-result {
+        background: var(--brand-700) !important;
+        border: 1px solid var(--brand-600) !important;
+        border-radius: 12px !important;
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .estimate-result h4,
+    body.dark-mode .estimate-result .result-title {
+        color: var(--brand-200) !important;
+    }
+    
+    body.dark-mode .estimate-result .result-value,
+    body.dark-mode .estimate-result .price {
+        color: var(--brand-300) !important;
+    }
+    
+    /* Form controls in services */
+    body.dark-mode .services-page .form-control,
+    body.dark-mode .services-page .form-select {
+        background: var(--brand-800) !important;
+        border: 2px solid var(--ui-border) !important;
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .services-page .form-control:focus,
+    body.dark-mode .services-page .form-select:focus {
+        background: var(--brand-800) !important;
+        border-color: var(--brand-500) !important;
+        box-shadow: 0 0 0 4px rgba(126, 137, 172, 0.2) !important;
+    }
+    
+    body.dark-mode .services-page .form-label,
+    body.dark-mode .services-page label {
+        color: var(--ui-text) !important;
+    }
+    
+    body.dark-mode .services-page .form-group label {
+        color: var(--brand-200) !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
+    }
+    
+    /* Fuel prices */
+    body.dark-mode .fuel-station-card {
+        background: var(--ui-surface);
+        border-color: var(--ui-border);
+    }
+    
+    body.dark-mode .fuel-station-name {
+        color: var(--ui-text);
+    }
+    
+    body.dark-mode .fuel-price-row {
+        background: var(--ui-bg);
+    }
+    
+    body.dark-mode .fuel-type {
+        color: var(--ui-text);
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeSlideIn 0.3s ease;
+    }
+    
+    @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Section Title */
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--ui-text);
+    }
+    
+    .section-title .icon {
+        font-size: 1.1rem;
+    }
+    
+    /* Emergency Page Layout */
+    .emergency-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .emergency-services-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    @media (max-width: 1100px) {
+        .emergency-services-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .emergency-services-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Cards Grid */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 1.25rem;
+        align-items: start;
+    }
+    
+    .cards-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    @media (max-width: 1100px) {
+        .cards-grid-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .cards-grid, .cards-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Service Card - Compact for Emergency */
+    .service-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+    }
+    
+    .service-card:hover {
+        border-color: var(--ui-border-strong);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+    
+    .service-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--ui-border);
+        flex-shrink: 0;
+    }
+    
+    .service-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .service-card-icon.emergency { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+    .service-card-icon.speed { background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+    .service-card-icon.risk { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+    .service-card-icon.route { background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+    .service-card-icon.tips { background: linear-gradient(135deg, #ecfdf5, #d1fae5); }
+    .service-card-icon.stats { background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+    
+    .service-card-title h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.125rem 0;
+    }
+    
+    .service-card-title p {
+        color: var(--ui-text-muted);
+        font-size: 0.8rem;
+        margin: 0;
+    }
+    
+    .service-card-body {
+        margin-top: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Emergency services scroll container */
+    .emergency-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 320px;
+        overflow-y: auto;
+        flex: 1;
+        padding-right: 0.25rem;
+    }
+    
+    .emergency-list::-webkit-scrollbar {
+        width: 3px;
+    }
+    
+    .emergency-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .emergency-list::-webkit-scrollbar-thumb {
+        background: var(--ui-border);
+        border-radius: 3px;
+    }
+    
+    .emergency-list::-webkit-scrollbar-thumb:hover {
+        background: var(--ui-border-strong);
+    }
+
+    /* Emergency Numbers Banner - Modern */
+    .emergency-banner {
+        background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .emergency-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .emergency-banner-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .emergency-banner-header .pulse-ring {
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        position: relative;
+    }
+    
+    .emergency-banner-header .pulse-ring::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border: 2px solid rgba(255,255,255,0.5);
+        border-radius: 50%;
+        animation: pulseRing 2s infinite;
+    }
+    
+    @keyframes pulseRing {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(1.8); opacity: 0; }
+    }
+    
+    .emergency-banner-header h3 {
+        color: white;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .emergency-numbers-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+    }
+    
+    @media (max-width: 900px) {
+        .emergency-numbers-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 500px) {
+        .emergency-numbers-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .emergency-number {
+        text-align: center;
+        padding: 1rem 0.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+    }
+    
+    .emergency-number:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .emergency-number .number {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: white;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        letter-spacing: 0.5px;
+    }
+    
+    .emergency-number .label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.85);
+        margin-top: 0.375rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+    }
+    
+    /* Emergency Services Items - Modern */
+    .emergency-item {
+        background: var(--ui-bg);
+        border-radius: 12px;
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .emergency-item:hover {
+        background: var(--ui-surface);
+        border-color: var(--ui-border-strong);
+        transform: translateX(4px);
+    }
+    
+    .emergency-item-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    
+    .emergency-item-icon.hospital { background: linear-gradient(135deg, #fef2f2, #fecaca); }
+    .emergency-item-icon.police { background: linear-gradient(135deg, #eff6ff, #bfdbfe); }
+    .emergency-item-icon.fire { background: linear-gradient(135deg, #fff7ed, #fed7aa); }
+    
+    .emergency-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .emergency-item-info h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .emergency-item-info p {
+        font-size: 0.75rem;
+        margin: 0;
+        color: var(--ui-text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .emergency-item-phone {
+        font-size: 0.75rem;
+        color: var(--services-danger);
+        font-weight: 700;
+        white-space: nowrap;
+        font-family: 'SF Mono', ui-monospace, monospace;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        padding: 0.375rem 0.5rem;
+        border-radius: 8px;
+        border: 1px solid #fecaca;
+        flex-shrink: 0;
+    }
+
+    /* Map Container */
+    .map-section {
+        margin-top: 1.5rem;
+        background: var(--ui-surface);
+        border-radius: 16px;
+        padding: 1.25rem;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .map-section .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 1rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .map-section .section-title .icon {
+        font-size: 1.1rem;
+    }
+    
+    .map-container {
+        height: 400px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--ui-border);
+        background: var(--ui-bg);
+    }
+
+    /* Form Controls - Match Website UI */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--ui-text);
+    }
+    
+    .services-page .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1.5px solid var(--ui-border-strong);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+        background: var(--ui-surface);
+        color: var(--ui-text);
+        box-sizing: border-box;
+        margin: 0;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    
+    .services-page select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+        cursor: pointer;
+    }
+    
+    body.dark-mode .services-page select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    }
+    
+    body.dark-mode .emergency-item-phone {
+        background: rgba(220, 38, 38, 0.15);
+        border-color: rgba(220, 38, 38, 0.3);
+    }
+    
+    body.dark-mode .emergency-item-icon.hospital { background: linear-gradient(135deg, rgba(254, 242, 242, 0.1), rgba(254, 202, 202, 0.1)); }
+    body.dark-mode .emergency-item-icon.police { background: linear-gradient(135deg, rgba(239, 246, 255, 0.1), rgba(191, 219, 254, 0.1)); }
+    body.dark-mode .emergency-item-icon.fire { background: linear-gradient(135deg, rgba(255, 247, 237, 0.1), rgba(254, 215, 170, 0.1)); }
+    
+    /* Dark mode emergency banner - softer red */
+    body.dark-mode .emergency-banner {
+        background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+    }
+    
+    body.dark-mode .emergency-number {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    /* Dark mode text colors - ensure white text */
+    body.dark-mode .services-page,
+    body.dark-mode .services-page h1,
+    body.dark-mode .services-page h2,
+    body.dark-mode .services-page h3,
+    body.dark-mode .services-page h4,
+    body.dark-mode .services-page p,
+    body.dark-mode .services-page span,
+    body.dark-mode .services-page label {
+        color: var(--ui-text);
+    }
+    
+    body.dark-mode .services-header-content p,
+    body.dark-mode .service-card-title p,
+    body.dark-mode .emergency-item-info p,
+    body.dark-mode .tip-content p,
+    body.dark-mode .speed-zone-item .zone-info p {
+        color: var(--ui-muted);
+    }
+    
+    body.dark-mode .emergency-item-phone {
+        background: rgba(248, 113, 113, 0.15);
+        border-color: rgba(248, 113, 113, 0.3);
+        color: #fca5a5;
+    }
+    
+    body.dark-mode .vehicle-card .risk.high,
+    body.dark-mode .tip-badge.high {
+        background: rgba(248, 113, 113, 0.15);
+        color: #fca5a5;
+    }
+    
+    body.dark-mode .vehicle-card .risk.medium,
+    body.dark-mode .tip-badge.medium {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fcd34d;
+    }
+    
+    body.dark-mode .vehicle-card .risk.low {
+        background: rgba(52, 211, 153, 0.15);
+        color: #6ee7b7;
+    }
+    
+    body.dark-mode .quick-stat-trend.up {
+        background: rgba(248, 113, 113, 0.15);
+        color: #fca5a5;
+    }
+    
+    body.dark-mode .quick-stat-trend.down {
+        background: rgba(52, 211, 153, 0.15);
+        color: #6ee7b7;
+    }
+    
+    body.dark-mode .speed-zone-item .zone-speed {
+        border-color: #f87171;
+        color: #f87171;
+    }
+    
+    body.dark-mode .speed-limit-card .value {
+        color: #f87171;
+    }
+    
+    body.dark-mode .services-tab:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
+    
+    .services-page .form-control:focus {
+        outline: none;
+        border-color: var(--ui-primary);
+        box-shadow: 0 0 0 4px var(--ui-focus);
+        background: var(--ui-surface);
+    }
+    
+    .services-page .form-control::placeholder {
+        color: var(--ui-text-muted);
+        opacity: 0.7;
+    }
+    
+    /* Fix number input spinners */
+    .services-page input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    
+    .services-page input[type="number"]::-webkit-outer-spin-button,
+    .services-page input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    /* Buttons - Match Website UI */
+    .services-page .btn-primary {
+        width: 100%;
+        padding: 0.75rem 1.25rem;
+        background: var(--ui-primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(33, 44, 77, 0.12);
+    }
+    
+    .services-page .btn-primary:hover {
+        background: var(--ui-primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(33, 44, 77, 0.18);
+    }
+    
+    .services-page .btn-primary:active {
+        transform: translateY(0);
+    }
+    
+    .services-page .btn-primary svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* Analyze Route Button - Enhanced */
+    .analyze-btn {
+        margin-top: 0 !important;
+        padding: 0.875rem 1.5rem !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+        letter-spacing: 0.01em;
+    }
+    
+    .analyze-btn:hover {
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35) !important;
+        transform: translateY(-3px) !important;
+    }
+    
+    .analyze-btn:active {
+        transform: translateY(-1px) !important;
+    }
+    
+    .analyze-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    /* Filter Bar */
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        background: var(--ui-surface);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .filter-bar .form-group {
+        margin-bottom: 0;
+        min-width: 200px;
+        flex: 1;
+        max-width: 280px;
+    }
+    
+    .filter-bar .form-control {
+        width: 100%;
+    }
+    
+    /* Results Display */
+    .result-box {
+        background: var(--ui-bg);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .result-box.visible {
+        display: block;
+        animation: fadeSlideIn 0.3s ease;
+    }
+    
+    .result-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed var(--ui-border);
+    }
+    
+    .result-row:last-child {
+        border-bottom: none;
+    }
+    
+    .result-label {
+        color: var(--ui-text-muted);
+        font-size: 0.85rem;
+    }
+    
+    .result-value {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .result-value.danger { color: var(--services-danger); }
+    .result-value.warning { color: var(--services-warning); }
+    .result-value.success { color: var(--services-success); }
+    
+    /* Risk Meter */
+    .risk-meter {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed var(--ui-border);
+    }
+    
+    .risk-meter-label {
+        font-size: 0.85rem;
+        color: var(--ui-text-muted);
+        margin-bottom: 0.5rem;
+    }
+    
+    .risk-meter-bar {
+        height: 8px;
+        background: var(--ui-border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .risk-meter-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .risk-meter-fill.low { background: linear-gradient(90deg, #10b981, #34d399); }
+    .risk-meter-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .risk-meter-fill.high { background: linear-gradient(90deg, #ef4444, #f87171); }
+    
+    /* Speed Limit Cards */
+    .speed-limits-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+    }
+    
+    @media (max-width: 900px) {
+        .speed-limits-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    .speed-limit-card {
+        text-align: center;
+        padding: 1rem 0.5rem;
+        background: var(--ui-bg);
+        border-radius: 12px;
+        border: 2px solid var(--ui-border);
+        transition: all 0.2s ease;
+        cursor: default;
+    }
+    
+    .speed-limit-card:hover {
+        border-color: var(--services-danger);
+        transform: translateY(-2px);
+    }
+    
+    .speed-limit-card .limit {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--services-danger);
+        line-height: 1;
+    }
+    
+    .speed-limit-card .unit {
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+        margin-top: 0.125rem;
+    }
+    
+    .speed-limit-card .zone {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        text-transform: capitalize;
+        color: var(--ui-text);
+    }
+    
+    /* Speed Zones List */
+    .speed-zones-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .speed-zone-item {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        padding: 0.75rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .speed-zone-item .zone-speed {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 3px solid var(--services-danger);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--services-danger);
+        flex-shrink: 0;
+    }
+    
+    .speed-zone-item .zone-info {
+        flex: 1;
+    }
+    
+    .speed-zone-item .zone-info h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .speed-zone-item .zone-info p {
+        font-size: 0.75rem;
+        color: var(--ui-text-muted);
+        margin: 0;
+    }
+    
+    .speed-zone-item .zone-type {
+        padding: 0.25rem 0.625rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        background: var(--ui-border);
+        color: var(--ui-text-muted);
+    }
+    
+    /* Quick Stats */
+    .quick-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    @media (max-width: 900px) {
+        .quick-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .quick-stat-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-stat-card:hover {
+        border-color: var(--services-primary);
+    }
+    
+    .quick-stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--services-primary);
+        line-height: 1.2;
+    }
+    
+    .quick-stat-label {
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+        margin-top: 0.375rem;
+    }
+    
+    .quick-stat-trend {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    .quick-stat-trend.up { 
+        background: #fef2f2;
+        color: var(--services-danger); 
+    }
+    .quick-stat-trend.down { 
+        background: #ecfdf5;
+        color: var(--services-success); 
+    }
+    
+    /* Vehicle Types - Compact Grid */
+    .vehicle-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    @media (max-width: 600px) {
+        .vehicle-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .vehicle-card {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--ui-bg);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    
+    .vehicle-card:hover {
+        border-color: var(--ui-border-strong);
+        background: var(--ui-surface);
+    }
+    
+    .vehicle-card.selected {
+        border-color: var(--services-primary);
+        background: rgba(59, 130, 246, 0.06);
+    }
+    
+    .vehicle-card .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        flex-shrink: 0;
+    }
+    
+    .vehicle-card .vehicle-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .vehicle-card .name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--ui-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .vehicle-card .risk {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+    
+    .vehicle-card .risk.low { 
+        background: rgba(16, 185, 129, 0.12); 
+        color: var(--services-success); 
+    }
+    
+    .vehicle-card .risk.medium { 
+        background: rgba(245, 158, 11, 0.12); 
+        color: var(--services-warning); 
+    }
+    
+    .vehicle-card .risk.high { 
+        background: rgba(239, 68, 68, 0.12); 
+        color: var(--services-danger); 
+    }
+    
+    /* Risk Assessment Layout */
+    .risk-assessment-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 900px) {
+        .risk-assessment-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Risk Meter - Modern */
+    .risk-meter {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--ui-border);
+    }
+    
+    .risk-meter-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .risk-meter-bar {
+        height: 10px;
+        background: var(--ui-bg);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .risk-meter-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.5s ease, background 0.3s ease;
+        position: relative;
+    }
+    
+    .risk-meter-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .risk-meter-fill.low { background: linear-gradient(90deg, #10b981, #34d399); }
+    .risk-meter-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .risk-meter-fill.high { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .risk-meter-fill.critical { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    
+    /* Risk Score Display */
+    .risk-score-display {
+        text-align: center;
+        padding: 1.5rem;
+        background: var(--ui-bg);
+        border-radius: 16px;
+        margin-top: 1rem;
+    }
+    
+    .risk-score-value {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--services-primary), var(--services-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .risk-score-label {
+        font-size: 0.85rem;
+        color: var(--ui-muted);
+        margin-top: 0.5rem;
+    }
+    
+    .risk-level-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .risk-level-badge.low { background: rgba(16, 185, 129, 0.15); color: var(--services-success); }
+    .risk-level-badge.medium { background: rgba(245, 158, 11, 0.15); color: var(--services-warning); }
+    .risk-level-badge.high { background: rgba(239, 68, 68, 0.15); color: var(--services-danger); }
+    .risk-level-badge.critical { background: rgba(220, 38, 38, 0.15); color: #dc2626; }
+    
+    /* Risk Stats Grid */
+    .risk-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .risk-stat-item {
+        background: var(--ui-bg);
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .risk-stat-item .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--ui-text);
+    }
+    
+    .risk-stat-item .stat-label {
+        font-size: 0.75rem;
+        color: var(--ui-muted);
+        margin-top: 0.25rem;
+    }
+    
+    /* Safety Tips */
+    .tips-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+    
+    .tip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.875rem;
+        padding: 0.875rem;
+        background: var(--ui-bg);
+        border-radius: 10px;
+        border: 1px solid var(--ui-border);
+        transition: all 0.2s ease;
+    }
+    
+    .tip-item:hover {
+        border-color: var(--ui-border-strong);
+    }
+    
+    .tip-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    
+    .tip-content {
+        flex: 1;
+    }
+    
+    .tip-content h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        text-transform: capitalize;
+    }
+    
+    .tip-content p {
+        font-size: 0.8rem;
+        margin: 0;
+        color: var(--ui-text-muted);
+        line-height: 1.4;
+    }
+    
+    .tip-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+    
+    .tip-badge.high { background: #fef2f2; color: var(--services-danger); }
+    .tip-badge.medium { background: #fffbeb; color: var(--services-warning); }
+    
+    /* ===== Route Planner - Real-time Layout ===== */
+    .route-planner-layout {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 1.5rem;
+        min-height: 600px;
+    }
+    
+    @media (max-width: 1100px) {
+        .route-planner-layout {
+            grid-template-columns: 1fr;
+        }
+        .route-map-panel {
+            order: -1;
+            height: 350px;
+        }
+    }
+    
+    /* Route Input Card - Custom Styling */
+    .route-input-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 16px;
+        overflow: visible;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .route-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1.5rem 1.5rem 1.25rem;
+        border-bottom: 1px solid var(--ui-border);
+        background: linear-gradient(to bottom, var(--ui-bg) 0%, transparent 100%);
+    }
+    
+    .route-header-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.875rem;
+    }
+    
+    .route-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .route-header-text h3 {
+        margin: 0 0 0.375rem 0;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--ui-text);
+        letter-spacing: -0.01em;
+    }
+    
+    .route-header-text p {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: var(--ui-text-muted);
+        line-height: 1.5;
+    }
+    
+    body.dark-mode .route-header-text h3 {
+        color: white;
+    }
+    
+    .route-card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Left Panel */
+    .route-control-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .route-control-panel::-webkit-scrollbar {
+        width: 6px;
+    }
+    .route-control-panel::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .route-control-panel::-webkit-scrollbar-thumb {
+        background: var(--ui-border);
+        border-radius: 3px;
+    }
+    
+    /* Live Indicator */
+    .live-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #16a34a;
+        margin-left: auto;
+    }
+    
+    .live-dot {
+        width: 6px;
+        height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: livePulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes livePulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    body.dark-mode .live-indicator {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+    
+    /* Route Input Styling - Polished */
+    .route-inputs {
+        margin-bottom: 1.25rem;
+    }
+    
+    .route-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .route-input-group {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background: var(--ui-bg);
+        border: 1.5px solid var(--ui-border);
+        border-radius: 12px;
+        overflow: visible;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        flex: 1;
+    }
+    
+    .route-point {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.125rem 1.25rem;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .route-point.origin {
+        padding-bottom: 1rem;
+    }
+    
+    .route-point.destination {
+        padding-top: 1rem;
+        border-top: 1.5px dashed rgba(0, 0, 0, 0.08);
+    }
+    
+    body.dark-mode .route-point.destination {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .point-marker {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        position: relative;
+    }
+    
+    .point-marker::after {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        background: inherit;
+        opacity: 0.15;
+        z-index: -1;
+    }
+    
+    .origin .point-marker {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+    }
+    
+    .destination .point-marker {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    .point-input {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+    }
+    
+    .point-input label {
+        display: block;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: var(--ui-text-muted);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+    
+    .point-input .form-control {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        padding-right: 2.5rem;
+        border: 1.5px solid var(--ui-border);
+        border-radius: 8px;
+        background: var(--ui-surface);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--ui-text);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.875rem center;
+        line-height: 1.5;
+        min-height: 42px;
+    }
+    
+    .point-input .form-control:hover {
+        border-color: #93c5fd;
+        background: var(--ui-surface);
+    }
+    
+    .point-input .form-control:focus {
+        border-color: var(--ui-primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        outline: none;
+        background: var(--ui-surface);
+    }
+    
+    body.dark-mode .point-input .form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    }
+    
+    /* Route Connector with Swap Button */
+    .route-connector {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 5;
+    }
+    
+    .connector-line {
+        display: none;
+    }
+    
+    .swap-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--ui-border);
+        background: var(--ui-surface);
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        position: relative;
+        flex-shrink: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .swap-btn:hover {
+        border-color: var(--ui-primary);
+        color: var(--ui-primary);
+        background: rgba(59, 130, 246, 0.05);
+        transform: rotate(180deg);
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+    
+    .swap-btn:active {
+        transform: rotate(180deg) scale(0.95);
+    }
+    
+    /* Results Panel Cards */
+    .route-results-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .journey-overview,
+    .risk-assessment-card,
+    .live-conditions-card,
+    .risk-factors-card,
+    .recommendations-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .journey-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    
+    .journey-header h4 {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--ui-text);
+    }
+    
+    .last-updated {
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .journey-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .journey-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+    }
+    
+    .journey-stat .stat-icon {
+        font-size: 1.25rem;
+    }
+    
+    .journey-stat .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .journey-stat .stat-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--ui-text);
+    }
+    
+    .journey-stat .stat-label {
+        font-size: 0.65rem;
+        color: var(--ui-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    /* Risk Gauge */
+    .risk-assessment-card h4,
+    .live-conditions-card h4,
+    .risk-factors-card h4,
+    .recommendations-card h4 {
+        margin: 0 0 0.75rem 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--ui-text);
+    }
+    
+    .risk-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .risk-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .risk-badge.low {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    .risk-badge.medium {
+        background: rgba(234, 179, 8, 0.1);
+        color: #ca8a04;
+    }
+    .risk-badge.high {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    body.dark-mode .risk-badge.low { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+    body.dark-mode .risk-badge.medium { background: rgba(234, 179, 8, 0.15); color: #facc15; }
+    body.dark-mode .risk-badge.high { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    
+    .risk-gauge-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .risk-gauge {
+        position: relative;
+        width: 180px;
+        height: 100px;
+    }
+    
+    .risk-arc {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .risk-arc-fill {
+        stroke-dasharray: 251;
+        stroke-dashoffset: 251;
+        transition: stroke-dashoffset 1s ease-out;
+    }
+    
+    .risk-needle {
+        transform-origin: 100px 90px;
+        transition: transform 1s ease-out;
+    }
+    
+    .risk-score-display {
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+    
+    .risk-score {
+        display: block;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--ui-text);
+        line-height: 1;
+    }
+    
+    .risk-score-label {
+        font-size: 0.65rem;
+        color: var(--ui-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .risk-scale {
+        display: flex;
+        justify-content: space-between;
+        width: 160px;
+        font-size: 0.65rem;
+        color: var(--ui-text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .scale-low { color: #22c55e; }
+    .scale-med { color: #eab308; }
+    .scale-high { color: #ef4444; }
+    
+    /* Live Conditions Grid */
+    .conditions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 500px) {
+        .conditions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .condition-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.625rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .condition-icon {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .condition-value {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--ui-text);
+    }
+    
+    .condition-label {
+        font-size: 0.6rem;
+        color: var(--ui-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    /* Risk Factors */
+    .risk-factors-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .risk-factor {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+    }
+    
+    .risk-factor-icon {
+        font-size: 1rem;
+    }
+    
+    .risk-factor-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .risk-factor-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ui-text);
+    }
+    
+    .risk-factor-bar {
+        height: 4px;
+        background: var(--ui-border);
+        border-radius: 2px;
+        margin-top: 0.25rem;
+        overflow: hidden;
+    }
+    
+    .risk-factor-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.5s ease-out;
+    }
+    
+    .risk-factor-fill.low { background: #22c55e; }
+    .risk-factor-fill.medium { background: #eab308; }
+    .risk-factor-fill.high { background: #ef4444; }
+    
+    .risk-factor-value {
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    /* Recommendations */
+    .recommendations-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .recommendations-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+        border-bottom: 1px solid var(--ui-border);
+    }
+    
+    .recommendations-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .recommendations-list li::before {
+        content: '→';
+        color: var(--ui-primary);
+        font-weight: 600;
+    }
+    
+    /* Right Panel - Map */
+    .route-map-panel {
+        position: relative;
+    }
+    
+    .map-container-wrapper {
+        position: relative;
+        height: 100%;
+        min-height: 500px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--ui-border);
+        background: var(--ui-bg);
+    }
+    
+    .route-map {
+        width: 100%;
+        height: 100%;
+        min-height: 500px;
+        background: #f3f4f6;
+    }
+    
+    body.dark-mode .route-map {
+        background: #1e293b;
+    }
+    
+    /* Map Controls */
+    .map-overlay-controls {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 1000;
+    }
+    
+    .map-control-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        background: var(--ui-surface);
+        color: var(--ui-text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    
+    .map-control-btn:hover {
+        background: var(--ui-primary);
+        color: white;
+    }
+    
+    .map-control-btn.active {
+        background: var(--ui-primary);
+        color: white;
+    }
+    
+    /* Map Legend */
+    .map-legend {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--ui-surface);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 1000;
+        font-size: 0.7rem;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .legend-marker {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .legend-marker.origin {
+        background: #22c55e;
+    }
+    
+    .legend-marker.destination {
+        background: #ef4444;
+    }
+    
+    .legend-marker.accident {
+        background: #f97316;
+        border: 2px solid #fff;
+    }
+    
+    /* Old Route Styles - keeping for backwards compatibility */
+    .route-result {
+        margin-top: 1.25rem;
+        display: none;
+    }
+    
+    .route-result.visible {
+        display: block;
+        animation: fadeSlideIn 0.3s ease;
+    }
+    
+    .route-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .route-stat {
+        text-align: center;
+        padding: 1rem;
+        background: var(--ui-bg);
+        border-radius: 10px;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .route-stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+    
+    .route-stat-label {
+        font-size: 0.75rem;
+        color: var(--ui-text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .route-recommendations {
+        background: var(--ui-bg);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .route-recommendations h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0 0 0.625rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+    
+    .route-recommendations ul {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+    
+    .route-recommendations li {
+        font-size: 0.825rem;
+        margin-bottom: 0.375rem;
+        color: var(--ui-text-muted);
+    }
+    
+    /* Dark mode for new route styles */
+    body.dark-mode .journey-overview,
+    body.dark-mode .risk-assessment-card,
+    body.dark-mode .live-conditions-card,
+    body.dark-mode .risk-factors-card,
+    body.dark-mode .recommendations-card {
+        background: var(--ui-surface);
+    }
+    
+    body.dark-mode .journey-header h4,
+    body.dark-mode .risk-assessment-card h4,
+    body.dark-mode .live-conditions-card h4,
+    body.dark-mode .risk-factors-card h4,
+    body.dark-mode .recommendations-card h4 {
+        color: white;
+    }
+    
+    body.dark-mode .journey-stat .stat-value,
+    body.dark-mode .risk-score,
+    body.dark-mode .condition-value,
+    body.dark-mode .risk-factor-name {
+        color: white;
+    }
+    
+    body.dark-mode .recommendations-list li {
+        color: #94a3b8;
+    }
+
+    /* Loading State */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: var(--ui-text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--ui-border);
+        border-top-color: var(--services-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 0.625rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .empty-state .icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Fine Info Cards */
+    .fine-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.625rem;
+    }
+    
+    .fine-info-card {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem;
+        background: var(--ui-bg);
+        border-radius: 8px;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .fine-info-card .icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .fine-info-card .info h4 {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin: 0 0 0.125rem 0;
+    }
+    
+    .fine-info-card .info p {
+        font-size: 0.7rem;
+        color: var(--ui-text-muted);
+        margin: 0;
+    }
+    
+    /* Insurance Companies Grid */
+    .insurance-companies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .insurance-company-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .insurance-company-card:hover {
+        border-color: var(--ui-primary);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+    
+    .insurance-company-card .company-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .insurance-company-card .company-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--ui-text);
+    }
+    
+    .insurance-company-card .company-type {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--ui-hover);
+        border-radius: 4px;
+        color: var(--ui-text-muted);
+    }
+    
+    .insurance-company-card .company-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: #f59e0b;
+        font-size: 0.85rem;
+    }
+    
+    .insurance-company-card .company-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .insurance-company-card .company-info a {
+        color: var(--ui-primary);
+        text-decoration: none;
+    }
+    
+    .insurance-company-card .claim-time {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 6px;
+        color: #10b981;
+        font-size: 0.8rem;
+    }
+    
+    /* Damage Parts Grid - Legacy */
+    .damage-parts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .damage-part {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+    
+    .damage-part:hover {
+        border-color: var(--ui-primary);
+    }
+    
+    .damage-part:has(input:checked) {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: var(--ui-primary);
+    }
+    
+    /* Interactive Car Damage Selector - Professional Style */
+    .car-damage-selector {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 0.5rem;
+    }
+    
+    .damage-categories {
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+    }
+    
+    .damage-category {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .damage-category-header {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.75rem 1rem;
+        background: var(--brand-200, #D9E1FA);
+        border-bottom: 1px solid var(--ui-border);
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--brand-700, #212C4D);
+    }
+    
+    .damage-category-header .category-icon {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--brand-700, #212C4D);
+        color: white;
+        border-radius: 6px;
+    }
+    
+    .damage-category-header .category-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .damage-category-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: var(--ui-bg);
+    }
+    
+    .damage-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.65rem;
+        background: var(--ui-surface);
+        border: 1.5px solid var(--ui-border);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-size: 0.8rem;
+        color: var(--ui-text);
+    }
+    
+    .damage-item:hover {
+        border-color: var(--brand-600, #37446B);
+        background: var(--ui-surface);
+    }
+    
+    .damage-item.selected {
+        background: var(--brand-200, #D9E1FA);
+        border-color: var(--brand-700, #212C4D);
+        color: var(--brand-700, #212C4D);
+        font-weight: 500;
+    }
+    
+    .damage-item .check-indicator {
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid var(--ui-border);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.15s;
+        background: var(--ui-surface);
+    }
+    
+    .damage-item .check-indicator::after {
+        content: '';
+        width: 8px;
+        height: 5px;
+        border-left: 2px solid transparent;
+        border-bottom: 2px solid transparent;
+        transform: rotate(-45deg) translateY(-1px);
+    }
+    
+    .damage-item.selected .check-indicator {
+        background: var(--brand-700, #212C4D);
+        border-color: var(--brand-700, #212C4D);
+    }
+    
+    .damage-item.selected .check-indicator::after {
+        border-left-color: white;
+        border-bottom-color: white;
+    }
+    
+    .damage-item .item-label {
+        flex: 1;
+        line-height: 1.2;
+    }
+    
+    /* Selected Summary */
+    .selected-parts-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--brand-200, #D9E1FA);
+        border: 1px solid var(--brand-300, #D1DBF9);
+        border-radius: 8px;
+        margin-top: 0.875rem;
+        flex-wrap: wrap;
+    }
+    
+    .summary-label {
+        font-size: 0.8rem;
+        color: var(--brand-600, #37446B);
+        font-weight: 500;
+    }
+    
+    .summary-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        padding: 0.25rem 0.6rem;
+        background: var(--brand-700, #212C4D);
+        border-radius: 12px;
+        min-width: 22px;
+        text-align: center;
+    }
+    
+    .selected-tags {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+    
+    .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.5rem;
+        background: white;
+        border: 1px solid var(--brand-300, #D1DBF9);
+        border-radius: 5px;
+        font-size: 0.7rem;
+        color: var(--brand-700, #212C4D);
+    }
+    
+    .selected-tag .remove-tag {
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.15s;
+        font-size: 0.9rem;
+        line-height: 1;
+    }
+    
+    .selected-tag .remove-tag:hover {
+        opacity: 1;
+        color: #ef4444;
+    }
+    
+    /* Estimate Result */
+    .estimate-result {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+        border-radius: 12px;
+        border: 1px solid var(--ui-border);
+    }
+    
+    .estimate-result h4 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+    }
+    
+    .estimate-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .estimate-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed var(--ui-border);
+    }
+    
+    .estimate-item.total {
+        border-top: 2px solid var(--ui-primary);
+        border-bottom: none;
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    /* Checklist Sections */
+    .checklist-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .checklist-section h4 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0 0.75rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--ui-primary);
+        color: var(--ui-primary);
+    }
+    
+    .checklist-items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .checklist-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 8px;
+    }
+    
+    .checklist-item .icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .checklist-item .text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    /* Traffic Alerts */
+    .alerts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .alert-card {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        border-left: 4px solid;
+    }
+    
+    .alert-card.accident { border-left-color: #ef4444; }
+    .alert-card.construction { border-left-color: #f59e0b; }
+    .alert-card.weather { border-left-color: #3b82f6; }
+    .alert-card.closure { border-left-color: #8b5cf6; }
+    
+    .alert-icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    
+    .alert-content {
+        flex: 1;
+    }
+    
+    .alert-content h4 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+    
+    .alert-content p {
+        margin: 0 0 0.5rem 0;
+        color: var(--ui-text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .alert-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+    }
+    
+    /* News List */
+    .news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .news-item {
+        padding: 1rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+    
+    .news-item:hover {
+        border-color: var(--ui-primary);
+    }
+    
+    .news-item h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+    }
+    
+    .news-item h4 a {
+        color: var(--ui-text);
+        text-decoration: none;
+    }
+    
+    .news-item h4 a:hover {
+        color: var(--ui-primary);
+    }
+    
+    .news-item p {
+        margin: 0 0 0.75rem 0;
+        color: var(--ui-text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .news-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+    }
+    
+    /* Fuel Prices Grid */
+    .fuel-prices-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .fuel-price-card {
+        padding: 1.25rem;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        text-align: center;
+        border-top: 4px solid;
+    }
+    
+    .fuel-price-card .icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .fuel-price-card .name {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .fuel-price-card .price {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--ui-primary);
+    }
+    
+    .fuel-price-card .unit {
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .fuel-updated {
+        margin-top: 1rem;
+        text-align: center;
+        color: var(--ui-text-muted);
+        font-size: 0.85rem;
+    }
+    
+    /* Trip Calculator Result */
+    .trip-result {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(245, 158, 11, 0.1));
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .trip-result .cost {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+    
+    .trip-result .details {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .trip-result .detail-item {
+        text-align: center;
+    }
+    
+    .trip-result .detail-item .value {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .trip-result .detail-item .label {
+        font-size: 0.8rem;
+        color: var(--ui-text-muted);
+    }
+    
+    .price-chart-container {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--ui-surface);
+        border-radius: 8px;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 2rem;
+        color: var(--ui-text-muted);
+    }
+</style>
+
+<div class="services-page">
+    <div class="services-header">
+        <div class="services-header-content">
+            <h1>🚗 <span data-i18n="services.title">Services & Tools</span></h1>
+            <p data-i18n="services.subtitle">Essential traffic services, emergency contacts, and safety tools for Tunisia</p>
+        </div>
+    </div>
+    
+    <!-- Emergency Numbers Banner - Modern Red Design -->
+    <div class="emergency-banner" id="emergencyBanner">
+        <div class="emergency-banner-header">
+            <div class="pulse-ring"></div>
+            <h3>🚨 <span data-i18n="services.emergencyNumbers">Emergency Numbers - Call Immediately</span></h3>
+        </div>
+        <div class="emergency-numbers-grid" id="emergencyNumbersGrid">
+            <div class="loading"><div class="loading-spinner"></div> <span data-i18n="services.loading">Loading...</span></div>
+        </div>
+    </div>
+    
+    <!-- Tab Navigation - Match Statistics Page -->
+    <div class="services-tabs-wrapper">
+        <div class="services-tabs">
+            <button class="services-tab active" data-tab="emergency">
+                <span class="tab-icon">🚑</span>
+                <span data-i18n="services.emergency">Emergency</span>
+            </button>
+            <button class="services-tab" data-tab="insurance">
+                <span class="tab-icon">🛡️</span>
+                <span data-i18n="services.insurance">Insurance</span>
+            </button>
+            <button class="services-tab" data-tab="fuel">
+                <span class="tab-icon">⛽</span>
+                <span data-i18n="services.fuel">Fuel Prices</span>
+            </button>
+            <button class="services-tab" data-tab="speed">
+                <span class="tab-icon">⚡</span>
+                <span data-i18n="services.speed">Speed Limits</span>
+            </button>
+            <button class="services-tab" data-tab="calculator">
+                <span class="tab-icon">💰</span>
+                <span data-i18n="services.calculator">Fine Calculator</span>
+            </button>
+            <button class="services-tab" data-tab="risk">
+                <span class="tab-icon">⚠️</span>
+                <span data-i18n="services.risk">Risk Assessment</span>
+            </button>
+            <button class="services-tab" data-tab="route">
+                <span class="tab-icon">🗺️</span>
+                <span data-i18n="services.route">Route Planner</span>
+            </button>
+            <button class="services-tab" data-tab="tips">
+                <span class="tab-icon">💡</span>
+                <span data-i18n="services.tips">Safety Tips</span>
+            </button>
+            <button class="services-tab" data-tab="stats">
+                <span class="tab-icon">📊</span>
+                <span data-i18n="services.stats">Quick Stats</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Emergency Services -->
+    <div class="tab-content active" id="tab-emergency">
+        <div class="emergency-layout">
+            <!-- Filter -->
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label for="emergencyGov">Filter by Governorate</label>
+                    <select id="emergencyGov" class="form-control" onchange="loadEmergencyServices()">
+                        <option value="">All Governorates</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Emergency Services Grid -->
+            <div class="emergency-services-grid">
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon emergency">🏥</div>
+                    <div class="service-card-title">
+                        <h3>Hospitals</h3>
+                        <p>Emergency medical centers</p>
+                    </div>
+                </div>
+                <div class="emergency-list" id="hospitalsList">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon emergency">👮</div>
+                    <div class="service-card-title">
+                        <h3>Police Stations</h3>
+                        <p>Traffic and district police</p>
+                    </div>
+                </div>
+                <div class="emergency-list" id="policeList">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon emergency">🚒</div>
+                    <div class="service-card-title">
+                        <h3>Fire Stations</h3>
+                        <p>Protection Civile</p>
+                    </div>
+                </div>
+                <div class="emergency-list" id="fireList">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map Section -->
+        <div class="map-section">
+            <h3 class="section-title"><span class="icon">📍</span> Emergency Services Map</h3>
+            <div class="map-container" id="emergencyMap"></div>
+        </div>
+    </div>
+    </div>
+    
+    <!-- Tab Content: Insurance -->
+    <div class="tab-content" id="tab-insurance">
+        <div class="insurance-layout">
+            <!-- Insurance Companies Section -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">🛡️</div>
+                    <div class="service-card-title">
+                        <h3>Insurance Companies</h3>
+                        <p>Licensed insurance providers in Tunisia</p>
+                    </div>
+                </div>
+                <div class="insurance-companies-grid" id="insuranceCompanies">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+            
+            <!-- Cost Estimator Section -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, var(--brand-700), var(--brand-600));">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="service-card-title">
+                        <h3 data-i18n="services.insurance.repairEstimator">Repair Cost Estimator</h3>
+                        <p data-i18n="services.insurance.repairEstimatorDesc">Get an estimate for your vehicle repair costs</p>
+                    </div>
+                </div>
+                <div class="estimator-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="services.insurance.vehicleType">Vehicle Type</label>
+                            <select id="vehicleType" class="form-control">
+                                <option value="economy">Economy Car</option>
+                                <option value="sedan" selected>Sedan</option>
+                                <option value="suv">SUV / 4x4</option>
+                                <option value="luxury">Luxury Vehicle</option>
+                                <option value="truck">Truck / Van</option>
+                                <option value="motorcycle">Motorcycle</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="services.insurance.damageSeverity">Damage Severity</label>
+                            <select id="damageSeverity" class="form-control">
+                                <option value="minor">Minor - Scratches, small dents</option>
+                                <option value="moderate" selected>Moderate - Visible damage</option>
+                                <option value="severe">Severe - Major damage</option>
+                                <option value="critical">Critical - Extensive damage</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="services.insurance.selectParts">Select Damaged Parts</label>
+                        <div class="car-damage-selector">
+                            <div class="damage-categories">
+                                <!-- Exterior Body -->
+                                <div class="damage-category">
+                                    <div class="damage-category-header">
+                                        <span class="category-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="22" height="14" rx="2"/><path d="M1 14h22M6 21h4M14 21h4"/></svg>
+                                        </span>
+                                        Exterior Body
+                                    </div>
+                                    <div class="damage-category-items">
+                                        <div class="damage-item" data-part="hood" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Hood</span>
+                                        </div>
+                                        <div class="damage-item" data-part="trunk" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Trunk</span>
+                                        </div>
+                                        <div class="damage-item" data-part="door" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Door</span>
+                                        </div>
+                                        <div class="damage-item" data-part="fender" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Fender</span>
+                                        </div>
+                                        <div class="damage-item" data-part="bumper" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Bumper</span>
+                                        </div>
+                                        <div class="damage-item" data-part="roof" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Roof</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Lights & Glass -->
+                                <div class="damage-category">
+                                    <div class="damage-category-header">
+                                        <span class="category-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                                        </span>
+                                        Lights & Glass
+                                    </div>
+                                    <div class="damage-category-items">
+                                        <div class="damage-item" data-part="headlight" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Headlight</span>
+                                        </div>
+                                        <div class="damage-item" data-part="taillight" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Taillight</span>
+                                        </div>
+                                        <div class="damage-item" data-part="windshield" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Windshield</span>
+                                        </div>
+                                        <div class="damage-item" data-part="side_mirror" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Side Mirror</span>
+                                        </div>
+                                        <div class="damage-item" data-part="rear_window" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Rear Window</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Mechanical & Interior -->
+                                <div class="damage-category">
+                                    <div class="damage-category-header">
+                                        <span class="category-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                        </span>
+                                        Mechanical & Safety
+                                    </div>
+                                    <div class="damage-category-items">
+                                        <div class="damage-item" data-part="suspension" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Suspension</span>
+                                        </div>
+                                        <div class="damage-item" data-part="radiator" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Radiator</span>
+                                        </div>
+                                        <div class="damage-item" data-part="airbag" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Airbag</span>
+                                        </div>
+                                        <div class="damage-item" data-part="frame" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Frame</span>
+                                        </div>
+                                        <div class="damage-item" data-part="exhaust" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Exhaust</span>
+                                        </div>
+                                        <div class="damage-item" data-part="paint_panel" onclick="toggleDamagePart(this)">
+                                            <span class="check-indicator"></span>
+                                            <span class="item-label">Paint Work</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Parts Summary -->
+                            <div class="selected-parts-summary" id="selectedPartsSummary">
+                                <span class="summary-label">Selected parts:</span>
+                                <span class="summary-count" id="selectedPartsCount">0</span>
+                                <div class="selected-tags" id="selectedPartsTags"></div>
+                            </div>
+                        </div>
+                        <div id="damageParts" style="display:none;"></div>
+                    </div>
+                    
+                    <button class="btn-primary" onclick="calculateRepairCost()" style="margin-top: 1rem;" data-i18n="services.insurance.calculateEstimate">
+                        Calculate Estimate
+                    </button>
+                </div>
+                <div class="estimate-result" id="estimateResult" style="display: none;">
+                    <!-- Results loaded via JS -->
+                </div>
+            </div>
+            
+            <!-- Claim Checklist -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">📋</div>
+                    <div class="service-card-title">
+                        <h3>Insurance Claim Checklist</h3>
+                        <p>Steps to follow after an accident</p>
+                    </div>
+                </div>
+                <div class="checklist-sections" id="claimChecklist">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Fuel Prices -->
+    <div class="tab-content" id="tab-fuel">
+        <div class="fuel-layout">
+            <!-- Current Prices -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">⛽</div>
+                    <div class="service-card-title">
+                        <h3>Current Fuel Prices</h3>
+                        <p>Official prices in Tunisia (TND/Liter)</p>
+                    </div>
+                </div>
+                <div class="fuel-prices-grid" id="fuelPrices">
+                    <!-- Loaded via JS -->
+                </div>
+                <div class="fuel-updated" id="fuelUpdated"></div>
+            </div>
+            
+            <!-- Trip Calculator -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">🧮</div>
+                    <div class="service-card-title">
+                        <h3>Trip Fuel Calculator</h3>
+                        <p>Estimate fuel cost for your journey</p>
+                    </div>
+                </div>
+                <div class="trip-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Distance (km)</label>
+                            <input type="number" id="tripDistance" class="form-control" placeholder="e.g. 150" value="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Fuel Type</label>
+                            <select id="tripFuelType" class="form-control">
+                                <option value="diesel">Diesel</option>
+                                <option value="essence_super">Super (Essence)</option>
+                                <option value="essence_normal">Regular (Essence)</option>
+                                <option value="gpl">LPG (GPL)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumption (L/100km)</label>
+                        <input type="number" id="tripConsumption" class="form-control" placeholder="e.g. 7" value="7" step="0.1">
+                    </div>
+                    <button class="btn-primary" onclick="calculateTripCost()">
+                        <span class="icon">💰</span> Calculate Trip Cost
+                    </button>
+                </div>
+                <div class="trip-result" id="tripResult" style="display: none;">
+                    <!-- Results loaded via JS -->
+                </div>
+            </div>
+            
+            <!-- Price Trend -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">📈</div>
+                    <div class="service-card-title">
+                        <h3>Price Trends</h3>
+                        <p>Historical fuel price changes</p>
+                    </div>
+                </div>
+                <div class="price-chart-container">
+                    <canvas id="fuelPriceChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Speed Limits -->
+    <div class="tab-content" id="tab-speed">
+        <div class="service-card">
+            <div class="service-card-header">
+                <div class="service-card-icon speed">⚡</div>
+                <div class="service-card-title">
+                    <h3>Tunisia Speed Limits</h3>
+                    <p>Official speed limits by zone type</p>
+                </div>
+            </div>
+            <div class="speed-limits-grid" id="speedLimitsGrid">
+                <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+            </div>
+        </div>
+        
+        <div class="service-card" style="margin-top: 1.25rem;">
+            <div class="service-card-header">
+                <div class="service-card-icon speed">🛣️</div>
+                <div class="service-card-title">
+                    <h3>Major Speed Zones</h3>
+                    <p>Highways and main roads</p>
+                </div>
+            </div>
+            <div class="speed-zones-list" id="speedZonesList">
+                <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Fine Calculator -->
+    <div class="tab-content" id="tab-calculator">
+        <div class="cards-grid">
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon risk">💰</div>
+                    <div class="service-card-title">
+                        <h3>Speeding Fine Calculator</h3>
+                        <p>Calculate potential fines and penalties</p>
+                    </div>
+                </div>
+                <div class="service-card-body">
+                    <div class="form-group">
+                        <label for="fineZoneType">Zone Type</label>
+                        <select id="fineZoneType" class="form-control">
+                            <option value="urban">Urban (50 km/h)</option>
+                            <option value="expressway">Expressway (90 km/h)</option>
+                            <option value="highway">Highway (110 km/h)</option>
+                            <option value="residential">Residential (30 km/h)</option>
+                            <option value="school_zone">School Zone (20 km/h)</option>
+                            <option value="construction">Construction (30 km/h)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="actualSpeed">Your Speed (km/h)</label>
+                        <input type="number" id="actualSpeed" class="form-control" placeholder="e.g., 85" min="0" max="300">
+                    </div>
+                    <button class="btn-primary" onclick="calculateFine()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/></svg>
+                        Calculate Fine
+                    </button>
+                    
+                    <div class="result-box" id="fineResult">
+                        <div class="result-row">
+                            <span class="result-label">Speed Limit</span>
+                            <span class="result-value" id="fineLimit">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Your Speed</span>
+                            <span class="result-value" id="fineSpeed">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Over Limit</span>
+                            <span class="result-value danger" id="fineOver">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Fine Amount</span>
+                            <span class="result-value danger" id="fineAmount">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">License Points</span>
+                            <span class="result-value warning" id="finePoints">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Severity</span>
+                            <span class="result-value" id="fineSeverity">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon tips">ℹ️</div>
+                    <div class="service-card-title">
+                        <h3>Fine Information</h3>
+                        <p>Understanding Tunisia traffic fines</p>
+                    </div>
+                </div>
+                <div class="service-card-body">
+                    <div class="fine-info-grid">
+                        <div class="fine-info-card">
+                            <span class="icon">⚠️</span>
+                            <div class="info">
+                                <h4>Minor (1-15 km/h)</h4>
+                                <p>Base fine, 1-2 points</p>
+                            </div>
+                        </div>
+                        <div class="fine-info-card">
+                            <span class="icon">🔶</span>
+                            <div class="info">
+                                <h4>Moderate (16-30 km/h)</h4>
+                                <p>2x fine, 3-4 points</p>
+                            </div>
+                        </div>
+                        <div class="fine-info-card">
+                            <span class="icon">🔴</span>
+                            <div class="info">
+                                <h4>Severe (31-50 km/h)</h4>
+                                <p>5x fine, 4-6 points</p>
+                            </div>
+                        </div>
+                        <div class="fine-info-card">
+                            <span class="icon">⛔</span>
+                            <div class="info">
+                                <h4>Extreme (50+ km/h)</h4>
+                                <p>10x fine, suspension</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Risk Assessment -->
+    <div class="tab-content" id="tab-risk">
+        <div class="risk-assessment-layout">
+            <!-- Left: Vehicle Selection -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon risk">🚗</div>
+                    <div class="service-card-title">
+                        <h3>Select Vehicle Type</h3>
+                        <p>Click to select and auto-fill the calculator</p>
+                    </div>
+                </div>
+                <div class="vehicle-grid" id="vehicleGrid">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Right: Risk Calculator -->
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon risk">📊</div>
+                    <div class="service-card-title">
+                        <h3>Risk Calculator</h3>
+                        <p>Get your personalized risk assessment</p>
+                    </div>
+                </div>
+                <div class="service-card-body">
+                    <div class="form-group">
+                        <label for="driverAge">Your Age</label>
+                        <input type="number" id="driverAge" class="form-control" placeholder="Enter your age" min="18" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="vehicleType">Vehicle Type</label>
+                        <select id="vehicleType" class="form-control">
+                            <option value="car">Private Car</option>
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="truck">Truck</option>
+                            <option value="bus">Bus</option>
+                            <option value="taxi">Taxi</option>
+                            <option value="bicycle">Bicycle</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="calculateDriverRisk()" style="width: 100%;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Calculate Risk Score
+                    </button>
+                    
+                    <div class="result-box" id="riskResult">
+                        <!-- Score Display -->
+                        <div class="risk-score-display">
+                            <div class="risk-score-value" id="riskScore">--</div>
+                            <div class="risk-score-label">Risk Score</div>
+                            <div class="risk-level-badge" id="riskLevelBadge">
+                                <span id="riskLevel">--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Risk Meter -->
+                        <div class="risk-meter">
+                            <div class="risk-meter-bar">
+                                <div class="risk-meter-fill" id="riskMeterFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stats Grid -->
+                        <div class="risk-stats-grid">
+                            <div class="risk-stat-item">
+                                <div class="stat-value" id="riskAgeGroup">--</div>
+                                <div class="stat-label">Age Group</div>
+                            </div>
+                            <div class="risk-stat-item">
+                                <div class="stat-value" id="riskAgeFactor">--</div>
+                                <div class="stat-label">Age Factor</div>
+                            </div>
+                            <div class="risk-stat-item">
+                                <div class="stat-value" id="riskVehicle">--</div>
+                                <div class="stat-label">Vehicle Risk</div>
+                            </div>
+                            <div class="risk-stat-item">
+                                <div class="stat-value" id="riskOverall">--</div>
+                                <div class="stat-label">Combined</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Route Planner -->
+    <div class="tab-content" id="tab-route">
+        <div class="route-planner-layout">
+            <!-- Left Panel: Controls & Results -->
+            <div class="route-control-panel">
+                <div class="service-card route-input-card">
+                    <div class="route-card-header">
+                        <div class="route-header-content">
+                            <div class="route-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="10" r="3"/>
+                                    <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+                                </svg>
+                            </div>
+                            <div class="route-header-text">
+                                <h3>Route Risk Assessment</h3>
+                                <p>Plan your journey with real-time safety insights</p>
+                            </div>
+                        </div>
+                        <div class="live-indicator" id="routeLiveIndicator">
+                            <span class="live-dot"></span>
+                            <span class="live-text">LIVE</span>
+                        </div>
+                    </div>
+                    
+                    <div class="route-card-body">
+                        <!-- Route Selection -->
+                        <div class="route-inputs">
+                            <div class="route-input-wrapper">
+                                <div class="route-input-group">
+                                    <div class="route-point origin">
+                                        <div class="point-marker">A</div>
+                                        <div class="point-input">
+                                            <label>Starting Point</label>
+                                            <select id="routeFrom" class="form-control" onchange="onRouteChange()">
+                                                <option value="">Choose origin governorate</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="route-point destination">
+                                        <div class="point-marker">B</div>
+                                        <div class="point-input">
+                                            <label>Destination</label>
+                                            <select id="routeTo" class="form-control" onchange="onRouteChange()">
+                                                <option value="">Choose destination governorate</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="swap-btn" onclick="swapRoutePoints()" title="Swap locations">
+                                    ⇅
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-primary analyze-btn" onclick="calculateRouteRisk()" id="analyzeRouteBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                            </svg>
+                            Analyze Route
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Route Results Panel -->
+                <div class="route-results-panel" id="routeResultsPanel" style="display: none;">
+                    <!-- Journey Overview -->
+                    <div class="journey-overview">
+                        <div class="journey-header">
+                            <h4>🚗 Journey Overview</h4>
+                            <span class="last-updated" id="routeLastUpdated">Updated just now</span>
+                        </div>
+                        <div class="journey-stats">
+                            <div class="journey-stat">
+                                <div class="stat-icon">📍</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="routeDistance">-- km</span>
+                                    <span class="stat-label">Distance</span>
+                                </div>
+                            </div>
+                            <div class="journey-stat">
+                                <div class="stat-icon">⏱️</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="routeDuration">-- min</span>
+                                    <span class="stat-label">Est. Duration</span>
+                                </div>
+                            </div>
+                            <div class="journey-stat">
+                                <div class="stat-icon">🚦</div>
+                                <div class="stat-info">
+                                    <span class="stat-value" id="routeTrafficStatus">--</span>
+                                    <span class="stat-label">Traffic</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Assessment -->
+                    <div class="risk-assessment-card">
+                        <div class="risk-header">
+                            <h4>⚠️ Risk Assessment</h4>
+                            <div class="risk-badge" id="routeRiskBadge">--</div>
+                        </div>
+                        <div class="risk-gauge-container">
+                            <div class="risk-gauge">
+                                <svg viewBox="0 0 200 100" class="risk-arc">
+                                    <defs>
+                                        <linearGradient id="riskGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color:#22c55e"/>
+                                            <stop offset="50%" style="stop-color:#eab308"/>
+                                            <stop offset="100%" style="stop-color:#ef4444"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M 20 90 A 80 80 0 0 1 180 90" fill="none" stroke="#e5e7eb" stroke-width="12" stroke-linecap="round"/>
+                                    <path d="M 20 90 A 80 80 0 0 1 180 90" fill="none" stroke="url(#riskGradient)" stroke-width="12" stroke-linecap="round" class="risk-arc-fill" id="riskArcFill"/>
+                                    <circle cx="100" cy="90" r="6" fill="var(--ui-text)" class="risk-needle" id="riskNeedle"/>
+                                </svg>
+                                <div class="risk-score-display">
+                                    <span class="risk-score" id="routeRiskScore">--</span>
+                                    <span class="risk-score-label">Risk Score</span>
+                                </div>
+                            </div>
+                            <div class="risk-scale">
+                                <span class="scale-low">Low</span>
+                                <span class="scale-med">Medium</span>
+                                <span class="scale-high">High</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Conditions -->
+                    <div class="live-conditions-card">
+                        <h4>🌡️ Current Conditions</h4>
+                        <div class="conditions-grid">
+                            <div class="condition-item">
+                                <span class="condition-icon" id="weatherIcon">🌤️</span>
+                                <span class="condition-value" id="routeWeather">--</span>
+                                <span class="condition-label">Weather</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="condition-icon">🌡️</span>
+                                <span class="condition-value" id="routeTemp">--°C</span>
+                                <span class="condition-label">Temperature</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="condition-icon">👁️</span>
+                                <span class="condition-value" id="routeVisibility">--</span>
+                                <span class="condition-label">Visibility</span>
+                            </div>
+                            <div class="condition-item">
+                                <span class="condition-icon">🕐</span>
+                                <span class="condition-value" id="routeTimeOfDay">--</span>
+                                <span class="condition-label">Time Factor</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Risk Factors -->
+                    <div class="risk-factors-card">
+                        <h4>📊 Risk Factors</h4>
+                        <div class="risk-factors-list" id="riskFactorsList">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div class="recommendations-card">
+                        <h4>💡 Safety Recommendations</h4>
+                        <ul class="recommendations-list" id="routeRecommendations">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Map -->
+            <div class="route-map-panel">
+                <div class="map-container-wrapper">
+                    <div id="routeMap" class="route-map"></div>
+                    <div class="map-overlay-controls">
+                        <button class="map-control-btn" onclick="centerRouteMap()" title="Center map">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                            </svg>
+                        </button>
+                        <button class="map-control-btn" onclick="toggleAccidentMarkers()" title="Toggle accidents" id="toggleAccidentsBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <span class="legend-marker origin"></span>
+                            <span>Origin</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-marker destination"></span>
+                            <span>Destination</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-marker accident"></span>
+                            <span>Accident Hotspot</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Safety Tips -->
+    <div class="tab-content" id="tab-tips">
+        <div class="cards-grid">
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon tips">💡</div>
+                    <div class="service-card-title">
+                        <h3>Safety Tips</h3>
+                        <p>Contextual driving safety recommendations</p>
+                    </div>
+                </div>
+                <div id="safetyTipsList">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-icon tips">🌤️</div>
+                    <div class="service-card-title">
+                        <h3>Current Conditions</h3>
+                        <p>Driving conditions right now</p>
+                    </div>
+                </div>
+                <div id="currentConditions">
+                    <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Quick Stats -->
+    <div class="tab-content" id="tab-stats">
+        <div class="service-card">
+            <div class="service-card-header">
+                <div class="service-card-icon stats">📊</div>
+                <div class="service-card-title">
+                    <h3>Quick Statistics</h3>
+                    <p>At-a-glance accident statistics</p>
+                </div>
+            </div>
+            <div class="filter-bar">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="statsPeriod">Period</label>
+                    <select id="statsPeriod" class="form-control" onchange="loadQuickStats()">
+                        <option value="week">Last Week</option>
+                        <option value="month" selected>Last Month</option>
+                        <option value="year">Last Year</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="statsGov">Governorate</label>
+                    <select id="statsGov" class="form-control" onchange="loadQuickStats()">
+                        <option value="">All Tunisia</option>
+                    </select>
+                </div>
+            </div>
+            <div class="quick-stats-grid" id="quickStatsGrid">
+                <div class="loading"><div class="loading-spinner"></div> Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_BASE = '/api/v1/stats';
+
+// Governorates list
+const GOVERNORATES = [
+    'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan', 'Bizerte',
+    'Beja', 'Jendouba', 'Le Kef', 'Siliana', 'Sousse', 'Monastir', 'Mahdia',
+    'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid', 'Gabes', 'Medenine',
+    'Tataouine', 'Gafsa', 'Tozeur', 'Kebili'
+];
+
+// Tab Navigation - Match Statistics Page Style
+document.querySelectorAll('.services-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.services-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        
+        // Scroll tab into view smoothly
+        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        
+        // Initialize route map when route tab is selected
+        if (tab.dataset.tab === 'route') {
+            setTimeout(() => {
+                initRouteMap();
+                if (routeMap) routeMap.invalidateSize();
+            }, 150);
+        }
+        
+        // Stop live updates when leaving route tab
+        if (tab.dataset.tab !== 'route') {
+            stopLiveUpdates();
+        }
+    });
+});
+
+// Populate governorate dropdowns
+function populateGovernorates() {
+    const selects = ['emergencyGov', 'routeFrom', 'routeTo', 'statsGov'];
+    selects.forEach(id => {
+        const select = document.getElementById(id);
+        if (select && select.options.length <= 1) {
+            GOVERNORATES.forEach(gov => {
+                const option = document.createElement('option');
+                option.value = gov;
+                option.textContent = gov;
+                select.appendChild(option);
+            });
+        }
+    });
+}
+
+// Load Emergency Numbers
+async function loadEmergencyNumbers() {
+    try {
+        const resp = await fetch(`${API_BASE}/emergency-services`);
+        const data = await resp.json();
+        
+        const grid = document.getElementById('emergencyNumbersGrid');
+        const numbers = data.emergency_numbers;
+        
+        grid.innerHTML = `
+            <div class="emergency-number">
+                <div class="number">${numbers.police}</div>
+                <div class="label">Police</div>
+            </div>
+            <div class="emergency-number">
+                <div class="number">${numbers.ambulance}</div>
+                <div class="label">Ambulance</div>
+            </div>
+            <div class="emergency-number">
+                <div class="number">${numbers.fire}</div>
+                <div class="label">Fire</div>
+            </div>
+            <div class="emergency-number">
+                <div class="number">${numbers.national_guard}</div>
+                <div class="label">National Guard</div>
+            </div>
+            <div class="emergency-number">
+                <div class="number">${numbers.highway_emergency}</div>
+                <div class="label">Highway Emergency</div>
+            </div>
+            <div class="emergency-number">
+                <div class="number">${numbers.traffic_info}</div>
+                <div class="label">Traffic Info</div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error loading emergency numbers:', err);
+    }
+}
+
+// Load Emergency Services
+let emergencyMap;
+async function loadEmergencyServices() {
+    const gov = document.getElementById('emergencyGov').value;
+    const url = gov ? `${API_BASE}/emergency-services?governorate=${gov}` : `${API_BASE}/emergency-services`;
+    
+    try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        
+        // Hospitals
+        document.getElementById('hospitalsList').innerHTML = data.hospitals.map(h => `
+            <div class="emergency-item">
+                <div class="emergency-item-icon hospital">🏥</div>
+                <div class="emergency-item-info">
+                    <h4>${h.name}</h4>
+                    <p>${h.governorate} • ${h.beds} beds</p>
+                </div>
+                <span class="emergency-item-phone">${h.phone}</span>
+            </div>
+        `).join('') || '<p class="empty-state"><span class="icon">🏥</span><br>No hospitals found</p>';
+        
+        // Police
+        document.getElementById('policeList').innerHTML = data.police_stations.map(p => `
+            <div class="emergency-item">
+                <div class="emergency-item-icon police">👮</div>
+                <div class="emergency-item-info">
+                    <h4>${p.name}</h4>
+                    <p>${p.governorate} • ${p.type}</p>
+                </div>
+                <span class="emergency-item-phone">${p.phone}</span>
+            </div>
+        `).join('') || '<p class="empty-state"><span class="icon">👮</span><br>No police stations found</p>';
+        
+        // Fire
+        document.getElementById('fireList').innerHTML = data.fire_stations.map(f => `
+            <div class="emergency-item">
+                <div class="emergency-item-icon fire">🚒</div>
+                <div class="emergency-item-info">
+                    <h4>${f.name}</h4>
+                    <p>${f.governorate} • ${f.response_time_min} min response</p>
+                </div>
+                <span class="emergency-item-phone">${f.phone}</span>
+            </div>
+        `).join('') || '<p class="empty-state"><span class="icon">🚒</span><br>No fire stations found</p>';
+        
+        // Update map
+        updateEmergencyMap(data);
+        
+    } catch (err) {
+        console.error('Error loading emergency services:', err);
+    }
+}
+function updateEmergencyMap(data) {
+    if (!emergencyMap) {
+        emergencyMap = L.map('emergencyMap').setView([34.0, 9.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(emergencyMap);
+    }
+    
+    // Clear existing markers
+    emergencyMap.eachLayer(layer => {
+        if (layer instanceof L.Marker) {
+            emergencyMap.removeLayer(layer);
+        }
+    });
+    
+    // Add hospital markers
+    data.hospitals.forEach(h => {
+        L.marker([h.lat, h.lng], {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '🏥',
+                iconSize: [30, 30]
+            })
+        }).addTo(emergencyMap).bindPopup(`<b>${h.name}</b><br>${h.phone}`);
+    });
+    
+    // Add police markers
+    data.police_stations.forEach(p => {
+        L.marker([p.lat, p.lng], {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '👮',
+                iconSize: [30, 30]
+            })
+        }).addTo(emergencyMap).bindPopup(`<b>${p.name}</b><br>${p.phone}`);
+    });
+    
+    // Add fire markers
+    data.fire_stations.forEach(f => {
+        L.marker([f.lat, f.lng], {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '🚒',
+                iconSize: [30, 30]
+            })
+        }).addTo(emergencyMap).bindPopup(`<b>${f.name}</b><br>${f.phone}`);
+    });
+    
+    // Fit bounds if we have data
+    const allPoints = [...data.hospitals, ...data.police_stations, ...data.fire_stations];
+    if (allPoints.length > 0) {
+        const bounds = L.latLngBounds(allPoints.map(p => [p.lat, p.lng]));
+        emergencyMap.fitBounds(bounds, { padding: [30, 30] });
+    }
+}
+
+// Load Speed Limits
+async function loadSpeedLimits() {
+    try {
+        const resp = await fetch(`${API_BASE}/speed-limits`);
+        const data = await resp.json();
+        
+        // Speed limit cards
+        const limitsHtml = Object.entries(data.limits).map(([zone, info]) => `
+            <div class="speed-limit-card">
+                <div class="limit">${info.limit}</div>
+                <div class="unit">km/h</div>
+                <div class="zone">${zone.replace('_', ' ')}</div>
+            </div>
+        `).join('');
+        document.getElementById('speedLimitsGrid').innerHTML = limitsHtml;
+        
+        // Speed zones with new design
+        const zonesHtml = data.zones.map(z => `
+            <div class="speed-zone-item">
+                <div class="zone-speed">${z.speed_limit}</div>
+                <div class="zone-info">
+                    <h4>${z.name}</h4>
+                    <p>${z.governorates.join(', ')}</p>
+                </div>
+                <span class="zone-type">${z.type}</span>
+            </div>
+        `).join('');
+        document.getElementById('speedZonesList').innerHTML = zonesHtml;
+        
+    } catch (err) {
+        console.error('Error loading speed limits:', err);
+    }
+}
+
+// Calculate Fine
+async function calculateFine() {
+    const zoneType = document.getElementById('fineZoneType').value;
+    const speed = document.getElementById('actualSpeed').value;
+    
+    if (!speed) {
+        alert('Please enter your speed');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${API_BASE}/fine-calculator?zone_type=${zoneType}&speed=${speed}`);
+        const data = await resp.json();
+        
+        document.getElementById('fineLimit').textContent = data.speed_limit + ' km/h';
+        document.getElementById('fineSpeed').textContent = data.actual_speed + ' km/h';
+        document.getElementById('fineOver').textContent = data.violation ? '+' + data.over_limit + ' km/h' : 'None';
+        document.getElementById('fineAmount').textContent = data.violation ? data.fine + ' ' + data.fine_currency : 'No fine';
+        document.getElementById('finePoints').textContent = data.violation ? data.points + ' points' : '0 points';
+        document.getElementById('fineSeverity').textContent = data.severity || 'none';
+        document.getElementById('fineSeverity').className = 'result-value ' + (data.severity === 'extreme' || data.severity === 'severe' ? 'danger' : data.severity === 'moderate' ? 'warning' : 'success');
+        
+        document.getElementById('fineResult').classList.add('visible');
+    } catch (err) {
+        console.error('Error calculating fine:', err);
+    }
+}
+
+// Load Vehicle Types
+async function loadVehicleTypes() {
+    try {
+        const resp = await fetch(`${API_BASE}/vehicle-types`);
+        const data = await resp.json();
+        
+        const icons = { car: '🚗', motorcycle: '🏍️', truck: '🚛', bus: '🚌', taxi: '🚕', bicycle: '🚲', pedestrian: '🚶' };
+        
+        // API returns { types: { car: {...}, motorcycle: {...} } }
+        // Convert to array format
+        const vehicles = Object.entries(data.types || {}).map(([type, info]) => ({
+            type: type,
+            name: info.name || type.charAt(0).toUpperCase() + type.slice(1),
+            risk_level: info.risk_factor >= 2.5 ? 'high' : info.risk_factor >= 1.5 ? 'medium' : 'low'
+        }));
+        
+        if (vehicles.length === 0) {
+            // Fallback data if API doesn't return proper data
+            const fallbackVehicles = [
+                { type: 'car', name: 'Private Car', risk_level: 'low' },
+                { type: 'motorcycle', name: 'Motorcycle', risk_level: 'high' },
+                { type: 'truck', name: 'Truck', risk_level: 'medium' },
+                { type: 'bus', name: 'Bus', risk_level: 'low' },
+                { type: 'taxi', name: 'Taxi', risk_level: 'medium' },
+                { type: 'bicycle', name: 'Bicycle', risk_level: 'high' }
+            ];
+            vehicles.push(...fallbackVehicles);
+        }
+        
+        const html = vehicles.map(v => `
+            <div class="vehicle-card" onclick="selectVehicle('${v.type}')">
+                <div class="icon">${icons[v.type] || '🚗'}</div>
+                <div class="vehicle-info">
+                    <div class="name">${v.name}</div>
+                    <div class="risk ${v.risk_level}">${v.risk_level} risk</div>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('vehicleGrid').innerHTML = html;
+        
+    } catch (err) {
+        console.error('Error loading vehicle types:', err);
+        // Show fallback on error
+        const fallbackHtml = `
+            <div class="vehicle-card" onclick="selectVehicle('car')">
+                <div class="icon">🚗</div>
+                <div class="vehicle-info">
+                    <div class="name">Private Car</div>
+                    <div class="risk low">low risk</div>
+                </div>
+            </div>
+            <div class="vehicle-card" onclick="selectVehicle('motorcycle')">
+                <div class="icon">🏍️</div>
+                <div class="vehicle-info">
+                    <div class="name">Motorcycle</div>
+                    <div class="risk high">high risk</div>
+                </div>
+            </div>
+            <div class="vehicle-card" onclick="selectVehicle('truck')">
+                <div class="icon">🚛</div>
+                <div class="vehicle-info">
+                    <div class="name">Truck</div>
+                    <div class="risk medium">medium risk</div>
+                </div>
+            </div>
+            <div class="vehicle-card" onclick="selectVehicle('bus')">
+                <div class="icon">🚌</div>
+                <div class="vehicle-info">
+                    <div class="name">Bus</div>
+                    <div class="risk low">low risk</div>
+                </div>
+            </div>
+            <div class="vehicle-card" onclick="selectVehicle('taxi')">
+                <div class="icon">🚕</div>
+                <div class="vehicle-info">
+                    <div class="name">Taxi</div>
+                    <div class="risk medium">medium risk</div>
+                </div>
+            </div>
+            <div class="vehicle-card" onclick="selectVehicle('bicycle')">
+                <div class="icon">🚲</div>
+                <div class="vehicle-info">
+                    <div class="name">Bicycle</div>
+                    <div class="risk high">high risk</div>
+                </div>
+            </div>
+        `;
+        document.getElementById('vehicleGrid').innerHTML = fallbackHtml;
+    }
+}
+
+function selectVehicle(type) {
+    document.getElementById('vehicleType').value = type;
+    document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+}
+
+// Calculate Driver Risk
+async function calculateDriverRisk() {
+    const age = document.getElementById('driverAge').value;
+    const vehicle = document.getElementById('vehicleType').value;
+    
+    if (!age) {
+        alert('Please enter your age');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${API_BASE}/driver-risk?age=${age}&vehicle=${vehicle}`);
+        const data = await resp.json();
+        
+        // Update score display
+        document.getElementById('riskScore').textContent = data.risk_score;
+        document.getElementById('riskLevel').textContent = data.risk_level.toUpperCase();
+        
+        // Update badge class
+        const badge = document.getElementById('riskLevelBadge');
+        badge.className = 'risk-level-badge ' + data.risk_level;
+        
+        // Update meter
+        const fill = document.getElementById('riskMeterFill');
+        fill.style.width = data.risk_score + '%';
+        fill.className = 'risk-meter-fill ' + data.risk_level;
+        
+        // Update stats
+        document.getElementById('riskAgeGroup').textContent = data.driver.age_group;
+        document.getElementById('riskAgeFactor').textContent = data.driver.factor + 'x';
+        document.getElementById('riskVehicle').textContent = data.vehicle.risk_level;
+        document.getElementById('riskOverall').textContent = (data.driver.factor * data.vehicle.risk_factor).toFixed(1) + 'x';
+        
+        document.getElementById('riskResult').classList.add('visible');
+    } catch (err) {
+        console.error('Error calculating risk:', err);
+        // Show fallback result
+        document.getElementById('riskScore').textContent = '45';
+        document.getElementById('riskLevel').textContent = 'MEDIUM';
+        document.getElementById('riskLevelBadge').className = 'risk-level-badge medium';
+        document.getElementById('riskMeterFill').style.width = '45%';
+        document.getElementById('riskMeterFill').className = 'risk-meter-fill medium';
+        document.getElementById('riskAgeGroup').textContent = 'Adult';
+        document.getElementById('riskAgeFactor').textContent = '1.0x';
+        document.getElementById('riskVehicle').textContent = 'Medium';
+        document.getElementById('riskOverall').textContent = '1.0x';
+        document.getElementById('riskResult').classList.add('visible');
+    }
+}
+
+// ===== Route Risk Assessment - Real-time Implementation =====
+
+// Governorate coordinates for Tunisia
+const GOVERNORATE_COORDS = {
+    'Tunis': { lat: 36.8065, lng: 10.1815 },
+    'Ariana': { lat: 36.8667, lng: 10.1647 },
+    'Ben Arous': { lat: 36.7533, lng: 10.2283 },
+    'Manouba': { lat: 36.8078, lng: 9.8589 },
+    'Nabeul': { lat: 36.4561, lng: 10.7376 },
+    'Zaghouan': { lat: 36.4029, lng: 10.1433 },
+    'Bizerte': { lat: 37.2744, lng: 9.8739 },
+    'Béja': { lat: 36.7333, lng: 9.1833 },
+    'Jendouba': { lat: 36.5011, lng: 8.7803 },
+    'Le Kef': { lat: 36.1747, lng: 8.7047 },
+    'Siliana': { lat: 36.0850, lng: 9.3708 },
+    'Sousse': { lat: 35.8288, lng: 10.6405 },
+    'Monastir': { lat: 35.7643, lng: 10.8113 },
+    'Mahdia': { lat: 35.5047, lng: 11.0622 },
+    'Sfax': { lat: 34.7406, lng: 10.7603 },
+    'Kairouan': { lat: 35.6781, lng: 10.0963 },
+    'Kasserine': { lat: 35.1672, lng: 8.8365 },
+    'Sidi Bouzid': { lat: 34.8888, lng: 9.4842 },
+    'Gabès': { lat: 33.8886, lng: 10.0975 },
+    'Médenine': { lat: 33.3549, lng: 10.5055 },
+    'Tataouine': { lat: 32.9297, lng: 10.4518 },
+    'Gafsa': { lat: 34.4250, lng: 8.7842 },
+    'Tozeur': { lat: 33.9197, lng: 8.1339 },
+    'Kébili': { lat: 33.7044, lng: 8.9650 }
+};
+
+// Route map instance
+let routeMap = null;
+let routeLayer = null;
+let markersLayer = null;
+let accidentMarkersLayer = null;
+let showAccidents = true;
+let routeUpdateInterval = null;
+let lastRouteData = null;
+
+// Initialize route map
+function initRouteMap() {
+    if (routeMap) return;
+    
+    const mapContainer = document.getElementById('routeMap');
+    if (!mapContainer) return;
+    
+    routeMap = L.map('routeMap', {
+        center: [34.5, 9.5],
+        zoom: 6,
+        zoomControl: true,
+        attributionControl: false
+    });
+    
+    // Add tile layer (dark mode aware)
+    const isDark = document.body.classList.contains('dark-mode');
+    const tileUrl = isDark 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    
+    L.tileLayer(tileUrl, {
+        maxZoom: 19,
+        subdomains: 'abcd'
+    }).addTo(routeMap);
+    
+    // Create layer groups
+    routeLayer = L.layerGroup().addTo(routeMap);
+    markersLayer = L.layerGroup().addTo(routeMap);
+    accidentMarkersLayer = L.layerGroup().addTo(routeMap);
+}
+
+// Calculate distance between two points (Haversine)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round(R * c);
+}
+
+// Estimate travel duration based on distance and conditions
+function estimateDuration(distance, trafficLevel) {
+    const avgSpeed = trafficLevel === 'heavy' ? 40 : trafficLevel === 'moderate' ? 60 : 80;
+    const hours = distance / avgSpeed;
+    const minutes = Math.round(hours * 60);
+    if (minutes >= 60) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return `${h}h ${m}m`;
+    }
+    return `${minutes} min`;
+}
+
+// Get weather icon based on conditions
+function getWeatherIcon(weather) {
+    if (!weather) return '🌤️';
+    
+    const w = weather.toLowerCase();
+    const icons = {
+        'clear': '☀️',
+        'sunny': '☀️',
+        'partly cloudy': '⛅',
+        'cloudy': '☁️',
+        'overcast': '☁️',
+        'rain': '🌧️',
+        'drizzle': '🌦️',
+        'showers': '🌦️',
+        'light rain': '🌦️',
+        'heavy rain': '⛈️',
+        'thunderstorm': '⛈️',
+        'storm': '⛈️',
+        'fog': '🌫️',
+        'mist': '🌫️',
+        'snow': '❄️',
+        'wind': '💨',
+        'unknown': '🌤️'
+    };
+    
+    // Try exact match first
+    if (icons[w]) return icons[w];
+    
+    // Try partial matches
+    if (w.includes('clear') || w.includes('sunny')) return '☀️';
+    if (w.includes('cloud')) return '☁️';
+    if (w.includes('rain')) return '🌧️';
+    if (w.includes('storm') || w.includes('thunder')) return '⛈️';
+    if (w.includes('fog') || w.includes('mist')) return '🌫️';
+    if (w.includes('snow')) return '❄️';
+    
+    return '🌤️';
+}
+
+// Get time of day factor
+function getTimeOfDayInfo() {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 10) return { text: 'Morning Rush', factor: 1.3, icon: '🌅' };
+    if (hour >= 10 && hour < 16) return { text: 'Midday', factor: 1.0, icon: '☀️' };
+    if (hour >= 16 && hour < 20) return { text: 'Evening Rush', factor: 1.4, icon: '🌆' };
+    if (hour >= 20 && hour < 23) return { text: 'Evening', factor: 1.1, icon: '🌙' };
+    return { text: 'Night', factor: 1.5, icon: '🌃' };
+}
+
+// Swap origin and destination
+function swapRoutePoints() {
+    const fromSelect = document.getElementById('routeFrom');
+    const toSelect = document.getElementById('routeTo');
+    const temp = fromSelect.value;
+    fromSelect.value = toSelect.value;
+    toSelect.value = temp;
+    onRouteChange();
+}
+
+// Handle route selection change
+function onRouteChange() {
+    const from = document.getElementById('routeFrom').value;
+    const to = document.getElementById('routeTo').value;
+    
+    if (from && to && from !== to) {
+        // Update map preview immediately
+        updateMapPreview(from, to);
+    }
+}
+
+// Update map with route preview (before full analysis)
+function updateMapPreview(from, to) {
+    if (!routeMap) initRouteMap();
+    
+    const fromCoords = GOVERNORATE_COORDS[from];
+    const toCoords = GOVERNORATE_COORDS[to];
+    
+    if (!fromCoords || !toCoords) return;
+    
+    // Clear previous layers
+    routeLayer.clearLayers();
+    markersLayer.clearLayers();
+    
+    // Draw route line
+    const routeLine = L.polyline([
+        [fromCoords.lat, fromCoords.lng],
+        [toCoords.lat, toCoords.lng]
+    ], {
+        color: '#3b82f6',
+        weight: 4,
+        opacity: 0.6,
+        dashArray: '10, 10'
+    }).addTo(routeLayer);
+    
+    // Add markers
+    const originIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">A</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+    
+    const destIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">B</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+    
+    L.marker([fromCoords.lat, fromCoords.lng], { icon: originIcon })
+        .bindPopup(`<strong>Origin:</strong> ${from}`)
+        .addTo(markersLayer);
+    
+    L.marker([toCoords.lat, toCoords.lng], { icon: destIcon })
+        .bindPopup(`<strong>Destination:</strong> ${to}`)
+        .addTo(markersLayer);
+    
+    // Fit bounds
+    const bounds = L.latLngBounds([
+        [fromCoords.lat, fromCoords.lng],
+        [toCoords.lat, toCoords.lng]
+    ]);
+    routeMap.fitBounds(bounds, { padding: [50, 50] });
+}
+
+// Main route risk calculation
+async function calculateRouteRisk() {
+    const from = document.getElementById('routeFrom').value;
+    const to = document.getElementById('routeTo').value;
+    
+    if (!from || !to) {
+        Toast.warning('Please select both origin and destination');
+        return;
+    }
+    
+    if (from === to) {
+        Toast.warning('Origin and destination must be different');
+        return;
+    }
+    
+    const btn = document.getElementById('analyzeRouteBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<div class="loading-spinner" style="width: 16px; height: 16px;"></div> Analyzing...`;
+    
+    try {
+        // Fetch route risk from API
+        const resp = await fetch(`${API_BASE}/route-risk?from=${from}&to=${to}`);
+        const data = await resp.json();
+        
+        // Fetch REAL weather data from both locations
+        let weatherData = { temperature: null, conditions: null, wind_speed: 0, humidity: 50 };
+        try {
+            // Get weather for origin (primary)
+            const weatherResp = await fetch(`${API_BASE}/weather?governorate=${from}`);
+            const wData = await weatherResp.json();
+            if (wData && !wData.fallback) {
+                weatherData = {
+                    temperature: wData.temperature,
+                    conditions: wData.conditions || 'Clear',
+                    wind_speed: wData.wind_speed || 0,
+                    humidity: wData.humidity || 50,
+                    precipitation: wData.precipitation || 0,
+                    rain_chance: wData.rain_chance || 0
+                };
+            } else {
+                // Try destination weather if origin fails
+                const weatherResp2 = await fetch(`${API_BASE}/weather?governorate=${to}`);
+                const wData2 = await weatherResp2.json();
+                if (wData2 && !wData2.fallback) {
+                    weatherData = {
+                        temperature: wData2.temperature,
+                        conditions: wData2.conditions || 'Clear',
+                        wind_speed: wData2.wind_speed || 0,
+                        humidity: wData2.humidity || 50,
+                        precipitation: wData2.precipitation || 0,
+                        rain_chance: wData2.rain_chance || 0
+                    };
+                }
+            }
+        } catch (e) {
+            console.error('Weather API error:', e);
+            Toast.warning('Weather data unavailable - using route analysis only');
+        }
+        
+        // Calculate distance
+        const fromCoords = GOVERNORATE_COORDS[from];
+        const toCoords = GOVERNORATE_COORDS[to];
+        const distance = calculateDistance(fromCoords.lat, fromCoords.lng, toCoords.lat, toCoords.lng);
+        
+        // Get time info
+        const timeInfo = getTimeOfDayInfo();
+        
+        // Determine traffic level
+        const trafficLevel = data.traffic_conditions?.origin || 'normal';
+        
+        // Store last data for live updates
+        lastRouteData = {
+            from, to, data, weatherData, distance, timeInfo, trafficLevel
+        };
+        
+        // Update UI
+        updateRouteUI(lastRouteData);
+        
+        // Update map
+        updateRouteMap(from, to, data);
+        
+        // Show results panel
+        document.getElementById('routeResultsPanel').style.display = 'flex';
+        
+        // Start live updates
+        startLiveUpdates();
+        
+        Toast.success('Route analyzed successfully');
+        
+    } catch (err) {
+        console.error('Error calculating route:', err);
+        Toast.error('Failed to analyze route. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+        </svg> Analyze Route`;
+    }
+}
+
+// Update the UI with route data
+function updateRouteUI(routeData) {
+    const { from, to, data, weatherData, distance, timeInfo, trafficLevel } = routeData;
+    
+    // Journey Overview
+    document.getElementById('routeDistance').textContent = `${distance} km`;
+    document.getElementById('routeDuration').textContent = estimateDuration(distance, trafficLevel);
+    document.getElementById('routeTrafficStatus').textContent = trafficLevel.charAt(0).toUpperCase() + trafficLevel.slice(1);
+    
+    // Risk Score
+    const riskScore = data.risk_score || 35;
+    document.getElementById('routeRiskScore').textContent = riskScore;
+    
+    // Risk Badge
+    const riskBadge = document.getElementById('routeRiskBadge');
+    riskBadge.textContent = data.risk_level?.toUpperCase() || 'LOW';
+    riskBadge.className = `risk-badge ${data.risk_level || 'low'}`;
+    
+    // Animate risk gauge
+    animateRiskGauge(riskScore);
+    
+    // Weather conditions - Show real data or indicate unavailable
+    const conditions = weatherData.conditions || 'Unknown';
+    const temp = weatherData.temperature !== null ? weatherData.temperature : '--';
+    
+    document.getElementById('weatherIcon').textContent = getWeatherIcon(conditions);
+    document.getElementById('routeWeather').textContent = conditions.replace(/_/g, ' ');
+    document.getElementById('routeTemp').textContent = temp !== '--' ? `${temp}°C` : 'N/A';
+    
+    // Calculate visibility based on actual weather data
+    let visibility = 'Good';
+    if (conditions.toLowerCase().includes('fog')) {
+        visibility = 'Poor';
+    } else if (conditions.toLowerCase().includes('rain') || conditions.toLowerCase().includes('snow')) {
+        visibility = 'Reduced';
+    } else if (weatherData.rain_chance > 60) {
+        visibility = 'Moderate';
+    }
+    
+    document.getElementById('routeVisibility').textContent = visibility;
+    document.getElementById('routeTimeOfDay').textContent = timeInfo.text;
+    
+    // Risk Factors
+    updateRiskFactors(data, timeInfo, weatherData);
+    
+    // Recommendations
+    updateRecommendations(data.recommendations || []);
+    
+    // Update timestamp
+    document.getElementById('routeLastUpdated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+}
+
+// Animate the risk gauge
+function animateRiskGauge(score) {
+    const arcFill = document.getElementById('riskArcFill');
+    const needle = document.getElementById('riskNeedle');
+    
+    // Arc animation (stroke-dashoffset)
+    const maxOffset = 251;
+    const newOffset = maxOffset - (score / 100 * maxOffset);
+    arcFill.style.strokeDashoffset = newOffset;
+    
+    // Needle rotation (-90 to 90 degrees based on score)
+    const angle = -90 + (score / 100 * 180);
+    needle.style.transform = `rotate(${angle}deg)`;
+}
+
+// Update risk factors display
+function updateRiskFactors(data, timeInfo, weatherData) {
+    const factors = [
+        {
+            name: 'Traffic Density',
+            icon: '🚗',
+            value: data.traffic_conditions?.origin === 'heavy' ? 80 : data.traffic_conditions?.origin === 'moderate' ? 50 : 25,
+            level: data.traffic_conditions?.origin === 'heavy' ? 'high' : data.traffic_conditions?.origin === 'moderate' ? 'medium' : 'low'
+        },
+        {
+            name: 'Time of Day',
+            icon: timeInfo.icon,
+            value: Math.round((timeInfo.factor - 1) * 100 + 20),
+            level: timeInfo.factor >= 1.4 ? 'high' : timeInfo.factor >= 1.2 ? 'medium' : 'low'
+        },
+        {
+            name: 'Weather Impact',
+            icon: getWeatherIcon(weatherData.conditions),
+            value: weatherData.conditions === 'rain' ? 70 : weatherData.conditions === 'fog' ? 85 : 15,
+            level: weatherData.conditions === 'fog' ? 'high' : weatherData.conditions === 'rain' ? 'medium' : 'low'
+        },
+        {
+            name: 'Accident History',
+            icon: '⚠️',
+            value: (data.risk_zones?.length || 0) * 20 + 10,
+            level: (data.risk_zones?.length || 0) >= 2 ? 'high' : (data.risk_zones?.length || 0) >= 1 ? 'medium' : 'low'
+        }
+    ];
+    
+    const html = factors.map(f => `
+        <div class="risk-factor">
+            <span class="risk-factor-icon">${f.icon}</span>
+            <div class="risk-factor-info">
+                <span class="risk-factor-name">${f.name}</span>
+                <div class="risk-factor-bar">
+                    <div class="risk-factor-fill ${f.level}" style="width: ${Math.min(f.value, 100)}%"></div>
+                </div>
+            </div>
+            <span class="risk-factor-value" style="color: ${f.level === 'high' ? '#ef4444' : f.level === 'medium' ? '#eab308' : '#22c55e'}">${f.level.toUpperCase()}</span>
+        </div>
+    `).join('');
+    
+    document.getElementById('riskFactorsList').innerHTML = html;
+}
+
+// Update recommendations
+function updateRecommendations(recommendations) {
+    const defaultRecs = [
+        'Keep emergency numbers handy: Police 197, Ambulance 190',
+        'Maintain safe following distance',
+        'Check vehicle condition before departure'
+    ];
+    
+    const allRecs = [...new Set([...recommendations, ...defaultRecs])].slice(0, 5);
+    
+    document.getElementById('routeRecommendations').innerHTML = allRecs.map(r => `<li>${r}</li>`).join('');
+}
+
+// Update the map with full route details
+function updateRouteMap(from, to, data) {
+    if (!routeMap) initRouteMap();
+    
+    const fromCoords = GOVERNORATE_COORDS[from];
+    const toCoords = GOVERNORATE_COORDS[to];
+    
+    // Clear layers
+    routeLayer.clearLayers();
+    markersLayer.clearLayers();
+    accidentMarkersLayer.clearLayers();
+    
+    // Determine route color based on risk
+    const routeColor = data.risk_level === 'high' ? '#ef4444' : 
+                       data.risk_level === 'medium' ? '#eab308' : '#22c55e';
+    
+    // Draw main route line (solid)
+    L.polyline([
+        [fromCoords.lat, fromCoords.lng],
+        [toCoords.lat, toCoords.lng]
+    ], {
+        color: routeColor,
+        weight: 5,
+        opacity: 0.8
+    }).addTo(routeLayer);
+    
+    // Add glow effect
+    L.polyline([
+        [fromCoords.lat, fromCoords.lng],
+        [toCoords.lat, toCoords.lng]
+    ], {
+        color: routeColor,
+        weight: 12,
+        opacity: 0.2
+    }).addTo(routeLayer);
+    
+    // Custom markers
+    const originIcon = L.divIcon({
+        className: 'route-marker',
+        html: `<div style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5); border: 3px solid white; font-family: system-ui, -apple-system, sans-serif;">A</div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+    
+    const destIcon = L.divIcon({
+        className: 'route-marker',
+        html: `<div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5); border: 3px solid white; font-family: system-ui, -apple-system, sans-serif;">B</div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+    
+    L.marker([fromCoords.lat, fromCoords.lng], { icon: originIcon })
+        .bindPopup(`<strong>📍 Origin</strong><br>${from}<br><small>Traffic: ${data.traffic_conditions?.origin || 'Normal'}</small>`)
+        .addTo(markersLayer);
+    
+    L.marker([toCoords.lat, toCoords.lng], { icon: destIcon })
+        .bindPopup(`<strong>🏁 Destination</strong><br>${to}<br><small>Traffic: ${data.traffic_conditions?.destination || 'Normal'}</small>`)
+        .addTo(markersLayer);
+    
+    // Add risk zone markers
+    if (data.risk_zones && showAccidents) {
+        data.risk_zones.forEach(zone => {
+            const zoneCoords = GOVERNORATE_COORDS[zone.governorate];
+            if (zoneCoords) {
+                const accidentIcon = L.divIcon({
+                    className: 'accident-marker',
+                    html: `<div style="background: #f97316; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5); border: 2px solid white;">⚠️</div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                
+                L.marker([zoneCoords.lat, zoneCoords.lng], { icon: accidentIcon })
+                    .bindPopup(`<strong>⚠️ Risk Zone</strong><br>${zone.zone}<br><small>Risk Level: ${zone.risk_level}</small>`)
+                    .addTo(accidentMarkersLayer);
+            }
+        });
+    }
+    
+    // Fit bounds
+    const bounds = L.latLngBounds([
+        [fromCoords.lat, fromCoords.lng],
+        [toCoords.lat, toCoords.lng]
+    ]);
+    routeMap.fitBounds(bounds, { padding: [60, 60] });
+}
+
+// Toggle accident markers visibility
+function toggleAccidentMarkers() {
+    showAccidents = !showAccidents;
+    const btn = document.getElementById('toggleAccidentsBtn');
+    
+    if (showAccidents) {
+        accidentMarkersLayer.addTo(routeMap);
+        btn.classList.add('active');
+    } else {
+        routeMap.removeLayer(accidentMarkersLayer);
+        btn.classList.remove('active');
+    }
+}
+
+// Center the route map
+function centerRouteMap() {
+    if (!routeMap || !lastRouteData) return;
+    
+    const fromCoords = GOVERNORATE_COORDS[lastRouteData.from];
+    const toCoords = GOVERNORATE_COORDS[lastRouteData.to];
+    
+    if (fromCoords && toCoords) {
+        const bounds = L.latLngBounds([
+            [fromCoords.lat, fromCoords.lng],
+            [toCoords.lat, toCoords.lng]
+        ]);
+        routeMap.fitBounds(bounds, { padding: [60, 60] });
+    }
+}
+
+// Start live updates (every 30 seconds)
+function startLiveUpdates() {
+    // Clear any existing interval
+    if (routeUpdateInterval) {
+        clearInterval(routeUpdateInterval);
+    }
+    
+    // Update every 30 seconds
+    routeUpdateInterval = setInterval(async () => {
+        if (!lastRouteData) return;
+        
+        try {
+            // Re-fetch route data
+            const resp = await fetch(`${API_BASE}/route-risk?from=${lastRouteData.from}&to=${lastRouteData.to}`);
+            const data = await resp.json();
+            
+            // Update time info (changes constantly)
+            const timeInfo = getTimeOfDayInfo();
+            
+            // Update stored data
+            lastRouteData.data = data;
+            lastRouteData.timeInfo = timeInfo;
+            
+            // Update UI
+            updateRouteUI(lastRouteData);
+            
+            // Pulse the live indicator
+            const liveIndicator = document.getElementById('routeLiveIndicator');
+            liveIndicator.style.transform = 'scale(1.1)';
+            setTimeout(() => { liveIndicator.style.transform = 'scale(1)'; }, 200);
+            
+        } catch (err) {
+            console.log('Live update failed:', err);
+        }
+    }, 30000);
+}
+
+// Stop live updates when leaving the tab
+function stopLiveUpdates() {
+    if (routeUpdateInterval) {
+        clearInterval(routeUpdateInterval);
+        routeUpdateInterval = null;
+    }
+}
+
+// Initialize route map when tab becomes visible
+document.addEventListener('DOMContentLoaded', function() {
+    // Watch for tab changes to initialize/cleanup map
+    const routeTab = document.querySelector('[data-tab="route"]');
+    if (routeTab) {
+        routeTab.addEventListener('click', function() {
+            setTimeout(initRouteMap, 100);
+        });
+    }
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', stopLiveUpdates);
+
+// Load Safety Tips
+async function loadSafetyTips() {
+    try {
+        const resp = await fetch(`${API_BASE}/safety-tips`);
+        const data = await resp.json();
+        
+        const tipsHtml = data.tips.map(t => `
+            <li class="tip-item">
+                <span class="tip-icon">${t.icon}</span>
+                <div class="tip-content">
+                    <h4>${t.category}</h4>
+                    <p>${t.tip}</p>
+                </div>
+                <span class="tip-badge ${t.priority}">${t.priority}</span>
+            </li>
+        `).join('');
+        document.getElementById('safetyTipsList').innerHTML = `<ul class="tips-list">${tipsHtml}</ul>`;
+        
+        // Current conditions with improved layout
+        const cond = data.current_conditions;
+        document.getElementById('currentConditions').innerHTML = `
+            <div class="conditions-grid">
+                <div class="condition-card">
+                    <div class="value">🕐 ${cond.hour}:00</div>
+                    <div class="label">Current Hour</div>
+                </div>
+                <div class="condition-card">
+                    <div class="value">${cond.is_night ? '🌙 Night' : '☀️ Day'}</div>
+                    <div class="label">Time of Day</div>
+                </div>
+                <div class="condition-card">
+                    <div class="value">${cond.is_rush_hour ? '🚗 Peak' : '✅ Normal'}</div>
+                    <div class="label">Traffic Status</div>
+                </div>
+                <div class="condition-card">
+                    <div class="value">${cond.is_weekend ? '📅 Weekend' : '💼 Weekday'}</div>
+                    <div class="label">Day Type</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error loading tips:', err);
+    }
+}
+
+// Load Quick Stats
+async function loadQuickStats() {
+    const period = document.getElementById('statsPeriod').value;
+    const gov = document.getElementById('statsGov').value;
+    
+    let url = `${API_BASE}/quick-stats?period=${period}`;
+    if (gov) url += `&governorate=${gov}`;
+    
+    try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        
+        document.getElementById('quickStatsGrid').innerHTML = `
+            <div class="quick-stat-card">
+                <div class="quick-stat-value">${data.total_accidents}</div>
+                <div class="quick-stat-label">Total Accidents</div>
+                <div class="quick-stat-trend ${data.trend}">${data.trend === 'up' ? '↑' : '↓'} ${data.trend_percent}%</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value" style="color: var(--services-danger);">${data.high_severity_count}</div>
+                <div class="quick-stat-label">High Severity</div>
+                <div class="quick-stat-trend">${data.high_severity_percent}% of total</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value">${data.top_cause || 'N/A'}</div>
+                <div class="quick-stat-label">Top Cause</div>
+                <div class="quick-stat-trend">${data.top_cause_count} incidents</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value">${data.most_affected_area || 'N/A'}</div>
+                <div class="quick-stat-label">Most Affected</div>
+                <div class="quick-stat-trend">${data.most_affected_count} accidents</div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error loading stats:', err);
+    }
+}
+
+// ============== INSURANCE FUNCTIONS ==============
+
+// Car parts damage selector state
+const selectedCarParts = new Set();
+const partNames = {
+    'bumper': 'Bumper',
+    'fender': 'Fender', 
+    'door': 'Door',
+    'hood': 'Hood',
+    'trunk': 'Trunk',
+    'roof': 'Roof',
+    'windshield': 'Windshield',
+    'side_mirror': 'Side Mirror',
+    'headlight': 'Headlight',
+    'taillight': 'Taillight',
+    'rear_window': 'Rear Window',
+    'paint_panel': 'Paint Work',
+    'suspension': 'Suspension',
+    'radiator': 'Radiator',
+    'airbag': 'Airbag',
+    'frame': 'Frame',
+    'exhaust': 'Exhaust'
+};
+
+function toggleDamagePart(element) {
+    const partId = element.dataset.part;
+    if (selectedCarParts.has(partId)) {
+        selectedCarParts.delete(partId);
+        element.classList.remove('selected');
+    } else {
+        selectedCarParts.add(partId);
+        element.classList.add('selected');
+    }
+    updateSelectedPartsSummary();
+}
+
+function removePart(partId) {
+    selectedCarParts.delete(partId);
+    const element = document.querySelector(`.damage-item[data-part="${partId}"]`);
+    if (element) {
+        element.classList.remove('selected');
+    }
+    updateSelectedPartsSummary();
+}
+
+function updateSelectedPartsSummary() {
+    const countEl = document.getElementById('selectedPartsCount');
+    const tagsEl = document.getElementById('selectedPartsTags');
+    
+    const count = selectedCarParts.size;
+    countEl.textContent = count;
+    
+    if (count === 0) {
+        tagsEl.innerHTML = '<span style="color: var(--ui-text-muted); font-size: 0.8rem;">No parts selected</span>';
+    } else {
+        tagsEl.innerHTML = Array.from(selectedCarParts).map(partId => `
+            <span class="selected-tag">
+                ${partNames[partId] || partId}
+                <span class="remove-tag" onclick="event.stopPropagation(); removePart('${partId}')">×</span>
+            </span>
+        `).join('');
+    }
+}
+
+// Initialize summary on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedPartsSummary();
+});
+
+async function loadInsuranceCompanies() {
+    try {
+        const response = await fetch('/api/services/insurance/companies');
+        const result = await response.json();
+        
+        if (result.success) {
+            const container = document.getElementById('insuranceCompanies');
+            container.innerHTML = result.data.map(company => `
+                <div class="insurance-company-card">
+                    <div class="company-header">
+                        <span class="company-name">${company.name}</span>
+                        <span class="company-type">${company.type}</span>
+                    </div>
+                    <div class="company-rating">
+                        ${'⭐'.repeat(Math.floor(company.rating))} ${company.rating.toFixed(1)}
+                    </div>
+                    <div class="company-info">
+                        <div>📞 <a href="tel:${company.phone}">${company.phone}</a></div>
+                        <div>🌐 <a href="https://${company.website}" target="_blank">${company.website}</a></div>
+                    </div>
+                    <div class="claim-time">
+                        ⏱️ Avg. claim time: ${company.claim_time_days} days
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('Error loading insurance companies:', err);
+    }
+}
+
+async function calculateRepairCost() {
+    // Use the new damage parts selector
+    const selectedParts = Array.from(selectedCarParts);
+    
+    if (selectedParts.length === 0) {
+        Toast.warning('Please select at least one damaged part');
+        return;
+    }
+    
+    const data = {
+        parts: selectedParts,
+        severity: document.getElementById('damageSeverity').value,
+        vehicle_type: document.getElementById('vehicleType').value
+    };
+    
+    try {
+        const response = await fetch('/api/services/insurance/estimate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            const estimate = result.data;
+            const resultDiv = document.getElementById('estimateResult');
+            
+            resultDiv.innerHTML = `
+                <h4>💰 Estimated Repair Cost</h4>
+                <div class="estimate-breakdown">
+                    ${estimate.parts_breakdown.map(part => `
+                        <div class="estimate-item">
+                            <span>${part.part}</span>
+                            <span>${part.min} - ${part.max} TND</span>
+                        </div>
+                    `).join('')}
+                    <div class="estimate-item">
+                        <span>Labor Cost</span>
+                        <span>${estimate.labor.min} - ${estimate.labor.max} TND</span>
+                    </div>
+                    <div class="estimate-item total">
+                        <span>Total Estimate</span>
+                        <span>${estimate.grand_total.min.toLocaleString()} - ${estimate.grand_total.max.toLocaleString()} TND</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--ui-text-muted);">
+                    * Estimates based on average repair costs in Tunisia for ${estimate.severity} damage to ${estimate.vehicle_type} vehicles.
+                </p>
+            `;
+            resultDiv.style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Error calculating estimate:', err);
+        Toast.error('Failed to calculate estimate');
+    }
+}
+
+async function loadClaimChecklist() {
+    try {
+        const response = await fetch('/api/services/insurance/checklist');
+        const result = await response.json();
+        
+        if (result.success) {
+            const container = document.getElementById('claimChecklist');
+            const sections = result.data;
+            
+            container.innerHTML = `
+                <div class="checklist-section">
+                    <h4>🚗 At the Accident Scene</h4>
+                    <div class="checklist-items">
+                        ${sections.at_scene.map(item => `
+                            <div class="checklist-item">
+                                <span class="icon">${item.icon}</span>
+                                <span class="text">${item.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="checklist-section">
+                    <h4>⏰ Within 24 Hours</h4>
+                    <div class="checklist-items">
+                        ${sections.within_24h.map(item => `
+                            <div class="checklist-item">
+                                <span class="icon">${item.icon}</span>
+                                <span class="text">${item.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="checklist-section">
+                    <h4>📝 Claim Process</h4>
+                    <div class="checklist-items">
+                        ${sections.claim_process.map(item => `
+                            <div class="checklist-item">
+                                <span class="icon">${item.icon}</span>
+                                <span class="text">${item.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Error loading checklist:', err);
+    }
+}
+
+// ============== FUEL FUNCTIONS ==============
+
+async function loadFuelPrices() {
+    try {
+        const response = await fetch('/api/services/fuel/prices');
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            const container = document.getElementById('fuelPrices');
+            
+            container.innerHTML = Object.entries(data.prices).map(([key, fuel]) => `
+                <div class="fuel-price-card" style="border-top-color: ${fuel.color}">
+                    <div class="icon">${fuel.icon}</div>
+                    <div class="name">${fuel.name}</div>
+                    <div class="price">${fuel.price.toFixed(3)}</div>
+                    <div class="unit">TND / Liter</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('fuelUpdated').textContent = `Last updated: ${data.updated}`;
+        }
+    } catch (err) {
+        console.error('Error loading fuel prices:', err);
+    }
+}
+
+async function calculateTripCost() {
+    const distance = parseFloat(document.getElementById('tripDistance').value);
+    const fuelType = document.getElementById('tripFuelType').value;
+    const consumption = parseFloat(document.getElementById('tripConsumption').value);
+    
+    if (!distance || distance <= 0) {
+        Toast.warning('Please enter a valid distance');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/services/fuel/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                distance_km: distance,
+                fuel_type: fuelType,
+                consumption_per_100km: consumption
+            })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            const resultDiv = document.getElementById('tripResult');
+            
+            resultDiv.innerHTML = `
+                <div class="cost">${data.total_cost.toFixed(2)} TND</div>
+                <p>Estimated fuel cost for your trip</p>
+                <div class="details">
+                    <div class="detail-item">
+                        <div class="value">${data.distance_km} km</div>
+                        <div class="label">Distance</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="value">${data.fuel_needed_liters} L</div>
+                        <div class="label">Fuel Needed</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="value">${data.price_per_liter} TND</div>
+                        <div class="label">Price/Liter</div>
+                    </div>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Error calculating trip cost:', err);
+        Toast.error('Failed to calculate trip cost');
+    }
+}
+
+async function loadFuelPriceChart() {
+    try {
+        const response = await fetch('/api/services/fuel/history');
+        const result = await response.json();
+        
+        if (result.success && typeof Chart !== 'undefined') {
+            const ctx = document.getElementById('fuelPriceChart');
+            if (!ctx) return;
+            
+            const data = result.data;
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [
+                        {
+                            label: 'Super (Essence)',
+                            data: data.map(d => d.essence_super),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Diesel',
+                            data: data.map(d => d.diesel),
+                            borderColor: '#eab308',
+                            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Price (TND)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Error loading fuel chart:', err);
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    populateGovernorates();
+    loadEmergencyNumbers();
+    loadEmergencyServices();
+    loadSpeedLimits();
+    loadVehicleTypes();
+    loadSafetyTips();
+    loadQuickStats();
+    
+    // Load new features
+    loadInsuranceCompanies();
+    loadClaimChecklist();
+    loadFuelPrices();
+    loadFuelPriceChart();
+});
+</script>
+{% endblock %}
