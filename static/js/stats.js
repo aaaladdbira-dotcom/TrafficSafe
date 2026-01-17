@@ -2016,8 +2016,20 @@ async function renderTime(granularity = 'month') {
   const area = document.getElementById('toggleArea')?.checked || false;
   const stacked = document.getElementById('toggleStack')?.checked || false;
   const res = await fetch(buildUrlWithFilters('/api/v1/stats/accidents/by_month', { granularity: granularity, series: 'total' }));
-  const data = await res.json();
-  // data may be { labels, values } or { labels, datasets: [{ label, values}] }
+  const dataRaw = await res.json();
+  console.debug('renderTime fetched:', dataRaw);
+  // normalize several server response formats into { labels, values } or datasets
+  let data = dataRaw;
+  if (Array.isArray(dataRaw)) {
+    // format 1: array of pairs: [[date, count], ...]
+    if (dataRaw.length && Array.isArray(dataRaw[0]) && dataRaw[0].length >= 2) {
+      data = { labels: dataRaw.map(d => d[0]), values: dataRaw.map(d => d[1]) };
+    // format 2: array of objects: [{date:..., count:...}, ...] or [{label:..., value:...}, ...]
+    } else if (dataRaw.length && typeof dataRaw[0] === 'object') {
+      data = { labels: dataRaw.map(d => d.date || d.label || d.x), values: dataRaw.map(d => d.count || d.value || d.y || 0) };
+    }
+  }
+  // data may also be { labels, values } or { labels, datasets: [{ label, values}] }
   const multi = data.datasets && Array.isArray(data.datasets) && data.datasets.length;
   if (!data.labels || (!data.values && !multi)) { hideSkeleton('time'); toggleCardForSkeleton('skeleton-time', false); return; }
   hideSkeleton('time');

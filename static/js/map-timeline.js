@@ -126,11 +126,26 @@ class MapTimeline {
       
       const result = await response.json();
       console.log('MapTimeline: Loaded data', result);
-      
-      // Use the timeline data which has accidents with lat/lng
+
+      // Normalize different server formats into result.timeline = [{date,count,accidents}...]
+      let timeline = [];
       if (result.timeline && Array.isArray(result.timeline)) {
-        this.data = result.timeline.map(item => ({
-          period: item.date,
+        timeline = result.timeline;
+      } else if (Array.isArray(result)) {
+        // result is an array: could be [[date,count], ...] or [{date,count,accidents}, ...]
+        if (result.length && Array.isArray(result[0]) && result[0].length >= 2) {
+          timeline = result.map(r => ({ date: r[0], count: r[1], accidents: [] }));
+        } else if (result.length && typeof result[0] === 'object') {
+          timeline = result.map(r => ({ date: r.date || r.label || r.period, count: r.count || r.value || 0, accidents: r.accidents || [] }));
+        }
+      } else if (result.data && Array.isArray(result.data)) {
+        timeline = result.data;
+      }
+
+      // Use the timeline data which has accidents with lat/lng
+      if (timeline && Array.isArray(timeline)) {
+        this.data = timeline.map(item => ({
+          period: item.date || item.period,
           count: item.count || 0,
           accidents: item.accidents || [] // Each accident has lat, lng, severity
         }));
