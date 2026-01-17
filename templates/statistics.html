@@ -2445,7 +2445,7 @@
     try {
       if (window.Toast) Toast.info('Preparing export...');
       
-      const response = await fetch(`/api/export/statistics/${format}`, {
+      const response = await fetch(`/ui/export/statistics/${format}`, {
         method: 'GET',
         headers: {
           'Accept': format === 'csv' ? 'text/csv' : 
