@@ -162,7 +162,7 @@ from models.accident import Accident
 def accident_detail(accident_id):
     # Debug guard: print requested ID and sample IDs
     print("Requested accident_id:", accident_id)
-    print("Existing sample IDs:", [row[0] for row in db.session.query(Accident.id).limit(5).all()])
+    print("Existing sample IDs:", [row.id for row in Accident.query.with_entities(Accident.id).limit(5).all()])
 
     # Ensure accident_id is int (Flask route enforces this, but double-check for safety)
     try:
