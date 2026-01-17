@@ -71,8 +71,11 @@ def login():
 
         # Call API login
         try:
+            current_app.logger.debug('[UI LOGIN] Local login attempt: %s', email)
             resp = call_api("/api/v1/auth/login", method='POST', json={"email": email, "password": password}, timeout=5)
-        except Exception:
+            current_app.logger.debug('[UI LOGIN] API response status: %s', getattr(resp, 'status_code', None))
+        except Exception as e:
+            current_app.logger.exception('[UI LOGIN] API call failed')
             flash("API not reachable", "danger")
             return render_template("login.html", next=next_url)
 

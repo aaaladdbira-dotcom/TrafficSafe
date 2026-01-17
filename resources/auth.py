@@ -1,6 +1,7 @@
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app
 
 from extensions import db
 from models.user import User
@@ -58,9 +59,12 @@ def register_user(user_data):
 @blp.route("/login", methods=["POST"])
 @blp.arguments(UserLoginSchema)
 def login_user(login_data):
+    current_app.logger.debug('[API LOGIN] attempt: %s', login_data.get('email'))
     user = User.query.filter_by(email=login_data["email"]).first()
+    current_app.logger.debug('[API LOGIN] user found: %s', bool(user))
 
     if not user or not check_password_hash(user.password_hash, login_data["password"]):
+        current_app.logger.debug('[API LOGIN] invalid credentials for %s', login_data.get('email'))
         abort(401, message="Invalid credentials")
 
     token = create_access_token(
