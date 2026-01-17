@@ -367,35 +367,25 @@ def accidents_data():
         if v:
             params[k] = v
 
+    from flask import jsonify, current_app
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 25))
     try:
-        resp = call_api("/api/v1/accidents", headers=headers, params=params, timeout=5)
-    except Exception:
-        return {"items": [], "total": 0, "page": 1, "per_page": int(request.args.get('per_page', 25))}, 502
-
-    # Try to return JSON from the API. If the API returned non-JSON (e.g., an
-    # HTML error page with a SQLAlchemy traceback), forward the text so the UI
-    # can surface the underlying error message instead of raising a 500 here.
-    try:
-        data = read_json(resp)
-        # API uses paginated_response which wraps data in {"data": [...], "pagination": {...}}
-        # Unwrap it to match the format expected by the frontend
+        api_resp = call_api("/api/v1/accidents", headers=headers, params=params, timeout=5)
+        if api_resp is None:
+            return jsonify({"items": [], "total": 0, "page": page, "per_page": per_page}), 200
+        data = read_json(api_resp)
         if isinstance(data, dict) and 'data' in data and 'pagination' in data:
-            return {
+            return jsonify({
                 "items": data['data'],
                 "total": data['pagination']['total'],
                 "page": data['pagination']['page'],
                 "per_page": data['pagination']['per_page']
-            }, resp.status_code
-        return data, resp.status_code
+            }), api_resp.status_code
+        return jsonify(data), api_resp.status_code
     except Exception:
-        # Forward plain text body with the API status code so the client can
-        # show a helpful error message.
-        text = None
-        try:
-            text = resp.text
-        except Exception:
-            text = 'Unexpected non-JSON response from API'
-        return {"error": text, "items": [], "total": 0, "page": 1, "per_page": int(request.args.get('per_page', 25))}, resp.status_code
+        current_app.logger.exception("UI accidents data proxy failed")
+        return jsonify({"items": [], "total": 0, "page": page, "per_page": per_page}), 500
 
 
 @accidents_ui.route('/accidents/filters')
@@ -407,19 +397,18 @@ def accidents_filters_proxy():
     headers = {
         "Authorization": f"Bearer {session['access_token']}"
     }
+    from flask import jsonify, current_app
     try:
-        resp = call_api("/api/v1/accidents/filters", headers=headers, timeout=5)
-    except Exception:
-        return {"locations": [], "causes": [], "severities": [], "delegations": []}, 502
-
-    try:
-        data = read_json(resp)
-        # API wraps data in success_response, unwrap it for the frontend
+        api_resp = call_api("/api/v1/accidents/filters", headers=headers, timeout=5)
+        if api_resp is None:
+            return jsonify({"error": "API unavailable"}), 502
+        data = read_json(api_resp)
         if isinstance(data, dict) and 'data' in data:
-            return data['data'], resp.status_code
-        return data, resp.status_code
-    except Exception:
-        return {"locations": [], "causes": [], "severities": [], "delegations": []}, 500
+            return jsonify(data['data']), api_resp.status_code
+        return jsonify(data), api_resp.status_code
+    except Exception as e:
+        current_app.logger.exception("UI filters proxy failed")
+        return jsonify({"error": "Internal UI proxy error"}), 500
 
 
 @accidents_ui.route('/accidents/export')
