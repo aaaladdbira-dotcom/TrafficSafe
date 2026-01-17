@@ -53,24 +53,21 @@ def report_accident():
             'fatal': 'High',  # If needed, map fatal to High
         }
         api_severity = severity_map.get(severity, 'Low')
-        # API expects 'occurred_at' instead of 'date'
         payload = {
-            'occurred_at': date,
+            'date': date,
             'location': location,
-            # 'delegation': delegation,  # Remove if not required by API schema
+            'delegation': delegation,
             'severity': api_severity,
-            'phone': phone,
-            'reported_by': 'citizen',
+            'phone': phone
         }
-        api_url = get_api_url('/api/v1/accidents')
+        api_url = get_api_url('/api/v1/reports')
         try:
             print(f"[DEBUG UI] Submitting report to API: url={api_url}, payload={payload}, headers={headers}")
             if api_url:
                 resp = requests.post(api_url, json=payload, headers=headers)
             else:
-                # Internal WSGI call (for local/test)
                 client = current_app.test_client()
-                resp = client.post('/api/v1/accidents', json=payload, headers=headers)
+                resp = client.post('/api/v1/reports', json=payload, headers=headers)
             print(f"[DEBUG UI] API response: status_code={resp.status_code}, text={resp.text}")
             if resp.status_code == 201:
                 flash('Report submitted successfully! Pending government verification.', 'success')
