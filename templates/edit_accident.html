@@ -3,7 +3,7 @@
 <div class="d-flex justify-content-center align-items-center page-fade" style="min-height: 80vh;">
   <div class="glass-card card-anim" style="max-width: 500px; width: 100%;">
     <h3 class="mb-4 text-center" data-i18n="editAccident.title">Edit Accident #{{ accident.id }}</h3>
-    <form id="edit-accident-form" autocomplete="off">
+    <form id="edit-accident-form" autocomplete="off" onsubmit="return false;">
         <input type="hidden" id="accident-id" value="{{ accident.id }}">
       <div class="mb-3">
         <label class="form-label" data-i18n="editAccident.date">Date</label>
