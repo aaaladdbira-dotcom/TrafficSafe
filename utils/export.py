@@ -7,7 +7,7 @@ Export data in various formats (CSV, Excel, PDF)
 import io
 import csv
 from datetime import datetime
-from flask import Response
+from flask import Response, send_file
 
 
 def export_to_csv(data, filename, headers=None):
@@ -22,8 +22,9 @@ def export_to_csv(data, filename, headers=None):
     Returns:
         Flask Response with CSV file
     """
+    # Build CSV text in memory and return as an attachment using send_file
     output = io.StringIO()
-    
+
     if data and isinstance(data[0], dict):
         # Dict data - use keys as headers
         if not headers:
@@ -37,16 +38,18 @@ def export_to_csv(data, filename, headers=None):
         if headers:
             writer.writerow(headers)
         writer.writerows(data)
-    
-    output.seek(0)
-    
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={
-            'Content-Disposition': f'attachment; filename={filename}',
-            'Content-Type': 'text/csv; charset=utf-8'
-        }
+
+    # Convert text to bytes for send_file
+    output_bytes = io.BytesIO()
+    output_bytes.write(output.getvalue().encode('utf-8'))
+    output_bytes.seek(0)
+    output.close()
+
+    return send_file(
+        output_bytes,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='text/csv'
     )
 
 
@@ -121,17 +124,16 @@ def export_to_excel(data, filename, headers=None, sheet_name='Data'):
                 pass
         ws.column_dimensions[col_letter].width = min(max_length + 2, 50)
     
-    # Save to bytes
+    # Save to bytes and return as attachment
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
-    
-    return Response(
-        output.getvalue(),
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={
-            'Content-Disposition': f'attachment; filename={filename}'
-        }
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
 
@@ -225,13 +227,12 @@ def export_to_pdf(data, filename, title='Report', headers=None):
     # Build PDF
     doc.build(elements)
     output.seek(0)
-    
-    return Response(
-        output.getvalue(),
-        mimetype='application/pdf',
-        headers={
-            'Content-Disposition': f'attachment; filename={filename}'
-        }
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/pdf'
     )
 
 
