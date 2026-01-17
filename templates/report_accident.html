@@ -228,7 +228,7 @@ body.dark-mode #voiceCommandBtn.listening {
     </div>
   {% endif %}
 
-  <form method="post" class="report-form">
+  <form id="reportForm" class="report-form">
     <div class="mb-3">
       <label for="date" class="form-label">
         <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -276,5 +276,32 @@ body.dark-mode #voiceCommandBtn.listening {
       <span data-i18n="report.submitBtn">Submit Report</span>
     </button>
   </form>
+  <script>
+    document.getElementById("reportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        date: document.getElementById("date").value,
+        location: document.getElementById("location").value,
+        delegation: document.getElementById("delegation").value,
+        severity: document.getElementById("severity").value,
+        phone: document.getElementById("phone").value
+      };
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        alert("Failed to report accident");
+        return;
+      }
+      alert("Accident reported successfully");
+      // Optionally redirect or reset form here
+    });
+  </script>
 </div>
 {% endblock %}
