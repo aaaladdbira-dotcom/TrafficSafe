@@ -436,7 +436,9 @@ def accidents_export_proxy():
             params[k] = v
 
     try:
-        resp = call_api("/api/v1/accidents/export", headers=headers, params=params, timeout=10)
+        # Backend export endpoints live under /api/export/accidents/<format>
+        # Request CSV by default to match UI expectations
+        resp = call_api("/api/export/accidents/csv", headers=headers, params=params, timeout=10)
     except Exception:
         from flask import abort
         abort(502, "Export failed: API not reachable")
