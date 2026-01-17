@@ -3,115 +3,71 @@
 <div class="d-flex justify-content-center align-items-center page-fade" style="min-height: 80vh;">
   <div class="glass-card card-anim" style="max-width: 500px; width: 100%;">
     <h3 class="mb-4 text-center" data-i18n="editAccident.title">Edit Accident #{{ accident.id }}</h3>
-    <form id="edit-accident-form" autocomplete="off" onsubmit="return false;">
-        <input type="hidden" id="accident-id" value="{{ accident.id }}">
-      <div class="mb-3">
-        <label class="form-label" data-i18n="editAccident.date">Date</label>
-        <input type="text" name="date" class="form-control" value="{{ accident.date_human if accident.date_human is defined else accident.date }}" readonly>
-      </div>
-      <div class="mb-3">
-        <label class="form-label" data-i18n="editAccident.location">Location</label>
-        <input type="text" name="location" class="form-control" value="{{ accident.governorate if accident.governorate is defined else accident.location }}">
-      </div>
-      <div class="mb-3">
-        <label class="form-label" data-i18n="editAccident.delegation">Delegation</label>
-        <input type="text" name="delegation" class="form-control" value="{{ accident.delegation }}">
-      </div>
-      <div class="mb-3">
-        <label class="form-label" data-i18n="editAccident.severity">Severity</label>
-        <select name="severity" class="form-select">
-          <option value="fatal" {% if accident.severity == 'fatal' %}selected{% endif %} data-i18n="accidents.fatal">Fatal</option>
-          <option value="serious" {% if accident.severity == 'serious' %}selected{% endif %} data-i18n="accidents.serious">Serious</option>
-          <option value="minor" {% if accident.severity == 'minor' %}selected{% endif %} data-i18n="accidents.minor">Minor</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label class="form-label" data-i18n="editAccident.cause">Cause</label>
-        <input type="text" name="cause" class="form-control" value="{{ accident.cause }}">
-      </div>
-      <div id="form-status" class="mb-2" style="min-height:1.5em;"></div>
-      <div class="d-flex justify-content-center gap-2">
-  <button id="save-btn" type="submit" class="btn btn-primary">
-          <span id="save-btn-text" data-i18n="editAccident.saveChanges">Save Changes</span>
-          <span id="save-btn-spinner" class="spinner-border spinner-border-sm ms-2" style="display:none" role="status" aria-hidden="true"></span>
-        </button>
-        <a href="{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}" class="btn btn-outline-secondary" data-i18n="common.cancel">Cancel</a>
-      </div>
-    </form>
+    <input type="hidden" id="accident-id" value="{{ accident.id }}">
+    <div class="mb-3">
+      <label class="form-label" data-i18n="editAccident.date">Date</label>
+      <input type="text" id="date" class="form-control" value="{{ accident.date_human if accident.date_human is defined else accident.date }}" readonly>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" data-i18n="editAccident.location">Location</label>
+      <input type="text" id="location" class="form-control" value="{{ accident.governorate if accident.governorate is defined else accident.location }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label" data-i18n="editAccident.delegation">Delegation</label>
+      <input type="text" id="delegation" class="form-control" value="{{ accident.delegation }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label" data-i18n="editAccident.severity">Severity</label>
+      <select id="severity" class="form-select">
+        <option value="fatal" {% if accident.severity == 'fatal' %}selected{% endif %} data-i18n="accidents.fatal">Fatal</option>
+        <option value="serious" {% if accident.severity == 'serious' %}selected{% endif %} data-i18n="accidents.serious">Serious</option>
+        <option value="minor" {% if accident.severity == 'minor' %}selected{% endif %} data-i18n="accidents.minor">Minor</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" data-i18n="editAccident.cause">Cause</label>
+      <input type="text" id="cause" class="form-control" value="{{ accident.cause }}">
+    </div>
+    <div id="form-status" class="mb-2" style="min-height:1.5em;"></div>
+    <div class="d-flex justify-content-center gap-2">
+      <button id="save-accident-btn" type="button" class="btn btn-primary">Save</button>
+      <a href="{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}" class="btn btn-outline-secondary" data-i18n="common.cancel">Cancel</a>
+    </div>
   </div>
 </div>
 <script>
-// AJAX form submission for accident edit
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('edit-accident-form');
-  const saveBtn = document.getElementById('save-btn');
-  const saveBtnText = document.getElementById('save-btn-text');
-  const saveBtnSpinner = document.getElementById('save-btn-spinner');
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("save-accident-btn");
   const statusDiv = document.getElementById('form-status');
-  let submitting = false;
-  // Helper for translations
-  function t(key) {
-    var lang = localStorage.getItem('app-language') || 'en';
-    var dict = (window.AppTranslations && window.AppTranslations[lang]) || {};
-    return dict[key] || key;
-  }
-  if (!form) return;
-  form.addEventListener('submit', async function(ev) {
-    ev.preventDefault();
-    if (submitting) return;
-    submitting = true;
-    statusDiv.textContent = '';
-    saveBtn.disabled = true;
-    saveBtnSpinner.style.display = '';
-    saveBtnText.textContent = t('editAccident.saving');
-    // Build payload
-    const data = {
-      location: form.location.value,
-      delegation: form.delegation.value,
-      severity: form.severity.value,
-      cause: form.cause.value
-    };
-    // Always extract accident ID from hidden input (preferred)
+  btn.addEventListener("click", async () => {
     const accidentId = document.getElementById('accident-id').value;
-    console.log("UPDATE CLICKED");
-    console.log("Accident ID =", accidentId);
+    console.log("UPDATE CLICKED, ID =", accidentId);
     if (!accidentId || isNaN(accidentId)) {
-      throw new Error("Invalid accident ID before update");
+      alert("Invalid accident ID");
+      return;
     }
+    // Collect form data
+    const payload = {
+      location: document.getElementById('location').value,
+      delegation: document.getElementById('delegation').value,
+      severity: document.getElementById('severity').value,
+      cause: document.getElementById('cause').value
+    };
     try {
-      const resp = await fetch(`/api/v1/accidents/${accidentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token') || sessionStorage.getItem('access_token') || ''}`
-        },
-        body: JSON.stringify(data)
+      const res = await fetch(`/api/v1/accidents/${accidentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
-      let result = {};
-      try {
-        result = await resp.json();
-      } catch (e) {
-        result = {};
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Update failed");
+        return;
       }
-      if (resp.ok) {
-        statusDiv.textContent = t('editAccident.saved');
-        statusDiv.className = 'text-success status-success';
-        setTimeout(() => {
-          window.location.href = "{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}";
-        }, 600);
-      } else {
-        console.error(result);
-        statusDiv.textContent = result.error || "Update failed";
-        statusDiv.className = 'text-danger status-error';
-      }
+      alert("Accident updated successfully");
+      window.location.href = "{{ url_for('accidents_ui.accident_detail', accident_id=accident.id) }}";
     } catch (e) {
-      statusDiv.textContent = t('editAccident.networkError');
-      statusDiv.className = 'text-danger status-error';
-    } finally {
-      saveBtn.disabled = false;
-      saveBtnSpinner.style.display = 'none';
-      saveBtnText.textContent = t('editAccident.saveChanges');
-      submitting = false;
+      alert("Network error");
     }
   });
 });
