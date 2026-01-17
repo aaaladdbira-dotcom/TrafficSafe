@@ -75,6 +75,43 @@ def call_api(endpoint, method='GET', headers=None, params=None, json=None, timeo
                     raise ValueError("No JSON")
             return FakeResponse(e)
 
+
+def read_json(resp):
+    """Read JSON payload from a response-like object that may be either
+    a `requests.Response` (where `.json()` is a method) or a Flask/Werkzeug
+    response (where `.json` may be a property or `get_json()` should be used).
+    Returns parsed JSON or None on failure.
+    """
+    try:
+        # requests.Response.json is a callable
+        json_fn = getattr(resp, 'json', None)
+        if callable(json_fn):
+            return json_fn()
+        # Flask/Werkzeug response often exposes get_json
+        if hasattr(resp, 'get_json'):
+            return resp.get_json(silent=True)
+        # json may be a property
+        if json_fn is not None:
+            return json_fn
+        # Fallback: try to parse text/data
+        text = None
+        if hasattr(resp, 'text'):
+            text = resp.text
+        elif hasattr(resp, 'data'):
+            try:
+                text = resp.data.decode('utf-8')
+            except Exception:
+                text = None
+        if text:
+            import json as _json
+            try:
+                return _json.loads(text)
+            except Exception:
+                return None
+    except Exception:
+        return None
+    return None
+
 # Edit accident route (government only)
 @accidents_ui.route('/accidents/<int:accident_id>/edit', methods=['GET'])
 @login_required
@@ -87,7 +124,7 @@ def edit_accident(accident_id):
     resp = call_api("/api/v1/accidents", headers=headers, params={"id": accident_id})
     accident = None
     if resp.status_code == 200:
-        data = resp.json()
+        data = read_json(resp)
         if isinstance(data, dict) and data.get("items"):
             for a in data["items"]:
                 if a["id"] == accident_id:
@@ -127,7 +164,7 @@ def accident_detail(accident_id):
     resp = call_api("/api/v1/accidents", headers=headers, params={"id": accident_id})
     accident = None
     if resp.status_code == 200:
-        data = resp.json()
+        data = read_json(resp)
         # If paginated, find the accident by id
         if isinstance(data, dict) and data.get("items"):
             for a in data["items"]:
@@ -172,9 +209,9 @@ def accidents():
     try:
         resp_filters = call_api("/api/v1/accidents/filters", headers=headers, timeout=5)
         if resp_filters.status_code == 200:
-            fdata = resp_filters.json()
+            fdata = read_json(resp_filters)
             # API returns data wrapped in "data" key
-            filter_data = fdata.get("data", {})
+            filter_data = fdata.get("data", {}) if isinstance(fdata, dict) else {}
             locations = filter_data.get("locations", [])
             causes = filter_data.get("causes", [])
             severities = filter_data.get("severities", [])
@@ -207,7 +244,8 @@ def accidents():
 
     if resp.status_code != 200:
         try:
-            msg = resp.json().get("message", resp.text)
+            d = read_json(resp)
+            msg = d.get("message", resp.text) if isinstance(d, dict) else resp.text
         except Exception:
             msg = resp.text
         flash(f"Failed to load accidents: {msg}", "warning")
@@ -216,7 +254,7 @@ def accidents():
         page = 1
         per_page = 25
     else:
-        rj = resp.json()
+        rj = read_json(resp)
         # support paginated response with 'data' or 'items' or legacy list
         if isinstance(rj, dict):
             # New API format: {data: [...], pagination: {total, page, per_page}}
@@ -338,7 +376,7 @@ def accidents_data():
     # HTML error page with a SQLAlchemy traceback), forward the text so the UI
     # can surface the underlying error message instead of raising a 500 here.
     try:
-        data = resp.json()
+        data = read_json(resp)
         # API uses paginated_response which wraps data in {"data": [...], "pagination": {...}}
         # Unwrap it to match the format expected by the frontend
         if isinstance(data, dict) and 'data' in data and 'pagination' in data:
@@ -375,7 +413,7 @@ def accidents_filters_proxy():
         return {"locations": [], "causes": [], "severities": [], "delegations": []}, 502
 
     try:
-        data = resp.json()
+        data = read_json(resp)
         # API wraps data in success_response, unwrap it for the frontend
         if isinstance(data, dict) and 'data' in data:
             return data['data'], resp.status_code
@@ -404,11 +442,49 @@ def accidents_export_proxy():
         abort(502, "Export failed: API not reachable")
 
     from flask import Response
-    # pass through CSV bytes
-    response = Response(resp.content, status=resp.status_code, mimetype=resp.headers.get('Content-Type', 'text/csv'))
-    disposition = resp.headers.get('Content-Disposition')
-    if disposition:
-        response.headers['Content-Disposition'] = disposition
+    # Support both requests.Response (.content) and Flask response (.data/get_data()).
+    body = None
+    try:
+        if hasattr(resp, 'content'):
+            body = resp.content
+        elif hasattr(resp, 'data'):
+            body = resp.data
+        elif hasattr(resp, 'get_data'):
+            try:
+                body = resp.get_data()
+            except Exception:
+                body = None
+        else:
+            # Fallback to text
+            txt = getattr(resp, 'text', None)
+            if isinstance(txt, str):
+                body = txt.encode('utf-8')
+    except Exception:
+        body = None
+
+    if body is None:
+        from flask import abort
+        abort(502, "Export failed: empty response from API")
+
+    # Resolve headers/mimetype
+    hdrs = getattr(resp, 'headers', {}) or {}
+    try:
+        mimetype = hdrs.get('Content-Type') if hasattr(hdrs, 'get') else None
+    except Exception:
+        mimetype = None
+    if not mimetype:
+        mimetype = 'text/csv'
+
+    status_code = getattr(resp, 'status_code', 502)
+    response = Response(body, status=status_code, mimetype=mimetype)
+
+    try:
+        disposition = hdrs.get('Content-Disposition') if hasattr(hdrs, 'get') else None
+        if disposition:
+            response.headers['Content-Disposition'] = disposition
+    except Exception:
+        pass
+
     return response
 
 
@@ -425,7 +501,8 @@ def accidents_batches_proxy():
         return {"batches": []}, 502
 
     try:
-        return resp.json(), resp.status_code
+        data = read_json(resp)
+        return data or {"batches": []}, resp.status_code
     except Exception:
         return {"batches": []}, 500
 
@@ -459,8 +536,11 @@ def clear_imports():
 
     if resp.status_code != 200:
         try:
-            data = resp.json()
-            msg = data.get("message") or data.get("msg") or resp.text
+            data = read_json(resp)
+            if isinstance(data, dict):
+                msg = data.get("message") or data.get("msg") or resp.text
+            else:
+                msg = resp.text
         except Exception:
             msg = resp.text
 
@@ -476,8 +556,8 @@ def clear_imports():
 
     # success
     try:
-        data = resp.json()
-        deleted = data.get('deleted', 0)
+        data = read_json(resp)
+        deleted = data.get('deleted', 0) if isinstance(data, dict) else 0
     except Exception:
         deleted = 0
     flash(f"Deleted: {deleted} records", "success")
