@@ -4,6 +4,7 @@
   <div class="glass-card card-anim" style="max-width: 500px; width: 100%;">
     <h3 class="mb-4 text-center" data-i18n="editAccident.title">Edit Accident #{{ accident.id }}</h3>
     <form id="edit-accident-form" autocomplete="off">
+        <input type="hidden" id="accident-id" value="{{ accident.id }}">
       <div class="mb-3">
         <label class="form-label" data-i18n="editAccident.date">Date</label>
         <input type="text" name="date" class="form-control" value="{{ accident.date_human if accident.date_human is defined else accident.date }}" readonly>
@@ -73,7 +74,9 @@ document.addEventListener('DOMContentLoaded', function() {
       cause: form.cause.value
     };
     try {
-      const resp = await fetch(`/api/accidents/{{ accident.id }}`, {
+      // Always extract accident ID from hidden input (preferred)
+      const accidentId = document.getElementById('accident-id').value;
+      const resp = await fetch(`/api/accidents/${accidentId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

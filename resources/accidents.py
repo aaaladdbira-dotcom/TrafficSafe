@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from utils.errors import ForbiddenError, NotFoundError, DatabaseError, ValidationError, success_response, paginated_response
 from utils.validators import PaginationValidator, DateRangeValidator, FilterValidator
-from app import limiter
+from extensions import limiter
 
 blp = Blueprint("accidents", "accidents", url_prefix="/api/v1/accidents")
 
@@ -19,6 +19,9 @@ blp = Blueprint("accidents", "accidents", url_prefix="/api/v1/accidents")
 @jwt_required()
 @limiter.limit("10 per minute")
 def update_accident(accident_id):
+    print("[DEBUG] update accident id =", accident_id)
+    if not isinstance(accident_id, int) or accident_id <= 0:
+        return {"error": "Invalid accident ID"}, 400
     """Update an accident. Government users only.
     
     Supports updating: location, delegation, severity, cause
