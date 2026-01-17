@@ -28,9 +28,9 @@ def call_api(endpoint, method='GET', headers=None, params=None, json=None, timeo
     If get_api_url returns a URL, use requests.
     Otherwise, use Flask test client for internal routing.
     """
-    api_base = current_app.config.get('API_URL', '')
-    
-    if api_base:
+    api_base = current_app.config.get('API_URL', None)
+    # Force internal routing unless API_URL is explicitly set (not empty string, not None)
+    if api_base is not None and api_base != '':
         # External API - use requests
         url = f"{api_base}{endpoint}"
         try:
@@ -55,15 +55,13 @@ def call_api(endpoint, method='GET', headers=None, params=None, json=None, timeo
             client = current_app.test_client()
             query_string = ''
             if params:
-                query_string = '?' + '&'.join(f"{k}={v}" for k, v in params.items() if v)
-            
+                query_string = '?' + '&'.join(f"{k}={v}" for k, v in params.items() if v is not None)
             if method.upper() == 'GET':
                 resp = client.get(endpoint + query_string, headers=headers)
             elif method.upper() == 'POST':
                 resp = client.post(endpoint + query_string, headers=headers, json=json)
             else:
                 resp = client.open(endpoint + query_string, method=method, headers=headers, json=json)
-            
             return resp
         except Exception as e:
             # Return a fake response-like object for exception handling
