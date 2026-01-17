@@ -155,33 +155,27 @@ def debug_routes():
         return jsonify({'error': str(e)}), 500
     return jsonify({'routes': out}), 200
 
+from models.accident import Accident
+
 @accidents_ui.route('/accidents/<int:accident_id>')
 @login_required
 def accident_detail(accident_id):
-    headers = {"Authorization": f"Bearer {session['access_token']}"}
-    resp = call_api("/api/v1/accidents", headers=headers, params={"id": accident_id})
-    accident = None
-    if resp.status_code == 200:
-        data = read_json(resp)
-        # If paginated, find the accident by id
-        if isinstance(data, dict) and data.get("items"):
-            for a in data["items"]:
-                if a["id"] == accident_id:
-                    accident = a
-                    break
-        elif isinstance(data, list):
-            for a in data:
-                if a["id"] == accident_id:
-                    accident = a
-                    break
+    # Debug guard: print requested ID and sample IDs
+    print("Requested accident_id:", accident_id)
+    print("Existing sample IDs:", [row[0] for row in db.session.query(Accident.id).limit(5).all()])
+
+    # Ensure accident_id is int (Flask route enforces this, but double-check for safety)
+    try:
+        accident_id = int(accident_id)
+    except Exception:
+        flash("Invalid accident ID.", "danger")
+        return render_template("accident_detail.html", accident=None)
+
+    accident = Accident.query.filter_by(id=accident_id).first()
     if not accident:
         flash("Accident not found.", "danger")
         return render_template("accident_detail.html", accident=None)
-    # Try to get linked report id if present
-    report_id = None
-    if "report" in accident and accident["report"] and isinstance(accident["report"], dict):
-        report_id = accident["report"].get("id")
-    accident["report_id"] = report_id
+
     role = session.get('role')
     return render_template("accident_detail.html", accident=accident, role=role)
 @accidents_ui.route("/accidents")
