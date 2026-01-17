@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 import requests
+from ui.accidents_ui import get_api_url
 from datetime import datetime
 
 report_ui = Blueprint('report_ui', __name__)
@@ -43,7 +44,6 @@ def report_accident():
         print("[DEBUG UI] Validation passed, proceeding to API call.")
         # Submit to API
         jwt_token = session.get('access_token')
-        api_url = current_app.config.get('API_URL', 'http://localhost:5001')
         headers = {'Authorization': f'Bearer {jwt_token}'} if jwt_token else {}
         payload = {
             'date': date,
@@ -52,15 +52,24 @@ def report_accident():
             'severity': severity,
             'phone': phone
         }
+        api_url = get_api_url('/reports')
         try:
-            print(f"[DEBUG UI] Submitting report to API: url={api_url}/reports, payload={payload}, headers={headers}")
-            resp = requests.post(f'{api_url}/reports', json=payload, headers=headers)
+            print(f"[DEBUG UI] Submitting report to API: url={api_url}, payload={payload}, headers={headers}")
+            if api_url:
+                resp = requests.post(api_url, json=payload, headers=headers)
+            else:
+                # Internal WSGI call (for local/test)
+                client = current_app.test_client()
+                resp = client.post('/reports', json=payload, headers=headers)
             print(f"[DEBUG UI] API response: status_code={resp.status_code}, text={resp.text}")
             if resp.status_code == 201:
                 flash('Report submitted successfully! Pending government verification.', 'success')
                 return redirect(url_for('report_ui.my_reports'))
             else:
-                msg = resp.json().get('description', 'Failed to submit report.')
+                try:
+                    msg = resp.json().get('description', 'Failed to submit report.')
+                except Exception:
+                    msg = 'Failed to submit report.'
                 flash(msg, 'danger')
         except Exception as e:
             print(f"[DEBUG UI] Exception during API call: {e}")
@@ -73,11 +82,18 @@ def my_reports():
         flash('Only non-government users can view their reports.', 'danger')
         return redirect(url_for('dashboard_ui.dashboard'))
     jwt_token = session.get('access_token')
-    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     headers = {'Authorization': f'Bearer {jwt_token}'} if jwt_token else {}
+    api_url = get_api_url('/reports')
     try:
-        resp = requests.get(f'{api_url}/reports', headers=headers)
-        reports = resp.json() if resp.status_code == 200 else []
+        if api_url:
+            resp = requests.get(api_url, headers=headers)
+        else:
+            client = current_app.test_client()
+            resp = client.get('/reports', headers=headers)
+        try:
+            reports = resp.json() if resp.status_code == 200 else []
+        except Exception:
+            reports = []
     except Exception:
         reports = []
     return render_template('my_reports.html', reports=reports)
