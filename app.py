@@ -5,10 +5,10 @@ import os
 from dotenv import load_dotenv
 from flask_socketio import SocketIO
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
-# Initialize SocketIO
+# Initialize SocketIO for WebSocket support
 socketio = SocketIO(
     cors_allowed_origins="*",
     async_mode="threading",
@@ -33,16 +33,18 @@ def create_app():
     app.config["OPENAPI_VERSION"] = "3.0.3"
     app.config["OPENAPI_URL_PREFIX"] = "/api"
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    app.config["OPENAPI_SWAGGER_UI_URL"] = (
+        "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    )
 
     # ---------------- INIT EXTENSIONS ----------------
+    limiter.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-    limiter.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")
 
-    # ---------------- VIEW TRANSITIONS ----------------
+    # ---------------- AFTER REQUEST (UI TRANSITIONS) ----------------
     @app.after_request
     def add_view_transition_headers(response):
         try:
@@ -73,49 +75,58 @@ def create_app():
     def handle_rate_limit(e):
         return RateLimitError().to_response()
 
-    # ---------------- REQUEST LOGGING ----------------
+    # ---------------- REQUEST / RESPONSE LOGGING ----------------
     @app.before_request
     def log_request():
         if not request.path.startswith("/api"):
             return
         from flask import g
         from datetime import datetime
+
         g.request_start_time = datetime.utcnow()
+        g.request_path = request.path
+        g.request_method = request.method
 
     @app.after_request
     def log_response(response):
         if not request.path.startswith("/api"):
             return response
-
         try:
             from flask import g
             from datetime import datetime
             from models.audit_log import AuditLog
             from flask_jwt_extended import get_jwt_identity
 
-            elapsed = (datetime.utcnow() - g.request_start_time).total_seconds()
-            try:
-                user_id = get_jwt_identity()
-            except Exception:
-                user_id = None
+            if hasattr(g, "request_start_time"):
+                elapsed = (datetime.utcnow() - g.request_start_time).total_seconds()
+                try:
+                    user_id = get_jwt_identity()
+                except Exception:
+                    user_id = None
 
-            if request.method != "GET" or response.status_code >= 400:
-                audit_log = AuditLog(
-                    user_id=user_id,
-                    action=request.method.lower(),
-                    entity_type="api_request",
-                    description=f"{request.method} {request.path} -> {response.status_code} ({elapsed:.2f}s)",
-                    ip_address=request.remote_addr,
-                    user_agent=request.headers.get("User-Agent", "")[:500],
-                )
-                db.session.add(audit_log)
-                db.session.commit()
-        except Exception:
-            pass
-
+                if request.method in ("POST", "PATCH", "PUT", "DELETE") or response.status_code >= 400:
+                    action_map = {
+                        "POST": "create",
+                        "PATCH": "update",
+                        "PUT": "update",
+                        "DELETE": "delete",
+                        "GET": "read",
+                    }
+                    audit_log = AuditLog(
+                        user_id=user_id,
+                        action=action_map.get(request.method, "api_call"),
+                        entity_type="api_request",
+                        description=f"{request.method} {request.path} -> {response.status_code} ({elapsed:.2f}s)",
+                        ip_address=request.remote_addr,
+                        user_agent=request.headers.get("User-Agent", "")[:500],
+                    )
+                    db.session.add(audit_log)
+                    db.session.commit()
+        except Exception as e:
+            print(f"Audit log error: {e}")
         return response
 
-    # ---------------- DATABASE INIT ----------------
+    # ---------------- DB INIT & SAFETY ----------------
     import sqlalchemy as sa
 
     with app.app_context():
@@ -127,10 +138,17 @@ def create_app():
         db.create_all()
 
         try:
-            from utils.create_gov_user import create_government_user
-            create_government_user()
+            with db.engine.connect() as conn:
+                insp = conn.execute(sa.text("PRAGMA table_info('accidents')")).fetchall()
+            cols = [row[1] for row in insp]
+
+            if "batch_id" not in cols:
+                db.engine.execute(sa.text("ALTER TABLE accidents ADD COLUMN batch_id INTEGER"))
         except Exception:
             pass
+
+        from utils.create_gov_user import create_government_user
+        create_government_user()
 
     # ---------------- FILE IMPORT API ----------------
     from resources.import_data import import_api
@@ -138,6 +156,7 @@ def create_app():
 
     # ---------------- SMOREST API ----------------
     from flask_smorest import Api
+
     api = Api(app)
 
     from resources.auth import blp as AuthAPI
@@ -150,20 +169,24 @@ def create_app():
     api.register_blueprint(StatsAPI)
     api.register_blueprint(MetaAPI)
 
-    # ---------------- OTHER APIs ----------------
+    # ---------------- OTHER APIS ----------------
+    from resources.accident_report import reports_bp
+    from resources.users import users_bp
     from resources.export import export_bp
     from resources.upload import upload_bp
     from resources.search import search_bp
     from resources.contact import contact_bp
-    from resources.services import services_bp
     from resources.chatbot import chatbot_bp
+    from resources.services import services_bp
 
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(users_bp)
     app.register_blueprint(export_bp)
     app.register_blueprint(upload_bp)
     app.register_blueprint(search_bp)
     app.register_blueprint(contact_bp)
-    app.register_blueprint(services_bp)
     app.register_blueprint(chatbot_bp)
+    app.register_blueprint(services_bp)
 
     # ---------------- UI ----------------
     from ui.auth_ui import auth_ui
@@ -180,8 +203,8 @@ def create_app():
     from ui.landing_ui import landing_ui
     from ui.info_ui import info_ui
     from ui.oauth_routes import oauth_ui
-    from ui.oauth import init_oauth
 
+    from ui.oauth import init_oauth
     init_oauth(app)
 
     app.register_blueprint(auth_ui, url_prefix="/ui")
@@ -199,16 +222,25 @@ def create_app():
     app.register_blueprint(info_ui)
     app.register_blueprint(oauth_ui)
 
-    # ---------------- SOCKET.IO ----------------
     from resources.websocket_handler import init_websocket
     init_websocket(app, socketio)
 
-    return app
+    return app, socketio
 
 
-# ---------------- WSGI ENTRYPOINT (FOR GUNICORN) ----------------
-app = create_app()
+# --------------------------------------------------
+# ✅ WSGI ENTRYPOINT (THIS IS WHAT GUNICORN NEEDS)
+# --------------------------------------------------
+app, socketio = create_app()
 
-# ---------------- LOCAL DEV ONLY ----------------
+
+# --------------------------------------------------
+# LOCAL DEVELOPMENT ONLY (WINDOWS)
+# --------------------------------------------------
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)
+    socketio.run(
+        app,
+        debug=True,
+        port=5001,
+        allow_unsafe_werkzeug=True,
+    )
