@@ -1,0 +1,436 @@
+% Traffic Accident Information System - Technical Report
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{multicol}
+\usepackage{color}
+
+% Header
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Traffic Accident Information System}
+\rhead{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{Technical Report\\Web Services Project\\Traffic Accident Information System}
+\author{Alaa Dbira}
+\date{January 17, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Accurate, timely collection and analysis of traffic-accident data is essential for improving
+road safety and enabling evidence-based interventions. This project implements a modular
+web platform to report, manage, visualize, and analyze traffic accidents. The system offers
+secure REST APIs, a server-rendered UI with geospatial visualization, import/export
+workflows, audit logging, real-time notifications, and operational tooling for deployment
+and maintenance. The application is hosted at \url{https://trafficsafe.onrender.com/}. This report documents motivation, architecture, API design, implementation,
+testing, deployment, results, and future work.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+% =====================
+% 0.1 Abstract (already present)
+% =====================
+
+% =====================
+% 1 Introduction
+% =====================
+\section{Introduction}
+\subsection{Motivation}
+Road traffic accidents are a leading cause of mortality and economic loss. Centralized,
+structured incident data improves response, supports analysis, and guides policy. The
+Traffic Accident Information System aims to provide an accessible, auditable platform to
+collect incident details, attach reports and media, and provide analytics and maps for
+stakeholders.
+
+\subsection{Problem Statement}
+Current reporting is fragmented and often lacks geolocation, standardized fields, or
+attachments. This reduces the usefulness of datasets for trend analysis, hotspot detection,
+and policymaking.
+
+\subsection{Objectives}
+\begin{itemize}
+  \item Provide RESTful APIs for accident CRUD operations and reporting.
+  \item Implement role-based workflows for reporters, operators, and government reviewers.
+  \item Deliver a dashboard with KPIs, time-series charts, and a Leaflet map.
+  \item Support CSV import/export and file attachments.
+  \item Ensure auditability, security, and deployability.
+\end{itemize}
+
+\subsection{Scope}
+The system includes backend APIs, server-rendered UI, basic analytics, import/export,
+WebSocket notifications, and DB migration support. It is designed to run on SQLite for
+development and PostgreSQL in production.
+
+\subsection{Methodology}
+The project follows an agile methodology with iterative development, regular testing, and
+feedback loops. Key phases included requirement analysis, system design, implementation,
+testing, and deployment.
+
+\subsection{Conclusion}
+The Traffic Accident Information System addresses critical gaps in road safety data
+collection and analysis. By leveraging modern web technologies and following best
+practices in software development, the system is poised to deliver significant
+value to stakeholders. The application is publicly hosted at \url{https://trafficsafe.onrender.com/}, making it accessible for demonstration and real-world use.
+
+% =====================
+% 2 System Architecture
+% =====================
+\section{System Architecture}
+\subsection{Overview}
+The application follows a layered architecture: presentation (UI), API layer, persistence,
+real-time layer, and utilities for imports and audits. Components are organized under
+`models/`, `resources/`, `ui/`, `schemas/`, and `utils/`.
+
+\subsection{Backend Architecture}
+The backend uses an application factory pattern (\texttt{create\_app()} in \texttt{app.py})
+to initialize extensions and register blueprints. Extensions include `db`, `jwt`, `migrate`,
+`limiter`, and `socketio`. Request timing and audit logs are captured for API calls.
+
+\subsection{Database Design}
+Relational schema with core tables: \textbf{users}, \textbf{accidents}, \textbf{accident\_reports},
+\textbf{import\_batches}, \textbf{uploaded\_files}, and \textbf{audit\_logs}.
+
+\subsubsection{Database Tables}
+\begin{itemize}
+  \item \textbf{users}: Stores user information and roles.
+  \item \textbf{accidents}: Contains accident details and metadata.
+  \item \textbf{accident\_reports}: Holds narrative reports and attachments for accidents.
+  \item \textbf{import\_batches}: Tracks CSV import batches and their status.
+  \item \textbf{uploaded\_files}: Manages file attachments for accidents and reports.
+  \item \textbf{audit\_logs}: Records API access and data changes for auditing.
+\end{itemize}
+
+\subsubsection{SQL Schema Excerpt}
+\begin{verbatim}
+CREATE TABLE accidents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  occurred_at DATETIME NOT NULL,
+  latitude REAL,
+  longitude REAL,
+  severity VARCHAR(32),
+  cause VARCHAR(128),
+  governorate VARCHAR(64),
+  delegation VARCHAR(64),
+  batch_id INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+\end{verbatim}
+
+\subsubsection{Relationships Between Tables}
+\begin{itemize}
+  \item \textbf{users} to \textbf{accidents}: One-to-many (a user can report multiple accidents).
+  \item \textbf{accidents} to \textbf{accident\_reports}: One-to-many (an accident can have multiple reports).
+  \item \textbf{import\_batches} to \textbf{accidents}: One-to-many (a batch can contain multiple accidents).
+\end{itemize}
+
+\subsection{Data Collection}
+Data sources: manual submissions, CSV imports, and optional integrations with external feeds.
+Imports validate and normalize coordinates, timestamps, and categories; invalid rows are
+reported per-batch.
+
+\subsubsection{Primary Data Sources}
+\begin{itemize}
+  \item Manual reports by users via the web interface.
+  \item CSV files uploaded by authorized personnel.
+  \item Real-time data from external APIs (e.g., weather, traffic).
+\end{itemize}
+
+\subsubsection{Data Integration and Processing}
+\begin{itemize}
+  \item CSV imports are processed by the import pipeline, which validates, transforms, and loads data.
+  \item External API data is fetched and integrated using scheduled tasks and webhooks.
+\end{itemize}
+
+\subsection{Authentication and Security}
+JWT tokens issued at login are used for API access; OAuth providers can be enabled. Security
+measures include password hashing, RBAC, token expiration, rate limiting, input validation,
+upload size checks, and audit logging.
+
+\subsubsection{Authentication Mechanism}
+\begin{itemize}
+  \item Users authenticate via email/password or social login (OAuth).
+  \item JWT tokens are issued upon successful login and are required for subsequent API requests.
+\end{itemize}
+
+\subsubsection{Security Measures}
+\begin{itemize}
+  \item Passwords are hashed using a strong, adaptive algorithm (e.g., bcrypt).
+  \item Role-based access control (RBAC) restricts actions based on user roles (e.g., reporter, reviewer).
+  \item API rate limiting protects against abuse and denial-of-service attacks.
+  \item Input validation and sanitization prevent injection attacks and ensure data integrity.
+  \item File uploads are scanned for malware, and size limits are enforced.
+  \item Audit logs record all access and changes to sensitive data, enabling accountability and traceability.
+\end{itemize}
+
+\subsection{External API Integrations}
+\subsubsection{Weather API Integration}
+(if any) Integration with external weather APIs to enrich accident data with contextual information
+(e.g., weather conditions at the time of the accident).
+
+\subsubsection{Geospatial/Map API Integration}
+Integration with mapping services (e.g., Leaflet, Google Maps) for geocoding, reverse geocoding,
+and displaying accident locations on maps.
+
+\subsection{Deployment and Scalability}
+Containerized deployment via Docker; use PostgreSQL, Redis, and Gunicorn/NGINX for
+production scalability.
+
+\subsubsection{Containerized Deployment with Docker}
+\begin{itemize}
+  \item The application is packaged as a Docker container, including all dependencies and configuration.
+  \item Docker Compose is used to define and manage multi-container applications (e.g., web server, database, cache).
+\end{itemize}
+
+\subsubsection{CI/CD}
+Continuous integration and deployment pipelines are configured to automate testing, building,
+and deployment of the application to various environments (e.g., development, staging, production).
+
+\section{API Endpoints}
+\subsection{Authentication and User Management}
+\texttt{POST /api/auth/login} -- returns JWT.\\
+\texttt{POST /api/auth/register} -- create user.
+
+\subsection{Accident Management}
+\texttt{GET /api/accidents} -- list with filters (date range, governorate, severity, bbox).
+\texttt{POST /api/accidents} -- create accident.
+\texttt{GET /api/accidents/{id}} -- detail; \texttt{PUT/PATCH}, \texttt{DELETE} supported.
+
+\subsection{Report Management}
+\texttt{POST /api/accidents/{id}/reports} -- add narrative report.
+
+\subsection{File Uploads}
+\texttt{POST /api/upload} -- attach files.
+
+\subsection{Import/Export}
+\texttt{POST /api/import} -- CSV upload (creates ImportBatch).
+\texttt{GET /api/export} -- export filtered CSV.
+
+\subsection{Stats and Dashboard}
+\texttt{GET /api/stats/kpis}, \texttt{GET /api/stats/accidents/by\_month}, etc.
+
+\subsection{Error Handling and Response Codes}
+Consistent error response format with appropriate HTTP status codes. Common errors include
+400 (Bad Request), 401 (Unauthorized), 403 (Forbidden), 404 (Not Found), and 500 (Internal Server Error).
+
+% =====================
+% 3 Implementation
+% =====================
+\section{Implementation}
+\subsection{Technology Stack}
+Flask, SQLAlchemy, Alembic, Flask-JWT-Extended, Flask-SocketIO, Flask-Smorest, Jinja2,
+Chart.js, Leaflet, Docker, Gunicorn, NGINX.
+
+\subsection{Project Structure}
+\begin{verbatim}
+traffic-accident/
+  app.py
+  models/
+  resources/
+  ui/
+  schemas/
+  static/
+  templates/
+  migrations/
+  utils/
+\end{verbatim}
+
+\subsection{Application Setup}
+\texttt{app.py} exposes \texttt{create\_app()} and a module-level \texttt{application} for WSGI.
+At startup, the app creates missing auxiliary tables and adds backward-compatible columns
+for SQLite deployments.
+
+\subsection{Database Configuration}
+Database connection settings are configured via environment variables (e.g., `DATABASE_URL`).
+SQLAlchemy is used for ORM and database migrations are managed with Alembic.
+
+\subsection{Authentication System}
+The authentication system is built using Flask-JWT-Extended, which provides JWT creation,
+verification, and refreshing. The user registration and login endpoints are secured and
+validate input data.
+
+\subsection{Import Pipeline}
+CSV import creates \texttt{ImportBatch}, validates rows, inserts valid records, and returns a
+row-level report. For large batches, move processing to background workers (Celery/RQ) and
+report progress via SocketIO.
+
+\subsection{Real-time Notifications}
+Real-time notifications are implemented using Flask-SocketIO, allowing the server to push
+updates to connected clients (e.g., progress of import jobs, new accident reports).
+
+\subsection{UI and Visualizations}
+Dashboard presents KPI cards, trend charts (Chart.js), and a Leaflet map with clustering and
+popups. UI blueprints proxy API calls and attach session credentials to AJAX to avoid
+exposing tokens.
+
+\subsection{Observability and Logging}
+Application performance and errors are monitored using logging and observability tools.
+Structured logs are generated for API requests, errors, and important events (e.g., imports,
+exports).
+
+\subsection{Example Code Snippets}
+\begin{lstlisting}[language=Python]
+class Accident(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    occurred_at = db.Column(db.DateTime, nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    severity = db.Column(db.String(32))
+    cause = db.Column(db.String(128))
+    governorate = db.Column(db.String(64))
+    delegation = db.Column(db.String(64))
+    batch_id = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+\end{lstlisting}
+
+\subsection{Conclusion}
+The implementation of the Traffic Accident Information System leverages modern technologies
+and best practices to deliver a robust, scalable, and secure solution for managing traffic
+accident data. The use of containerization, RESTful APIs, and real-time communication
+ensures that the system is well-equipped to handle the needs of its users and can
+easily adapt to future requirements.
+
+% =====================
+% 4 Testing and Validation
+% =====================
+\section{Testing and Validation}
+\subsection{Testing Approach}
+Unit tests for model logic and validations; integration tests with Flask test client for auth
+flows and endpoints; manual UI checks for map rendering.
+
+\subsection{Example Test}
+\begin{lstlisting}[language=Python]
+def test_accident_creation(client):
+    response = client.post('/api/accidents', json={
+        'occurred_at': '2023-01-01T12:00:00',
+        'latitude': 34.05,
+        'longitude': -118.25,
+        'severity': 'High',
+        'cause': 'Collision',
+        'governorate': 'California',
+        'delegation': 'Los Angeles'
+    })
+    assert response.status_code == 201
+    assert response.json['id'] is not None
+\end{lstlisting}
+
+\subsection{Data Validation}
+Data validation is performed at multiple levels: client-side (UI), API (request/response),
+and database (constraints, types). Invalid data is rejected with appropriate error messages.
+
+\subsection{Results and Evaluation}
+Testing has shown that the system meets its functional requirements and performs well
+under expected load conditions. Some minor issues were identified and addressed during
+testing.
+
+\subsection{Limitations}
+Current limitations include the need for manual intervention in some error cases, limited
+geospatial analysis capabilities, and reliance on external APIs for certain data.
+
+\subsection{Conclusion}
+The testing and validation phase has confirmed the stability and reliability of the Traffic
+Accident Information System. Ongoing monitoring and periodic testing will be essential
+to maintain system integrity and performance.
+
+% =====================
+% 5 Deployment
+% =====================
+\section{Deployment}
+\subsection{Local Development}
+For local development, Docker Compose is used to spin up the application and its dependencies
+(database, cache, etc.) in isolated containers. Environment variables are configured in a
+`.env` file.
+
+\subsection{Production Recommendations}
+In production, it is recommended to use separate containers for the web server, database,
+and cache. Use a reverse proxy (e.g., NGINX) to handle SSL termination and route requests
+to the appropriate service.
+
+\subsection{CI/CD}
+Continuous integration and deployment pipelines are configured to automate the process of
+building, testing, and deploying the application. Code changes are automatically tested and
+deployed to staging, with manual approval required for production deployments.
+
+\subsection{Backup and Monitoring}
+Regular backups of the database and uploaded files are essential. Monitoring should be
+configured to alert on critical issues (e.g., high error rates, slow performance).
+
+\subsection{Deployment Checklist}
+\begin{enumerate}
+  \item Configure secrets and `DATABASE_URL` in environment variables.
+  \item Run Alembic migrations (Postgres recommended).
+  \item Serve with Gunicorn behind NGINX and enable HTTPS.
+  \item Configure Redis for SocketIO and caching.
+  \item Schedule backups for DB and uploaded files.
+\end{enumerate}
+
+% =====================
+% 6 Evaluation, Risks and Future Work
+% =====================
+\section{Evaluation, Risks and Future Work}
+\subsection{Evaluation}
+The Traffic Accident Information System was evaluated based on its functionality, performance,
+security, and usability. Feedback from initial users has been positive, highlighting the
+system's ease of use and the value of its analytics features.
+
+\subsection{Risk Analysis}
+Key risks include data quality, privacy concerns, and system scalability. Mitigation strategies
+include robust data validation, anonymization of personal data, and designing for horizontal
+scalability.
+
+\subsection{Future Enhancements}
+Future work includes predictive analytics, mobile clients, and integration with emergency services.
+Additional data sources and advanced analytics capabilities will be explored to enhance
+the system's value.
+
+\subsection{Conclusion}
+The Traffic Accident Information System represents a significant advancement in the
+collection and analysis of traffic accident data. By addressing the identified risks and
+continuously evolving the system, we can further enhance road safety and response
+efforts.
+
+% =====================
+% Bibliography
+% =====================
+\section*{References}
+\begin{thebibliography}{9}
+\bibitem{flask} Flask documentation. \url{https://flask.palletsprojects.com/}
+\bibitem{sqlalchemy} SQLAlchemy. \url{https://www.sqlalchemy.org/}
+\bibitem{leaflet} Leaflet. \url{https://leafletjs.com/}
+\bibitem{chartjs} Chart.js. \url{https://www.chartjs.org/}
+\end{thebibliography}
+
+% =====================
+% Appendices
+% =====================
+\appendix
+\section{Appendix A: Hosting}
+The Traffic Accident Information System is deployed and publicly accessible at:
+
+\begin{itemize}
+  \item \textbf{URL:} \url{https://trafficsafe.onrender.com/}
+  \item The application is hosted on Render, a cloud platform that provides scalable and reliable web hosting for modern web applications.
+  \item The deployment process uses Docker containers and environment variables for configuration, ensuring portability and ease of updates.
+  \item Users can access the full functionality of the system, including reporting, analytics, and dashboard features, via this URL.
+\end{itemize}
+
+\end{document}

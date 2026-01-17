@@ -101,9 +101,10 @@ def accidents():
     params["per_page"] = per_page
 
     # Get filter option lists from the API (full distinct values)
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp_filters = requests.get(
-            "http://127.0.0.1:5001/api/v1/accidents/filters",
+            f"{api_url}/api/v1/accidents/filters",
             headers=headers,
             timeout=5
         )
@@ -128,7 +129,7 @@ def accidents():
 
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/api/v1/accidents",
+            f"{api_url}/api/v1/accidents",
             headers=headers,
             params=params,
             timeout=5
@@ -270,9 +271,10 @@ def accidents_data():
         if v:
             params[k] = v
 
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/api/v1/accidents",
+            f"{api_url}/api/v1/accidents",
             headers=headers,
             params=params,
             timeout=5
@@ -315,9 +317,10 @@ def accidents_filters_proxy():
     headers = {
         "Authorization": f"Bearer {session['access_token']}"
     }
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/api/v1/accidents/filters",
+            f"{api_url}/api/v1/accidents/filters",
             headers=headers,
             timeout=5
         )
@@ -347,9 +350,10 @@ def accidents_export_proxy():
         if v:
             params[k] = v
 
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/api/v1/accidents/export",
+            f"{api_url}/api/v1/accidents/export",
             headers=headers,
             params=params,
             timeout=10
@@ -374,9 +378,10 @@ def accidents_batches_proxy():
     headers = {
         "Authorization": f"Bearer {session['access_token']}"
     }
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/upload/import/batches",
+            f"{api_url}/upload/import/batches",
             headers=headers,
             timeout=5
         )
@@ -399,9 +404,10 @@ def clear_imports():
     headers = {
         "Authorization": f"Bearer {session.get('access_token')}"
     }
+    api_url = current_app.config.get('API_URL', 'http://localhost:5001')
     try:
         resp = requests.delete(
-            "http://127.0.0.1:5001/upload/import",
+            f"{api_url}/upload/import",
             headers=headers,
             timeout=10,
         )

@@ -118,6 +118,9 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///traffic.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+    # API_URL for UI to communicate with API layer (uses same origin by default)
+    app.config["API_URL"] = os.environ.get("API_URL", "http://localhost:5001")
+
     app.config["API_TITLE"] = "Traffic Accident Information System API"
     app.config["API_VERSION"] = "v1"
     app.config["OPENAPI_VERSION"] = "3.0.3"
@@ -347,6 +350,13 @@ def create_app():
 # ✅ IMPORTANT: GUNICORN NEEDS A GLOBAL "app"
 # --------------------------------------------------
 app = create_app()
+
+# Expose a module-level WSGI application object for Gunicorn/WSGI servers.
+# Some deployment platforms expect a top-level variable like `app` or `application`.
+# Avoid using import strings like `app:create_app()[0]` — Gunicorn does not
+# evaluate arbitrary expressions when importing. Use `gunicorn app:application`
+# or `gunicorn app:app` instead.
+application = app
 
 # --------------------------------------------------
 # Local development only
