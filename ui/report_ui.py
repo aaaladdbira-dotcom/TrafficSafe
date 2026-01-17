@@ -45,14 +45,24 @@ def report_accident():
         # Submit to API
         jwt_token = session.get('access_token')
         headers = {'Authorization': f'Bearer {jwt_token}'} if jwt_token else {}
-        payload = {
-            'date': date,
-            'location': location,
-            'delegation': delegation,
-            'severity': severity,
-            'phone': phone
+        # Map UI severity to API severity
+        severity_map = {
+            'minor': 'Low',
+            'moderate': 'Medium',
+            'severe': 'High',
+            'fatal': 'High',  # If needed, map fatal to High
         }
-        api_url = get_api_url('/reports')
+        api_severity = severity_map.get(severity, 'Low')
+        # API expects 'occurred_at' instead of 'date'
+        payload = {
+            'occurred_at': date,
+            'location': location,
+            # 'delegation': delegation,  # Remove if not required by API schema
+            'severity': api_severity,
+            'phone': phone,
+            'reported_by': 'citizen',
+        }
+        api_url = get_api_url('/api/v1/accidents')
         try:
             print(f"[DEBUG UI] Submitting report to API: url={api_url}, payload={payload}, headers={headers}")
             if api_url:
@@ -60,7 +70,7 @@ def report_accident():
             else:
                 # Internal WSGI call (for local/test)
                 client = current_app.test_client()
-                resp = client.post('/reports', json=payload, headers=headers)
+                resp = client.post('/api/v1/accidents', json=payload, headers=headers)
             print(f"[DEBUG UI] API response: status_code={resp.status_code}, text={resp.text}")
             if resp.status_code == 201:
                 flash('Report submitted successfully! Pending government verification.', 'success')
