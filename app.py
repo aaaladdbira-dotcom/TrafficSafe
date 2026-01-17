@@ -345,6 +345,34 @@ def create_app():
                 })
         return jsonify(routes)
 
+    # Minimal public export route (convenience for direct downloads)
+    @app.route('/export/csv')
+    def public_export_csv():
+        """Public CSV export at /export/csv — uses in-memory generator and send_file.
+
+        This is a convenience route so requesting /export/csv downloads a CSV
+        without going through the API blueprint. It returns recent accidents.
+        """
+        try:
+            from utils.export import export_to_csv, format_accident_for_export
+            from models.accident import Accident
+
+            accidents = Accident.query.order_by(Accident.occurred_at.desc()).limit(1000).all()
+            data = [format_accident_for_export(a) for a in accidents]
+
+            if not data:
+                # Return an empty CSV with headers to keep clients happy
+                data = [{
+                    'ID': '', 'Date': '', 'Location': '', 'Governorate': '',
+                    'Delegation': '', 'Severity': '', 'Cause': '', 'Source': '', 'Created At': ''
+                }]
+
+            return export_to_csv(data, 'accidents.csv')
+        except Exception as e:
+            app.logger.exception('Public export failed')
+            from flask import Response
+            return Response(str(e), status=500, mimetype='text/plain')
+
     return app
 
 
