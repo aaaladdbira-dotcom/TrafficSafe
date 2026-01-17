@@ -118,8 +118,10 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///traffic.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # API_URL for UI to communicate with API layer (uses same origin by default)
-    app.config["API_URL"] = os.environ.get("API_URL", "http://localhost:5001")
+    # API_URL for UI to communicate with API layer
+    # Default to empty string (relative URLs) so it uses same origin on production
+    # Can be overridden with API_URL env var for separate API servers
+    app.config["API_URL"] = os.environ.get("API_URL", "")
 
     app.config["API_TITLE"] = "Traffic Accident Information System API"
     app.config["API_VERSION"] = "v1"

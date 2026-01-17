@@ -1,9 +1,25 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 import requests
 from extensions import db
 from models.user import User
 
 auth_ui = Blueprint("auth_ui", __name__, url_prefix="/ui")
+
+
+def get_api_url(endpoint):
+    """Build absolute API URL.
+    
+    If API_URL is configured, use it as base.
+    Otherwise, use current request host (for same-origin requests on production).
+    """
+    api_base = current_app.config.get('API_URL', '')
+    
+    if api_base:
+        # Explicitly configured API URL
+        return f"{api_base}{endpoint}"
+    else:
+        # Same-origin: use current request scheme/host
+        return f"{request.scheme}://{request.host}{endpoint}"
 
 
 @auth_ui.route("/login", methods=["GET", "POST"])
@@ -20,7 +36,7 @@ def login():
         # Call API login
         try:
             resp = requests.post(
-                "http://127.0.0.1:5001/api/v1/auth/login",
+                get_api_url("/api/v1/auth/login"),
                 json={"email": email, "password": password},
                 timeout=5,
             )

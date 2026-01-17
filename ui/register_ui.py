@@ -8,6 +8,23 @@ from models.accident import Accident
 
 register_ui = Blueprint("register_ui", __name__)
 
+
+def get_api_url(endpoint):
+    """Build absolute API URL.
+    
+    If API_URL is configured, use it as base.
+    Otherwise, use current request host (for same-origin requests on production).
+    """
+    api_base = current_app.config.get('API_URL', '')
+    
+    if api_base:
+        # Explicitly configured API URL
+        return f"{api_base}{endpoint}"
+    else:
+        # Same-origin: use current request scheme/host
+        return f"{request.scheme}://{request.host}{endpoint}"
+
+
 def get_live_stats():
     """Get live statistics for the register page"""
     try:
@@ -86,7 +103,7 @@ def register():
 
         try:
             resp = requests.post(
-                "http://127.0.0.1:5001/api/v1/auth/register",
+                get_api_url("/api/v1/auth/register"),
                 json=payload,
                 timeout=5,
             )

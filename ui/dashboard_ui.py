@@ -1,10 +1,26 @@
-from flask import Blueprint, render_template, session, current_app
+from flask import Blueprint, render_template, session, current_app, request
 import requests
 from .utils import login_required
 import hashlib
 from datetime import datetime, timedelta
 
 dashboard_ui = Blueprint("dashboard_ui", __name__)
+
+
+def get_api_url(endpoint):
+    """Build absolute API URL.
+    
+    If API_URL is configured, use it as base.
+    Otherwise, use current request host (for same-origin requests on production).
+    """
+    api_base = current_app.config.get('API_URL', '')
+    
+    if api_base:
+        # Explicitly configured API URL
+        return f"{api_base}{endpoint}"
+    else:
+        # Same-origin: use current request scheme/host
+        return f"{request.scheme}://{request.host}{endpoint}"
 
 
 @dashboard_ui.route("/dashboard")
@@ -22,7 +38,7 @@ def dashboard():
 
     # Get total accidents (use API pagination total if available)
     try:
-        resp = requests.get("http://127.0.0.1:5001/api/v1/accidents", headers=headers, params={"page": 1, "per_page": 1}, timeout=5)
+        resp = requests.get(get_api_url("/api/v1/accidents"), headers=headers, params={"page": 1, "per_page": 1}, timeout=5)
         if resp.status_code == 200:
             rj = resp.json()
             if isinstance(rj, dict) and rj.get('total') is not None:
@@ -34,7 +50,7 @@ def dashboard():
 
     # Get last import batch info and statistics
     try:
-        resp = requests.get("http://127.0.0.1:5001/upload/import/batches", headers=headers, timeout=5)
+        resp = requests.get(get_api_url("/upload/import/batches"), headers=headers, timeout=5)
         if resp.status_code == 200:
             data = resp.json()
             # Accept either {'batches': [...]} or a list

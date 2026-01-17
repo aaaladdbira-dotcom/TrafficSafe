@@ -1,8 +1,25 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app
 import requests
 from .utils import login_required, role_required
 
 import_ui = Blueprint("import_ui", __name__)
+
+
+def get_api_url(endpoint):
+    """Build absolute API URL.
+    
+    If API_URL is configured, use it as base.
+    Otherwise, use current request host (for same-origin requests on production).
+    """
+    api_base = current_app.config.get('API_URL', '')
+    
+    if api_base:
+        # Explicitly configured API URL
+        return f"{api_base}{endpoint}"
+    else:
+        # Same-origin: use current request scheme/host
+        return f"{request.scheme}://{request.host}{endpoint}"
+
 
 @import_ui.route("/import", methods=["GET", "POST"])
 @login_required
@@ -15,7 +32,7 @@ def import_csv():
             batch_id = request.form.get('batch_id')
             try:
                 resp = requests.delete(
-                    "http://127.0.0.1:5001/upload/import",
+                    get_api_url("/upload/import"),
                     headers=headers,
                     params={'batch_id': batch_id} if batch_id else None,
                     timeout=10,
@@ -58,7 +75,7 @@ def import_csv():
 
         try:
             resp = requests.post(
-                "http://127.0.0.1:5001/upload/import",
+                get_api_url("/upload/import"),
                 # send explicit file tuple (filename, stream, content_type)
                 files={"file": (file.filename, file.stream, file.content_type)},
                 headers=headers,
@@ -124,7 +141,7 @@ def import_csv():
     batches = []
     try:
         resp = requests.get(
-            "http://127.0.0.1:5001/upload/import/batches",
+            get_api_url("/upload/import/batches"),
             headers=headers,
             timeout=5,
         )
