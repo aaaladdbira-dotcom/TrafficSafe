@@ -21,7 +21,9 @@ def statistics_export_proxy(format_type):
     # Build target API endpoint
     endpoint = f"/api/export/statistics/{format_type}"
     # Use current session token
-    headers = {"Authorization": f"Bearer {session.get('access_token', '')}"}
+    token = session.get('access_token')
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    current_app.logger.debug('[UI EXPORT] session token present: %s', bool(token))
 
     # Use internal call helper if available, otherwise fall back to requests/test client
     try:
@@ -38,6 +40,12 @@ def statistics_export_proxy(format_type):
             # Internal test client
             client = current_app.test_client()
             resp = client.get(endpoint, headers=headers)
+
+    # Log proxied response status for debugging
+    try:
+        current_app.logger.debug('[UI EXPORT] proxied resp status: %s', getattr(resp, 'status_code', None))
+    except Exception:
+        pass
 
     # Extract body
     body = None
