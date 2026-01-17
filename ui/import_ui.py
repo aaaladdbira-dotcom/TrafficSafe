@@ -5,20 +5,60 @@ from .utils import login_required, role_required
 import_ui = Blueprint("import_ui", __name__)
 
 
-def get_api_url(endpoint):
-    """Build absolute API URL.
+def call_api(endpoint, method='GET', headers=None, params=None, json=None, timeout=5):
+    """Call API endpoint - either via HTTP or internal WSGI client.
     
-    If API_URL is configured, use it as base.
-    Otherwise, use current request host (for same-origin requests on production).
+    If API_URL is configured, use requests for external API.
+    Otherwise, use Flask test client for internal routing.
     """
     api_base = current_app.config.get('API_URL', '')
     
     if api_base:
-        # Explicitly configured API URL
-        return f"{api_base}{endpoint}"
+        # External API - use requests
+        url = f"{api_base}{endpoint}"
+        try:
+            if method.upper() == 'GET':
+                return requests.get(url, headers=headers, params=params, timeout=timeout)
+            elif method.upper() == 'POST':
+                return requests.post(url, headers=headers, params=params, json=json, timeout=timeout)
+            elif method.upper() == 'DELETE':
+                return requests.delete(url, headers=headers, params=params, json=json, timeout=timeout)
+            else:
+                return requests.request(method, url, headers=headers, params=params, json=json, timeout=timeout)
+        except Exception as e:
+            class FakeResponse:
+                def __init__(self, error):
+                    self.status_code = 502
+                    self.text = str(error)
+                def json(self):
+                    raise ValueError("No JSON")
+            return FakeResponse(e)
     else:
-        # Same-origin: use current request scheme/host
-        return f"{request.scheme}://{request.host}{endpoint}"
+        # Internal WSGI call - use Flask test client
+        try:
+            client = current_app.test_client()
+            query_string = ''
+            if params:
+                query_string = '?' + '&'.join(f"{k}={v}" for k, v in params.items() if v)
+            
+            if method.upper() == 'GET':
+                resp = client.get(endpoint + query_string, headers=headers)
+            elif method.upper() == 'POST':
+                resp = client.post(endpoint + query_string, headers=headers, json=json)
+            elif method.upper() == 'DELETE':
+                resp = client.delete(endpoint + query_string, headers=headers, json=json)
+            else:
+                resp = client.open(endpoint + query_string, method=method, headers=headers, json=json)
+            
+            return resp
+        except Exception as e:
+            class FakeResponse:
+                def __init__(self, error):
+                    self.status_code = 502
+                    self.text = str(error)
+                def json(self):
+                    raise ValueError("No JSON")
+            return FakeResponse(e)
 
 
 @import_ui.route("/import", methods=["GET", "POST"])
@@ -31,12 +71,7 @@ def import_csv():
             headers = {"Authorization": f"Bearer {session['access_token']}"}
             batch_id = request.form.get('batch_id')
             try:
-                resp = requests.delete(
-                    get_api_url("/upload/import"),
-                    headers=headers,
-                    params={'batch_id': batch_id} if batch_id else None,
-                    timeout=10,
-                )
+                resp = call_api("/upload/import", method='DELETE', headers=headers, params={'batch_id': batch_id} if batch_id else None, timeout=10)
             except Exception:
                 flash("API not reachable", "danger")
                 return redirect(url_for("import_ui.import_csv"))
@@ -74,13 +109,25 @@ def import_csv():
         }
 
         try:
-            resp = requests.post(
-                get_api_url("/upload/import"),
-                # send explicit file tuple (filename, stream, content_type)
-                files={"file": (file.filename, file.stream, file.content_type)},
-                headers=headers,
-                timeout=10
-            )
+            # For file uploads, we need to handle external API differently
+            api_base = current_app.config.get('API_URL', '')
+            if api_base:
+                # External API - use requests which handles multipart/form-data
+                resp = requests.post(
+                    f"{api_base}/upload/import",
+                    files={"file": (file.filename, file.stream, file.content_type)},
+                    headers=headers,
+                    timeout=10
+                )
+            else:
+                # Internal - for Flask test client, we need to read the file content
+                file_content = file.read()
+                file.seek(0)  # Reset for potential re-reads
+                resp = current_app.test_client().post(
+                    "/upload/import",
+                    data={'file': (file.stream, file.filename)},
+                    headers=headers
+                )
         except Exception:
             flash("API not reachable", "danger")
             return redirect(url_for("import_ui.import_csv"))
@@ -140,11 +187,7 @@ def import_csv():
     headers = {"Authorization": f"Bearer {session.get('access_token')}"}
     batches = []
     try:
-        resp = requests.get(
-            get_api_url("/upload/import/batches"),
-            headers=headers,
-            timeout=5,
-        )
+        resp = call_api("/upload/import/batches", headers=headers, timeout=5)
         if resp.status_code == 200:
             batches = resp.json().get('batches', [])
     except Exception:

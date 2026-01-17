@@ -7,19 +7,73 @@ accidents_ui = Blueprint("accidents_ui", __name__)
 
 
 def get_api_url(endpoint):
-    """Build absolute API URL.
+    """Build API URL - either external or internal WSGI call.
     
-    If API_URL is configured, use it as base.
-    Otherwise, use current request host (for same-origin requests on production).
+    If API_URL is explicitly configured in env, use it for external API.
+    Otherwise, use Flask test client to make internal WSGI calls (no network overhead).
     """
     api_base = current_app.config.get('API_URL', '')
     
     if api_base:
-        # Explicitly configured API URL
+        # Explicitly configured external API URL
         return f"{api_base}{endpoint}"
     else:
-        # Same-origin: use current request scheme/host
-        return f"{request.scheme}://{request.host}{endpoint}"
+        # Internal WSGI call - return None to signal caller to use test client
+        return None
+
+
+def call_api(endpoint, method='GET', headers=None, params=None, json=None, timeout=5):
+    """Call API endpoint - either via HTTP or internal WSGI client.
+    
+    If get_api_url returns a URL, use requests.
+    Otherwise, use Flask test client for internal routing.
+    """
+    api_base = current_app.config.get('API_URL', '')
+    
+    if api_base:
+        # External API - use requests
+        url = f"{api_base}{endpoint}"
+        try:
+            if method.upper() == 'GET':
+                return requests.get(url, headers=headers, params=params, timeout=timeout)
+            elif method.upper() == 'POST':
+                return requests.post(url, headers=headers, params=params, json=json, timeout=timeout)
+            else:
+                return requests.request(method, url, headers=headers, params=params, json=json, timeout=timeout)
+        except Exception as e:
+            # Return a fake response-like object for exception handling
+            class FakeResponse:
+                def __init__(self, error):
+                    self.status_code = 502
+                    self.text = str(error)
+                def json(self):
+                    raise ValueError("No JSON")
+            return FakeResponse(e)
+    else:
+        # Internal WSGI call - use Flask test client
+        try:
+            client = current_app.test_client()
+            query_string = ''
+            if params:
+                query_string = '?' + '&'.join(f"{k}={v}" for k, v in params.items() if v)
+            
+            if method.upper() == 'GET':
+                resp = client.get(endpoint + query_string, headers=headers)
+            elif method.upper() == 'POST':
+                resp = client.post(endpoint + query_string, headers=headers, json=json)
+            else:
+                resp = client.open(endpoint + query_string, method=method, headers=headers, json=json)
+            
+            return resp
+        except Exception as e:
+            # Return a fake response-like object for exception handling
+            class FakeResponse:
+                def __init__(self, error):
+                    self.status_code = 502
+                    self.text = str(error)
+                def json(self):
+                    raise ValueError("No JSON")
+            return FakeResponse(e)
 
 # Edit accident route (government only)
 @accidents_ui.route('/accidents/<int:accident_id>/edit', methods=['GET'])
@@ -30,7 +84,7 @@ def edit_accident(accident_id):
         flash('Access denied.', 'danger')
         return redirect(url_for('accidents_ui.accidents'))
     headers = {"Authorization": f"Bearer {session['access_token']}"}
-    resp = requests.get(get_api_url("/api/v1/accidents"), headers=headers, params={"id": accident_id})
+    resp = call_api("/api/v1/accidents", headers=headers, params={"id": accident_id})
     accident = None
     if resp.status_code == 200:
         data = resp.json()
@@ -70,7 +124,7 @@ def debug_routes():
 @login_required
 def accident_detail(accident_id):
     headers = {"Authorization": f"Bearer {session['access_token']}"}
-    resp = requests.get(get_api_url("/api/v1/accidents"), headers=headers, params={"id": accident_id})
+    resp = call_api("/api/v1/accidents", headers=headers, params={"id": accident_id})
     accident = None
     if resp.status_code == 200:
         data = resp.json()
@@ -116,11 +170,7 @@ def accidents():
 
     # Get filter option lists from the API (full distinct values)
     try:
-        resp_filters = requests.get(
-            get_api_url("/api/v1/accidents/filters"),
-            headers=headers,
-            timeout=5
-        )
+        resp_filters = call_api("/api/v1/accidents/filters", headers=headers, timeout=5)
         if resp_filters.status_code == 200:
             fdata = resp_filters.json()
             # API returns data wrapped in "data" key
@@ -141,12 +191,7 @@ def accidents():
         delegations = []
 
     try:
-        resp = requests.get(
-            get_api_url("/api/v1/accidents"),
-            headers=headers,
-            params=params,
-            timeout=5
-        )
+        resp = call_api("/api/v1/accidents", headers=headers, params=params, timeout=5)
     except Exception as e:
         flash("API not reachable", "danger")
         return render_template("accidents_list.html", accidents=[],
@@ -285,12 +330,7 @@ def accidents_data():
             params[k] = v
 
     try:
-        resp = requests.get(
-            get_api_url("/api/v1/accidents"),
-            headers=headers,
-            params=params,
-            timeout=5
-        )
+        resp = call_api("/api/v1/accidents", headers=headers, params=params, timeout=5)
     except Exception:
         return {"items": [], "total": 0, "page": 1, "per_page": int(request.args.get('per_page', 25))}, 502
 
@@ -330,11 +370,7 @@ def accidents_filters_proxy():
         "Authorization": f"Bearer {session['access_token']}"
     }
     try:
-        resp = requests.get(
-            get_api_url("/api/v1/accidents/filters"),
-            headers=headers,
-            timeout=5
-        )
+        resp = call_api("/api/v1/accidents/filters", headers=headers, timeout=5)
     except Exception:
         return {"locations": [], "causes": [], "severities": [], "delegations": []}, 502
 
@@ -362,12 +398,7 @@ def accidents_export_proxy():
             params[k] = v
 
     try:
-        resp = requests.get(
-            get_api_url("/api/v1/accidents/export"),
-            headers=headers,
-            params=params,
-            timeout=10
-        )
+        resp = call_api("/api/v1/accidents/export", headers=headers, params=params, timeout=10)
     except Exception:
         from flask import abort
         abort(502, "Export failed: API not reachable")
@@ -389,11 +420,7 @@ def accidents_batches_proxy():
         "Authorization": f"Bearer {session['access_token']}"
     }
     try:
-        resp = requests.get(
-            get_api_url("/upload/import/batches"),
-            headers=headers,
-            timeout=5
-        )
+        resp = call_api("/upload/import/batches", headers=headers, timeout=5)
     except Exception:
         return {"batches": []}, 502
 
